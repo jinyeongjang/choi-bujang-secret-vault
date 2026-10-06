@@ -64,3 +64,28 @@
 
 3. **과거 노출 관련 주의사항**:
    - **과거 노출 미해소 경고**: 현재 최신 커밋의 정적 파일과 새 배포에서 가상 메모 문장을 비웠더라도, **GitHub의 과거 공개 커밋 이력(Git Commit History)과 Vercel의 이전 배포(Past Deployments) 본이 남아 있는 한 과거의 자료 노출이 완전히 해소된 것은 아닙니다.** 공개 저장소와 배포 플랫폼 특성상 과거 커밋 및 과거 배포 주소를 통해 이전 상태를 열람할 수 있으므로, 실제 환경에서는 이력 파기와 키 폐기 등의 후속 조치가 필요함을 유의하세요.
+
+## 3단계: 진짜 로그인 연동 및 토큰 기반 인가 제어
+
+### 현재 작동하는 기능
+- **토큰 검증**: 자료 API(`api/notes.js`, `api/notes/[id].js`)가 시작 틀의 `src/verify-login.mjs`(`createLoginVerifier`)를 사용하여 `Authorization: Bearer <token>`을 검증합니다.
+- **비로그인 및 비인가 요청 차단**: 유효한 토큰이 없거나 검증에 실패하면 자료를 반환하지 않고 `401 Unauthorized`로 즉시 거부합니다.
+- **브라우저 사용자 정보 불신**: 브라우저가 전달한 임의의 `userId`, `role` 등 클라이언트 주장은 신뢰하지 않고, 암호학적으로 검증된 서버의 `identity.userId`만 사용합니다.
+- **가상 메모 CRUD API**:
+  - `POST /api/notes`: `{id, title, body}` 수신 (id 누락 시 서버가 UUID 생성하여 `{id}` 반환, 서버 검증 사용자 ID를 `owner_id`로 저장).
+  - `GET /api/notes`: 로그인 사용자의 메모 배열 반환.
+  - `GET /api/notes/:id`: 단건 조회 시 `{id, title, body}` 반환 (삭제 후 조회 시 `404 Not Found`).
+  - `PUT /api/notes/:id`: `{title, body}` 수정 및 갱신된 메모 반환.
+  - `DELETE /api/notes/:id`: 단건 삭제 수행 (삭제 완료 후 후속 조회 시 404 반환).
+- **허용 경로 등록**: `aleph.config.json`의 `allowedRoutes`에 `["/api/notes", "/api/notes/:id"]` 등록.
+- **웹 화면 CRUD UI**: `public/index.html`에 메모 추가 폼과 목록 내 인라인 수정/삭제 버튼 제공, Supabase 세션 토큰을 `Authorization: Bearer` 헤더로 자동 첨부.
+- **보안 헤더 적용**: `vercel.json`의 `headers` 설정에 `X-Content-Type-Options: nosniff`를 등록하여 첫 화면(`/`) 및 전체 응답에 보안 헤더를 적용했습니다.
+- **JSON 에러 응답**: 비로그인 또는 비인가 요청 시 빈 화면이나 HTML이 아닌 `401 Unauthorized` 상태 코드와 JSON 에러 문구(`{"error":"UNAUTHORIZED"}`)를 반환합니다.
+- **환경변수 자동 적용**:
+  - `SUPABASE_URL`: 서버 런타임(`api/notes.js`)에서 읽어 DB 접속 및 `identityProvider` 발급자/JWKS 설정에 동적 적용하며, Vercel 배포 빌드 시 화면(`public/index.html`)에 자동 주입합니다.
+  - `SUPABASE_SECRET_KEY`: 서버 런타임에서 `createLoginVerifier` 검증 및 DB 접근용으로 참조합니다.
+  - `SUPABASE_ANON_KEY`: Vercel 배포 빌드 시 `public/index.html`의 공개 키 변수에 자동 주입합니다.
+  - 로컬 개발 지원: `.env` 파일이 존재할 경우 `api/notes.js`가 자동으로 파싱하여 로드합니다.
+
+### 현재 구조의 취약점 (4단계 예정)
+- **객체 수준 인가(소유자 검사) 부재**: 단건 수정(`PUT /api/notes/:id`), 조회(`GET`), 삭제(`DELETE`) 처리 시 메모의 실제 소유자(`owner_id`)와 요청자의 일치 여부를 아직 대조하지 않습니다. 따라서 로그인 사용자 B가 사용자 A의 메모 ID를 알면 A의 메모를 수정하거나 삭제할 수 있는 취약점이 남아 있으며, 이 허점은 4단계에서 고칠 예정입니다.
