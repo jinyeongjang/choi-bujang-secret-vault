@@ -40,19 +40,21 @@ export async function runAttackChecks(config) {
     const response = await fetch(new URL('/data.json', app), {
       redirect: 'error', signal: AbortSignal.timeout(10000),
     });
-    if (response.ok) {
+    if (response.status === 404) {
+      staticObserved = '공개 data.json이 제거되어 가상 메모 확인 표시가 노출되지 않음 (HTTP 404)';
+    } else if (response.ok) {
       const data = await response.json();
-      const empty = Array.isArray(data?.notes) && data.notes.length === 0;
-      staticObserved = empty ? '공개 data.json에서 가상 메모 문장이 보이지 않음' : '공개 data.json에 메모가 남아 있음';
+      const hasMarker = data?.sampleMarker === config.sampleMarker;
+      staticObserved = hasMarker ? '공개 data.json에 가상 메모 확인 표시가 남아 있음' : '공개 data.json에서 가상 메모 확인 표시가 보이지 않음';
     } else {
-      staticObserved = `공개 data.json 응답 오류 (HTTP ${response.status})`;
+      staticObserved = `공개 data.json 응답 코드 (HTTP ${response.status})`;
     }
   } catch (err) {
     staticObserved = `공개 data.json 요청 예외 (${err.message})`;
   }
   results.push({
     attackId: 'anonymous_static_read',
-    expected: '비로그인 정적 data.json 요청에서 메모가 비워져 있음',
+    expected: '비로그인 정적 data.json 요청에서 가상 메모 확인 표시가 노출되지 않음',
     observed: staticObserved,
   });
 

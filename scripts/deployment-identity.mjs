@@ -11,7 +11,7 @@ export function deploymentIdentity(env, config) {
   if (env.VERCEL_GIT_PROVIDER !== 'github' || !OWNER.test(owner || '')
       || !REPO.test(repo || '') || repo === '.' || repo === '..'
       || repo.toLowerCase().endsWith('.git') || !SHA.test(commit || '')
-      || !HOST.test(host || '') || config?.step !== 1
+      || !HOST.test(host || '') || !Number.isInteger(config?.step) || config.step < 1 || config.step > 12
       || typeof config.judgeIssuer !== 'string'
       || !/^https:\/\/[a-z0-9-]+\.up\.railway\.app\/defense\/judge$/iu.test(config.judgeIssuer)
       || typeof config.sampleMarker !== 'string'
@@ -20,7 +20,7 @@ export function deploymentIdentity(env, config) {
   }
   return {
     schema: 'aleph.defense.deployment.v1',
-    step: 1,
+    step: config.step,
     repoUrl: `https://github.com/${owner.toLowerCase()}/${repo.toLowerCase()}`,
     commit: commit.toLowerCase(),
     publicAppUrl: `https://${host.toLowerCase()}`,
