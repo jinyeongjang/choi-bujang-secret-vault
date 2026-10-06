@@ -87,5 +87,26 @@
   - `SUPABASE_ANON_KEY`: Vercel 배포 빌드 시 `public/index.html`의 공개 키 변수에 자동 주입합니다.
   - 로컬 개발 지원: `.env` 파일이 존재할 경우 `api/notes.js`가 자동으로 파싱하여 로드합니다.
 
-### 현재 구조의 취약점 (4단계 예정)
-- **객체 수준 인가(소유자 검사) 부재**: 단건 수정(`PUT /api/notes/:id`), 조회(`GET`), 삭제(`DELETE`) 처리 시 메모의 실제 소유자(`owner_id`)와 요청자의 일치 여부를 아직 대조하지 않습니다. 따라서 로그인 사용자 B가 사용자 A의 메모 ID를 알면 A의 메모를 수정하거나 삭제할 수 있는 취약점이 남아 있으며, 이 허점은 4단계에서 고칠 예정입니다.
+### 3단계 취약점 해소 안내
+- 3단계에서 존재했던 객체 수준 인가 부재(타인 메모 조회/수정/삭제 가능) 취약점은 4단계에서 API 및 DB RLS 정책을 통해 완전히 해소되었습니다.
+
+## 4단계: 로그인해도 내 자료만 보이게 합니다 (객체 수준 인가 및 DB RLS 적용)
+
+### 현재 작동하는 기능
+- **객체 수준 인가 검사**: 개별 메모 단건 조회(`GET /api/notes/:id`), 수정(`PUT /api/notes/:id`), 삭제(`DELETE /api/notes/:id`) 시 DB의 `owner_id`와 요청자의 검증된 `identity.userId`를 대조하여 본인 소유의 메모만 허용하고, 타인 메모 접근 시 `403 Forbidden` (`{"error":"FORBIDDEN"}`)으로 차단합니다.
+- **클라이언트 소유자 ID 불신**: 메모 추가(`POST /api/notes`) 시 URL이나 본문에 임의의 `owner_id`가 전달되더라도 이를 무시하고 서버가 암호학적으로 검증한 `identity.userId`로만 저장합니다.
+- **수정/삭제 무결성 보장**: 단건 수정 시 기존 행과 갱신될 행의 소유자가 모두 본인인지 검증하며, 삭제 시에도 본인 소유 메모만 삭제를 허용합니다. 한 건 응답은 `{id, title, body}`, 수정 요청 본문은 `{title, body}`를 유지합니다.
+- **허용 경로 등록**: `aleph.config.json`의 `allowedRoutes`에 실제 HTTP 메서드와 경로(`GET /api/notes`, `POST /api/notes`, `GET /api/notes/:id`, `PUT /api/notes/:id`, `DELETE /api/notes/:id`)를 명시했습니다.
+- **학습 DB 최소 권한 및 RLS 정책 (`step4-rls.sql`, `schema.sql`)**:
+  - `notes` 테이블에 Row Level Security(RLS)를 활성화하고, `PUBLIC, anon, authenticated`의 모든 권한을 회수한 뒤 `authenticated`에게만 `SELECT, INSERT, UPDATE, DELETE` 권한을 부여했습니다.
+  - 행 단위 정책으로 `SELECT`와 `DELETE`는 `USING (auth.uid() = owner_id)`, `INSERT`는 `WITH CHECK (auth.uid() = owner_id)`, `UPDATE`는 `USING`과 `WITH CHECK` 모두 `auth.uid() = owner_id`를 적용하여 데이터베이스 계층에서도 내 자료만 접근 가능하도록 강제했습니다.
+
+### 다시 실행하는 방법
+1. Supabase **SQL Editor**에서 `step4-rls.sql`을 실행하여 RLS 활성화, 최소 권한 회수/부여, 4대 정책을 적용합니다.
+2. `step4-seed.sql`에서 사용자 A와 B의 이메일을 입력 후 실행하여 소유권이 분리된 가상 메모를 준비합니다.
+3. 로컬 테스트 및 빌드 검증:
+   ```bash
+   npm run test:r5
+   npm run bundle
+   ```
+

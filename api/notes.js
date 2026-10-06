@@ -109,15 +109,19 @@ export default async function handler(request, response) {
       }
 
       if (request.method === 'GET') {
-        // 단건 조회: { id, title, body } (소유자 검사는 4단계 전이므로 생략)
+        // 단건 조회: { id, title, body } (소유자 검사: DB의 owner_id와 identity.userId 비교)
         const { data, error } = await supabase
           .from('notes')
-          .select('id, title, content')
+          .select('id, title, content, owner_id')
           .eq('id', noteId)
           .maybeSingle();
 
         if (error || !data) {
           return response.status(404).json({ error: 'NOT_FOUND' });
+        }
+
+        if (data.owner_id !== identity.userId) {
+          return response.status(403).json({ error: 'FORBIDDEN' });
         }
 
         return response.status(200).json({
@@ -128,7 +132,7 @@ export default async function handler(request, response) {
       }
 
       if (request.method === 'PUT') {
-        // 단건 수정: title, body 업데이트 (소유자 검사는 4단계 전이므로 B가 A 메모 수정 가능)
+        // 단건 수정: 기존 행과 새 행의 소유자가 모두 본인인지 확인, 수정 본문은 {title, body} 유지
         let reqBody = request.body;
         if (typeof reqBody === 'string') {
           try { reqBody = JSON.parse(reqBody); } catch { reqBody = {}; }
@@ -136,10 +140,33 @@ export default async function handler(request, response) {
           reqBody = {};
         }
 
+        // 요청 본문의 owner_id가 본인과 다르면 거부
+        if (reqBody.owner_id && reqBody.owner_id !== identity.userId) {
+          return response.status(403).json({ error: 'FORBIDDEN' });
+        }
+
+        // 1. 기존 행 조회 및 소유자 확인
+        const { data: existing, error: fetchError } = await supabase
+          .from('notes')
+          .select('id, title, content, owner_id')
+          .eq('id', noteId)
+          .maybeSingle();
+
+        if (fetchError || !existing) {
+          return response.status(404).json({ error: 'NOT_FOUND' });
+        }
+
+        if (existing.owner_id !== identity.userId) {
+          return response.status(403).json({ error: 'FORBIDDEN' });
+        }
+
+        // 2. 수정 본문 { title, body } 반영 (새 행의 소유자도 본인으로 유지)
         const title = reqBody.title;
         const bodyText = reqBody.body ?? reqBody.content;
 
-        const updatePayload = {};
+        const updatePayload = {
+          owner_id: identity.userId,
+        };
         if (title !== undefined) updatePayload.title = title;
         if (bodyText !== undefined) updatePayload.content = bodyText;
 
@@ -147,11 +174,16 @@ export default async function handler(request, response) {
           .from('notes')
           .update(updatePayload)
           .eq('id', noteId)
-          .select('id, title, content')
+          .eq('owner_id', identity.userId)
+          .select('id, title, content, owner_id')
           .maybeSingle();
 
         if (error || !data) {
           return response.status(404).json({ error: 'NOT_FOUND' });
+        }
+
+        if (data.owner_id !== identity.userId) {
+          return response.status(403).json({ error: 'FORBIDDEN' });
         }
 
         return response.status(200).json({
@@ -162,11 +194,26 @@ export default async function handler(request, response) {
       }
 
       if (request.method === 'DELETE') {
-        // 단건 삭제: 지운 뒤 GET은 404
+        // 단건 삭제: 본인 것만 허용
+        const { data: existing, error: fetchError } = await supabase
+          .from('notes')
+          .select('id, owner_id')
+          .eq('id', noteId)
+          .maybeSingle();
+
+        if (fetchError || !existing) {
+          return response.status(404).json({ error: 'NOT_FOUND' });
+        }
+
+        if (existing.owner_id !== identity.userId) {
+          return response.status(403).json({ error: 'FORBIDDEN' });
+        }
+
         const { data, error } = await supabase
           .from('notes')
           .delete()
           .eq('id', noteId)
+          .eq('owner_id', identity.userId)
           .select('id');
 
         if (error) {
