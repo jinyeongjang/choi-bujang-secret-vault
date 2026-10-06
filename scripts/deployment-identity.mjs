@@ -30,5 +30,8 @@ export function deploymentIdentity(env, config) {
   if (Array.isArray(config?.allowedRoutes) && config.allowedRoutes.length > 0) {
     identity.allowedRoutes = config.allowedRoutes;
   }
+  if (typeof config?.originalApiUrl === 'string' && config.originalApiUrl.startsWith('https://')) {
+    identity.originalApiUrl = config.originalApiUrl;
+  }
   return identity;
 }
