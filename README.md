@@ -110,3 +110,20 @@
    npm run bundle
    ```
 
+## 5단계: 자료 요청을 서버 한곳으로 모읍니다 (BFF 패턴 및 원본 자료 직접 접근 차단)
+
+### 현재 작동하는 기능
+- **단일 접점 집중 (BFF 패턴)**: 브라우저 클라이언트가 데이터베이스(Supabase)에 직접 쿼리를 날리지 않고, 모든 메모 조회·추가·수정·삭제 요청을 서버리스 함수(`/api/notes`, `/api/notes/:id`) 한곳으로 모아 처리합니다.
+- **원본 자료 직접 권한 완전 회수 (`step5-revoke.sql`)**: 학습용 메모 테이블(`notes`)에 대해 `PUBLIC`, `anon`, `authenticated`의 모든 직접 테이블 권한을 회수(`REVOKE ALL`)하여, 외부 및 브라우저에서 Supabase REST API(`.../rest/v1/notes`)로 직접 접근하는 경로를 원천 차단했습니다.
+- **서버 전용 권한 및 인가 유지**: 서버 함수는 환경변수(`SUPABASE_SECRET_KEY`, `service_role` 키)를 통해 데이터베이스에 안전하게 접근하며, 토큰 검증(`Authorization: Bearer`) 및 객체 수준 소유자 검증(`owner_id === identity.userId`)을 엄격히 유지합니다.
+- **원본 자료 경로 등록**: `aleph.config.json`의 `originalApiUrl`에 쿼리가 없는 원본 자료 HTTPS 경로(`https://rumiyxkamhgodrrdvvft.supabase.co/rest/v1/notes`)를 명시했습니다.
+
+### 다시 실행하는 방법
+1. Supabase **SQL Editor**에서 `step5-revoke.sql`을 실행하여 `notes` 테이블의 `PUBLIC, anon, authenticated` 직접 권한을 회수합니다.
+2. 로컬 테스트 및 빌드 검증:
+   ```bash
+   npm run test:r5
+   npm run bundle
+   ```
+
+

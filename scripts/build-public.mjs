@@ -22,23 +22,6 @@ if (config.step === 1) {
 }
 
 if (!process.argv.includes('--local')) {
-  // Vercel 배포 빌드 시 환경변수가 설정되어 있으면 클라이언트 화면(public/index.html)에 안전하게 주입
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (supabaseUrl || supabaseAnonKey) {
-    const indexPath = resolve(root, 'public', 'index.html');
-    let html = await readFile(indexPath, 'utf8');
-    if (supabaseUrl) {
-      const cleanUrl = supabaseUrl.replace(/\/+$/, '');
-      html = html.replaceAll('https://YOUR_PROJECT_REF.supabase.co', cleanUrl);
-    }
-    if (supabaseAnonKey) {
-      html = html.replaceAll('YOUR_SUPABASE_PUBLISHABLE_KEY', supabaseAnonKey);
-    }
-    await writeFile(indexPath, html, 'utf8');
-    console.log('환경변수(SUPABASE_URL/ANON_KEY)를 배포 산출물(public/index.html)에 주입했습니다.');
-  }
 
   const identity = deploymentIdentity(process.env, config);
   await writeFile(resolve(root, 'public', 'aleph.json'),

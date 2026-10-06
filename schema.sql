@@ -10,9 +10,8 @@ CREATE TABLE IF NOT EXISTS notes (
 -- RLS (Row Level Security) 활성화
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 
--- 기존 권한 회수 및 최소 권한 부여
+-- 5단계: 기존 권한 회수 및 직접 권한 완전 차단 (서버 함수만 service_role로 접근)
 REVOKE ALL ON TABLE notes FROM PUBLIC, anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE notes TO authenticated;
 
 -- RLS 정책 설정: auth.uid() = owner_id 일 때만 허용
 DROP POLICY IF EXISTS "notes_select_policy" ON notes;

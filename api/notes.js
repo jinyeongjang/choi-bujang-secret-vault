@@ -67,7 +67,40 @@ export default async function handler(request, response) {
     return response.status(204).end();
   }
 
-  // 1. 요청 헤더의 Authorization 검사 (src/verify-login.mjs 사용)
+  // 1. 브라우저에 Supabase 키를 노출하지 않고 서버 함수에서만 인증을 처리하는 로그인 핸들러
+  if (request.method === 'POST') {
+    let reqBody = request.body;
+    if (typeof reqBody === 'string') {
+      try { reqBody = JSON.parse(reqBody); } catch { reqBody = {}; }
+    }
+    if (reqBody && reqBody.action === 'login' && reqBody.email && reqBody.password) {
+      const targetDbUrl = supabaseUrl || effectiveConfig.identityProvider?.issuer?.replace(/\/auth\/v1$/, '');
+      const keyToUse = supabaseSecretKey || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+      if (!targetDbUrl || !keyToUse) {
+        return response.status(500).json({ error: 'DATABASE_CONFIG_MISSING' });
+      }
+      try {
+        const supabaseAuth = createClient(targetDbUrl, keyToUse, {
+          auth: { persistSession: false, autoRefreshToken: false },
+        });
+        const { data, error } = await supabaseAuth.auth.signInWithPassword({
+          email: reqBody.email,
+          password: reqBody.password,
+        });
+        if (error || !data?.session) {
+          return response.status(401).json({ error: error?.message || 'LOGIN_FAILED' });
+        }
+        return response.status(200).json({
+          access_token: data.session.access_token,
+          user: { id: data.user.id, email: data.user.email },
+        });
+      } catch (_err) {
+        return response.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+      }
+    }
+  }
+
+  // 2. 요청 헤더의 Authorization 검사 (src/verify-login.mjs 사용)
   const authorization = request.headers.authorization;
   if (!authorization || !verifyLoginAuthorization) {
     return response.status(401).json({ error: 'UNAUTHORIZED' });

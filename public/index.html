@@ -58,7 +58,7 @@
         <form id="login-form">
           <div class="form-group">
             <label for="login-email">이메일</label>
-            <input type="email" id="login-email" autocomplete="email" placeholder="student@example.com" required>
+            <input type="email" id="login-email" autocomplete="email" placeholder="이메일 입력" required>
           </div>
           <div class="form-group">
             <label for="login-password">비밀번호</label>
@@ -103,14 +103,7 @@
   </main>
 
   <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-    // =========================================================================
-    // Supabase 설정값 (공개용 URL 및 Publishable/Anon Key)
-    // =========================================================================
-    const SUPABASE_PROJECT_URL = 'https://rumiyxkamhgodrrdvvft.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'YOUR_SUPABASE_PUBLISHABLE_KEY';
-
+    // 클라이언트는 공개 키 없이 서버 함수(/api/notes)를 통해 인증 및 자료 통신을 수행합니다.
     const loggedOutView = document.getElementById('auth-logged-out-view');
     const loggedInView = document.getElementById('auth-logged-in-view');
     const addNoteCard = document.getElementById('add-note-card');
@@ -127,17 +120,6 @@
     const addNoteMsg = document.getElementById('add-note-msg');
 
     let currentSession = null;
-    let supabase = null;
-    const isConfigured = SUPABASE_PROJECT_URL && !SUPABASE_PROJECT_URL.includes('YOUR_PROJECT_REF')
-      && SUPABASE_PUBLISHABLE_KEY && !SUPABASE_PUBLISHABLE_KEY.startsWith('YOUR_');
-
-    if (isConfigured) {
-      try {
-        supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_PUBLISHABLE_KEY);
-      } catch (e) {
-        showError(`Supabase 초기화 오류: ${e.message}`);
-      }
-    }
 
     function showError(message) {
       errorEl.textContent = message;
@@ -397,39 +379,58 @@
       }
     });
 
-    if (supabase) {
-      supabase.auth.onAuthStateChange((_event, session) => {
-        updateAuthUI(session);
-        loadNotes(session);
-      });
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      if (!email || !password) {
+        showError('이메일과 비밀번호를 입력해 주세요.');
+        return;
+      }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      updateAuthUI(session);
-      loadNotes(session);
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
 
-      loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        clearError();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
+      try {
+        const res = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'login', email, password }),
+        });
 
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          showError(`로그인 실패: ${error.message}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `로그인 실패 (HTTP ${res.status})`);
         }
-      });
 
-      logoutBtn.addEventListener('click', async () => {
-        clearError();
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          showError(`로그아웃 오류: ${error.message}`);
-        }
-      });
-    } else {
-      showError('Supabase Project URL 및 Publishable Key 설정이 필요합니다. public/index.html 상단 변수를 입력해 주세요.');
+        const data = await res.json();
+        currentSession = { access_token: data.access_token, user: data.user };
+        try { sessionStorage.setItem('auth_session', JSON.stringify(currentSession)); } catch (_e) {}
+        updateAuthUI(currentSession);
+        await loadNotes(currentSession);
+      } catch (err) {
+        showError(`로그인 실패: ${err.message}`);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      clearError();
+      currentSession = null;
+      try { sessionStorage.removeItem('auth_session'); } catch (_e) {}
+      updateAuthUI(null);
       loadNotes(null);
-    }
+    });
+
+    // 세션 복원 및 초기화
+    try {
+      const saved = sessionStorage.getItem('auth_session');
+      if (saved) currentSession = JSON.parse(saved);
+    } catch (_e) {}
+    updateAuthUI(currentSession);
+    loadNotes(currentSession);
   </script>
 </body>
 </html>
