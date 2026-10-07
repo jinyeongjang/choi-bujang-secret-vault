@@ -8,3 +8,11 @@
 [2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-08 action=deny ruleId=xdr.block.bruteforce.bf-08 srcip=192.0.2.18 expiresAt=2026-10-07T09:19:22.649Z pattern=password_spraying_across_multiple_accounts
 [2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-09 action=deny ruleId=xdr.block.bruteforce.bf-09 srcip=198.51.100.8 expiresAt=2026-10-07T09:19:22.649Z pattern=password_spraying_across_multiple_accounts
 [2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-10 action=deny ruleId=xdr.block.bruteforce.bf-10 srcip=203.0.113.40 expiresAt=2026-10-07T09:19:22.649Z pattern=short_window_repeated_login_failures
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-01 action=deny ruleId=xdr.block.webinjection.wi-01 srcip=203.0.113.10 expiresAt=2026-10-07T09:38:40.135Z pattern=sql_injection_attempt
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-02 action=deny ruleId=xdr.block.webinjection.wi-02 srcip=203.0.113.10 expiresAt=2026-10-07T09:38:40.135Z pattern=cross_site_scripting_attempt
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-03 action=deny ruleId=xdr.block.webinjection.wi-03 srcip=198.51.100.15 expiresAt=2026-10-07T09:38:40.135Z pattern=path_traversal_attempt
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-04 action=deny ruleId=xdr.block.webinjection.wi-04 srcip=192.0.2.15 expiresAt=2026-10-07T09:38:40.135Z pattern=sql_injection_attempt
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-05 action=deny ruleId=xdr.block.webinjection.wi-05 srcip=203.0.113.18 expiresAt=2026-10-07T09:38:40.135Z pattern=cross_site_scripting_attempt
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-06 action=deny ruleId=xdr.block.webinjection.wi-06 srcip=198.51.100.18 expiresAt=2026-10-07T09:38:40.135Z pattern=sql_injection_attempt
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-07 action=deny ruleId=xdr.block.webinjection.wi-07 srcip=192.0.2.21 expiresAt=2026-10-07T09:38:40.135Z pattern=path_traversal_attempt
+[2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-08 action=deny ruleId=xdr.block.webinjection.wi-08 srcip=203.0.113.22 expiresAt=2026-10-07T09:38:40.135Z pattern=sql_injection_attempt

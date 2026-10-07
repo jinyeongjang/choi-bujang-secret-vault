@@ -1,0 +1,21 @@
+{
+  "schema": "aleph.xdr.patterns.v1",
+  "moduleKey": "web-injection",
+  "patterns": [
+    {
+      "name": "sql_injection_attempt",
+      "condition": "요청 인자(URL/쿼리) 내 SQL 조작 구문(chain, or, select-chain 등) 또는 따옴표/구문 결합 표기가 다수 반복(count >= 8 또는 rule level >= 10) 발생",
+      "rationale": "MITRE ATT&CK T1190 (Exploit Public-Facing Application) - 웹 애플리케이션의 입력값 검증 미흡을 악용하여 비인가 데이터베이스 질의를 유도하고 자료를 탈취·변조하려는 SQL 주입 공격입니다."
+    },
+    {
+      "name": "cross_site_scripting_attempt",
+      "condition": "요청 인자(URL/쿼리) 내 스크립트 삽입 태그/표식(script-marker, mixed-marker 등)이 반복(count >= 8 또는 rule level >= 10) 전달",
+      "rationale": "MITRE ATT&CK T1190 (Exploit Public-Facing Application) - 사용자 브라우저 또는 웹 애플리케이션 콘텍스트에서 악성 스크립트를 실행시켜 세션 탈취 및 임의 동작을 유도하려는 웹 주입 공격입니다."
+    },
+    {
+      "name": "path_traversal_attempt",
+      "condition": "요청 경로/인자 내 상위 디렉터리 접근 표기(../, up-repeat, 경로 이탈 등)가 다수 반복(count >= 8 또는 rule level >= 10) 발생",
+      "rationale": "MITRE ATT&CK T1190 (Exploit Public-Facing Application) - 허용된 웹 루트 경로를 벗어나 서버 파일시스템의 제한된 설정 파일이나 민감 자료에 비인가 접근하려는 경로 조작 공격입니다."
+    }
+  ]
+}
