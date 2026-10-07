@@ -1,0 +1,179 @@
+{
+  "schema": "aleph.xdr.result.v1",
+  "moduleKey": "brute-force",
+  "decisions": [
+    {
+      "alertId": "bf-01",
+      "action": "block",
+      "confidence": 0.92,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-02",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "password_spraying_across_multiple_accounts"
+    },
+    {
+      "alertId": "bf-03",
+      "action": "block",
+      "confidence": 0.92,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-04",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "password_spraying_across_multiple_accounts"
+    },
+    {
+      "alertId": "bf-05",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "password_spraying_across_multiple_accounts"
+    },
+    {
+      "alertId": "bf-06",
+      "action": "block",
+      "confidence": 0.92,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-07",
+      "action": "block",
+      "confidence": 0.92,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-08",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "password_spraying_across_multiple_accounts"
+    },
+    {
+      "alertId": "bf-09",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "password_spraying_across_multiple_accounts"
+    },
+    {
+      "alertId": "bf-10",
+      "action": "block",
+      "confidence": 0.92,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-11",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-12",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-13",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-14",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-15",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-16",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-17",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-18",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-19",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "short_window_repeated_login_failures"
+    },
+    {
+      "alertId": "bf-20",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-21",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-22",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-23",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-24",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-25",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-26",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-27",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    },
+    {
+      "alertId": "bf-28",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_user_activity"
+    }
+  ],
+  "counts": {
+    "block": 10,
+    "alert": 9,
+    "record": 9
+  }
+}

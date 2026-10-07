@@ -1,0 +1,125 @@
+{
+  "schema": "aleph.ztna.blocked-rules.v1",
+  "rules": [
+    {
+      "ruleId": "xdr.block.bruteforce.bf-01",
+      "alertId": "bf-01",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "203.0.113.10",
+      "targetUser": "user01",
+      "pattern": "short_window_repeated_login_failures",
+      "confidence": 0.92,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-02",
+      "alertId": "bf-02",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "203.0.113.10",
+      "targetUser": "user01",
+      "pattern": "password_spraying_across_multiple_accounts",
+      "confidence": 0.95,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-03",
+      "alertId": "bf-03",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "198.51.100.20",
+      "targetUser": "user02",
+      "pattern": "short_window_repeated_login_failures",
+      "confidence": 0.92,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-04",
+      "alertId": "bf-04",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "192.0.2.30",
+      "targetUser": "user02",
+      "pattern": "password_spraying_across_multiple_accounts",
+      "confidence": 0.95,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-05",
+      "alertId": "bf-05",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "203.0.113.21",
+      "targetUser": "user03",
+      "pattern": "password_spraying_across_multiple_accounts",
+      "confidence": 0.95,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-06",
+      "alertId": "bf-06",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "198.51.100.44",
+      "targetUser": "user03",
+      "pattern": "short_window_repeated_login_failures",
+      "confidence": 0.92,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-07",
+      "alertId": "bf-07",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "203.0.113.15",
+      "targetUser": "user04",
+      "pattern": "short_window_repeated_login_failures",
+      "confidence": 0.92,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-08",
+      "alertId": "bf-08",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "192.0.2.18",
+      "targetUser": "user05",
+      "pattern": "password_spraying_across_multiple_accounts",
+      "confidence": 0.95,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-09",
+      "alertId": "bf-09",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "198.51.100.8",
+      "targetUser": "user06",
+      "pattern": "password_spraying_across_multiple_accounts",
+      "confidence": 0.95,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    },
+    {
+      "ruleId": "xdr.block.bruteforce.bf-10",
+      "alertId": "bf-10",
+      "action": "deny",
+      "reasonCode": "xdr_brute_force_detected",
+      "ip": "203.0.113.40",
+      "targetUser": "user06",
+      "pattern": "short_window_repeated_login_failures",
+      "confidence": 0.92,
+      "createdAt": "2026-10-07T08:19:22.649Z",
+      "expiresAt": "2026-10-07T09:19:22.649Z"
+    }
+  ]
+}

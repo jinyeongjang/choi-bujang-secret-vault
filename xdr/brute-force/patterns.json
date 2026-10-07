@@ -1,0 +1,16 @@
+{
+  "schema": "aleph.xdr.patterns.v1",
+  "moduleKey": "brute-force",
+  "patterns": [
+    {
+      "name": "short_window_repeated_login_failures",
+      "condition": "짧은 시간(예: 1~3분) 내 단일 출발 IP 또는 단일 계정에서 로그인 실패가 비정상적으로 대량(수십 건 이상) 연속 발생하고 성공 이력이 없음",
+      "rationale": "MITRE ATT&CK T1110.001 (Password Guessing) - 올바른 비밀번호를 찾을 때까지 무작위 또는 사전 기반의 비밀번호를 짧은 주기로 반복 대입하는 전형적인 무차별 대입 공격 행위입니다."
+    },
+    {
+      "name": "password_spraying_across_multiple_accounts",
+      "condition": "단일 출발 IP에서 여러 계정(예: 8~20개 이상)을 대상으로 동일하거나 유사한 비밀번호를 연속 대입하여 로그인 실패 발생",
+      "rationale": "MITRE ATT&CK T1110.003 (Password Spraying) - 단일 계정 잠금 정책을 회피하기 위해 다수의 계정에 동일한 비밀번호를 일괄 대입하여 무차별 인증을 시도하는 공격 기법입니다."
+    }
+  ]
+}

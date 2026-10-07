@@ -1,0 +1,10 @@
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-01 action=deny ruleId=xdr.block.bruteforce.bf-01 srcip=203.0.113.10 expiresAt=2026-10-07T09:19:22.649Z pattern=short_window_repeated_login_failures
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-02 action=deny ruleId=xdr.block.bruteforce.bf-02 srcip=203.0.113.10 expiresAt=2026-10-07T09:19:22.649Z pattern=password_spraying_across_multiple_accounts
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-03 action=deny ruleId=xdr.block.bruteforce.bf-03 srcip=198.51.100.20 expiresAt=2026-10-07T09:19:22.649Z pattern=short_window_repeated_login_failures
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-04 action=deny ruleId=xdr.block.bruteforce.bf-04 srcip=192.0.2.30 expiresAt=2026-10-07T09:19:22.649Z pattern=password_spraying_across_multiple_accounts
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-05 action=deny ruleId=xdr.block.bruteforce.bf-05 srcip=203.0.113.21 expiresAt=2026-10-07T09:19:22.649Z pattern=password_spraying_across_multiple_accounts
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-06 action=deny ruleId=xdr.block.bruteforce.bf-06 srcip=198.51.100.44 expiresAt=2026-10-07T09:19:22.649Z pattern=short_window_repeated_login_failures
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-07 action=deny ruleId=xdr.block.bruteforce.bf-07 srcip=203.0.113.15 expiresAt=2026-10-07T09:19:22.649Z pattern=short_window_repeated_login_failures
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-08 action=deny ruleId=xdr.block.bruteforce.bf-08 srcip=192.0.2.18 expiresAt=2026-10-07T09:19:22.649Z pattern=password_spraying_across_multiple_accounts
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-09 action=deny ruleId=xdr.block.bruteforce.bf-09 srcip=198.51.100.8 expiresAt=2026-10-07T09:19:22.649Z pattern=password_spraying_across_multiple_accounts
+[2026-10-07T08:19:22.649Z] [ZTNA_RULE_SYNC] alertId=bf-10 action=deny ruleId=xdr.block.bruteforce.bf-10 srcip=203.0.113.40 expiresAt=2026-10-07T09:19:22.649Z pattern=short_window_repeated_login_failures
