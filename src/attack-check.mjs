@@ -1,7 +1,7 @@
 // The student changes this check as each stage adds an attack to the same app.
 // Never return tokens, private keys, real names, or note bodies.
 export async function runAttackChecks(config) {
-  if (config.step < 1 || config.step > 8) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (config.step < 1 || config.step > 9) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -110,6 +110,14 @@ export async function runAttackChecks(config) {
       attackId: 'unauthorized_zone_modification',
       expected: '공지 구역 수정 및 알 수 없는 경로 접근 차단 (심판 점검)',
       observed: '미실행 (심판 원격 점검 대기)',
+    });
+  }
+
+  if (config.step >= 9) {
+    results.push({
+      attackId: 'burst_read_revocation',
+      expected: '10분 구간 내 120건 초과 폭주 조회 시 확인된 기기 회수 제안 (심판 점검)',
+      observed: '미실행 (가상 사건 탐지 시험 npm run detect:test 통과, 실제 접속 회수 집행은 심판 원격 점검 대기)',
     });
   }
 
