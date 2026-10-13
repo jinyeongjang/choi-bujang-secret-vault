@@ -59,9 +59,9 @@ function isKnownRoute(method, path, route, service, queryLength) {
     || /^(?:GET|POST|PUT|DELETE)\s+\/(?:api\/)?notes(?:\/:id)?$/i.test(route || '');
 
   // 공지 구역 경로 (notices)
-  const isNotices = service === 'notices' || service === 'notice'
-    || /^\/(?:api\/)?(?:notices?|announcements?)(?:\/[^/?#]+)?$/i.test(path || '')
-    || /^(?:GET|POST|PUT|DELETE)\s+\/(?:api\/)?(?:notices?|announcements?)(?:\/:id)?$/i.test(route || '');
+  const isNotices = /notice|announcement/i.test(service || '')
+    || /notice|announcement/i.test(path || '')
+    || /notice|announcement/i.test(route || '');
 
   if (isNotes) {
     // 메모 컬렉션 루트(/notes)에 대한 PUT, DELETE는 허용하지 않고 오직 :id 경로만 허용
@@ -74,8 +74,8 @@ function isKnownRoute(method, path, route, service, queryLength) {
   }
 
   if (isNotices) {
-    // 공지 구역은 조회(GET) 또는 판정기 규칙 검사용 메서드만 경로 형태로 인식
-    return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+    // 공지 구역은 일반 학생에게 조회(GET)만 허용
+    return method === 'GET';
   }
 
   return false;
@@ -85,9 +85,9 @@ function isKnownRoute(method, path, route, service, queryLength) {
  * 강사 공지 수정/생성/삭제 시도 여부를 판별합니다.
  */
 function isNoticeModification(method, path, route, service) {
-  const isNotice = service === 'notices' || service === 'notice'
-    || /^\/(?:api\/)?(?:notices?|announcements?)(?:\/|$)/i.test(path || '')
-    || /\/(?:api\/)?(?:notices?|announcements?)(?:\/|$)/i.test(route || '');
+  const isNotice = /notice|announcement/i.test(service || '')
+    || /notice|announcement/i.test(path || '')
+    || /notice|announcement/i.test(route || '');
 
   const isModification = ['PUT', 'POST', 'PATCH', 'DELETE'].includes(method) || method !== 'GET';
 
@@ -102,7 +102,18 @@ function isOtherSubjectAccess(request) {
   const path = typeof request?.path === 'string' ? request.path : '';
   const route = typeof request?.route === 'string' ? request.route : '';
 
-  // 경로에 사용자/주체 지정 구문이 포함된 경우 현재 주체와 일치하는지 확인
+  // 1. 요청 주체 자체가 다른 사용자/비인가 가상 주체인 경우 차단
+  if (/(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(currentSubject)) {
+    return true;
+  }
+
+  // 2. 경로 또는 라우트에 다른 사용자/타인 자원 지칭 표기가 있는 경우 차단
+  if (/(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(path)
+      || /(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(route)) {
+    return true;
+  }
+
+  // 3. 경로에 사용자/주체 지정 구문이 포함된 경우 현재 주체와 일치하는지 확인
   const subjectPattern = /\/(?:users?|subjects?|learners?|members?)\/([^/?#]+)/i;
   const pathMatch = path.match(subjectPattern);
   if (pathMatch) {
@@ -120,8 +131,10 @@ function isOtherSubjectAccess(request) {
     }
   }
 
-  // 다른 가상 주체(예: learner_other, other_fixture, other_user 등)가 직접 경로에 지정된 경우
-  if (/\/(?:other_fixture|learner_other|other_user|other_learner)(?:\/|$)/i.test(path)) {
+  // 4. 경로에 현재 주체와 다른 가상 주체(예: user02, learner_b 등)가 직접 지정된 경우
+  const userPattern = /\/(?:user|learner|student|member)[0-9a-z_-]+/i;
+  const userMatch = path.match(userPattern);
+  if (userMatch && userMatch[0].slice(1) !== currentSubject) {
     return true;
   }
 
