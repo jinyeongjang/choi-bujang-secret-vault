@@ -33,7 +33,7 @@ function parseConnectionSignals(request) {
 /**
  * 엔진이 확인한 서비스·메서드·정확한 경로·라우트가 인가된 구역에 부합하는지 엄격히 검사합니다.
  * - 반 공지나 강사 자료에 대한 쓰기(POST·PUT·PATCH·DELETE)는 누구에게나 거부
- * - 메모 전체 목록처럼 여러 사람의 자료를 한꺼번에 여는 경로(/notes 목록)는 거부
+ * - 메모 전체 목록처럼 여러 사람의 자료를 한꺼번에 여는 경로(/notes 목록, :id 없는 라우트)는 거부
  * - 메모 한 건(/notes/:id)의 주인 비교는 API가 하므로 판정기는 단건 연산을 허용
  * - 기능 경로, 쿼리 기능 선택, 알 수 없는 구역은 거부
  */
@@ -62,10 +62,10 @@ function validateZoneAccess(request) {
 
   const cleanPath = path.replace(/^\/api/, '').replace(/\/+$/, '');
 
-  // 4. 반 공지나 강사 자료 구역 판별
-  const isNoticeOrMaterial = /notice|announcement|material|instructor|lecture|course/i.test(service)
-    || /notice|announcement|material|instructor|lecture|course/i.test(cleanPath)
-    || /notice|announcement|material|instructor|lecture|course/i.test(route);
+  // 4. 반 공지나 강사 자료 구역 판별: 쓰기는 누구에게나 전면 거부
+  const isNoticeOrMaterial = /notice|announcement|material|instructor|lecture|lesson|course|class|bulletin|board/i.test(service)
+    || /notice|announcement|material|instructor|lecture|lesson|course|class|bulletin|board/i.test(cleanPath)
+    || /notice|announcement|material|instructor|lecture|lesson|course|class|bulletin|board/i.test(route);
 
   if (isNoticeOrMaterial) {
     // 판정기는 공지·강사 자료 쓰기(POST, PUT, PATCH, DELETE)를 누구에게나 거부
@@ -76,23 +76,27 @@ function validateZoneAccess(request) {
     return method === 'GET';
   }
 
-  // 5. 메모 구역 판별 (service === 'notes' 또는 /notes 경로)
-  const isNotes = service === 'notes' || cleanPath.startsWith('/notes') || /\/notes(?:\/|$)/i.test(route);
-  if (isNotes) {
-    // 메모 전체 목록처럼 여러 사람의 자료를 한꺼번에 여는 경로(/notes)는 판정기에서 거부
-    if (cleanPath === '/notes' || cleanPath === '' || /^(?:GET)\s+\/(?:api\/)?notes\/?$/i.test(route)) {
-      return false;
-    }
+  // 5. 메모 전체 목록 경로 판별: 여러 사람의 자료를 한꺼번에 여는 경로는 무조건 거부
+  // - 경로가 컬렉션 루트(/notes)인 경우
+  // - 라우트에 :id가 없는 경우 (예: GET /notes)
+  // - 경로에 all, list, bulk 등이 지정된 경우
+  const isCollectionPath = cleanPath === '/notes' || cleanPath === ''
+    || !route.includes(':id')
+    || /\/notes\/(?:all|list|bulk|batch|every|entire)(?:\/|$)/i.test(cleanPath);
 
-    // 메모 한 건(/notes/:id) 경로: 판정기에서는 단건 연산(GET, PUT, DELETE) 허용 (주인 비교는 API가 수행)
-    if (/^\/notes\/[^/?#]+$/i.test(cleanPath)) {
-      return ['GET', 'PUT', 'DELETE'].includes(method);
-    }
-
+  if (isCollectionPath) {
     return false;
   }
 
-  // 6. 그 외 모든 서비스 및 경로는 미인가 다른 구역(Other Zone)이므로 거부!
+  // 6. 메모 한 건(/notes/:id) 경로 판별: 단건 연산(GET, PUT, DELETE) 허용 (주인 비교는 API가 수행)
+  const isSingleNote = (service === 'notes' || cleanPath.startsWith('/notes') || route.includes('/notes/:id'))
+    && /^\/notes\/[^/?#]+$/i.test(cleanPath);
+
+  if (isSingleNote) {
+    return ['GET', 'PUT', 'DELETE'].includes(method);
+  }
+
+  // 7. 그 외 모든 서비스 및 경로는 미인가 다른 구역(Other Zone)이므로 거부!
   return false;
 }
 
