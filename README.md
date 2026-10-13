@@ -147,6 +147,37 @@
    - **미등록 기기의 가상 요청**: `deny` 및 `reasonCode: 'device_not_registered'`로 차단 (`통과 · 미등록 기기의 가상 요청`).
    *(주의: 이 명령은 로컬 가상 요청 기반의 사전 연습이며 실제 심판 접수 판정 증거가 아닙니다.)*
 
+## 7단계: 평소와 다른 접속은 다시 확인합니다 (복합 이상 접속 및 추가 확인 판정 규칙)
+
+### 현재 작동하는 기능
+- **가상 접속 신호 및 출처 검증 (`src/decider.mjs`)**:
+  - 엔진이 전달한 `request.signals`(`source`, `region`, `network`, `hour`) 및 `request.recentEvents`를 검사하며, 정보가 누락되거나 출처가 불명확한 경우 임의의 기본값으로 채우지 않고 계약 그대로 안전하게 해석합니다.
+- **복합 이상 징후 판별 및 추가 확인(`step_up`) 요청**:
+  - `RULE_IDS`에 `step_up_required` 규칙을 추가했습니다.
+  - 평소와 다른 시각(심야/새벽) + 낯선 네트워크(`network !== 'usual'`) + 대량/위험 자료 열람 사건(`recentEvents`)이 복합적으로 발생할 경우 지역(`region`) 단독 영구 차단 대신 `decision: 'step_up'`, `reasonCode: 'step_up_required'`로 추가 확인을 요청합니다.
+  - 추가 인증이 검증된 요청(`request.stepUp?.verified === true` 및 유효 시간 내)은 정상 승인(`decision: 'allow'`, `reasonCode: 'approved'`)합니다.
+  - 기존 6단계 등록 기기 검증(`deviceRegistered: true`) 규칙을 유지하여 미등록 기기는 계속 `deny`로 차단합니다.
+- **제공 엔진 계약 확인 및 실제 차단 보존 (`src/attack-check.mjs`)**:
+  - 제공 엔진 계약(`docs/DECIDER_REQUEST.md`) 상 동일 사용자의 재로그인 시각 확인 계약이 없음을 확인했습니다.
+  - 실제 자료실 차단은 억지로 연결하지 않고 `미실행` 상태로 안전하게 보존했습니다.
+
+### 확인 순서 및 다시 실행하는 방법
+1. 로컬 판정기 단위 검증을 실행합니다:
+   ```bash
+   npm run decider:test
+   ```
+2. 검증 항목별 결과를 확인합니다:
+   - **등록 기기의 정상 요청**: `통과 · 등록 기기의 정상 요청` (`allow`)
+   - **미등록 기기의 가상 요청**: `통과 · 미등록 기기의 가상 요청` (`deny`, 사유: `device_not_registered`)
+   - **복합 이상 접속**: `통과 · 복합 이상 접속` (`step_up`, 사유: `step_up_required`)
+   - **다시 확인한 복합 이상 접속**: `통과 · 다시 확인한 복합 이상 접속` (`allow`)
+3. 가상 사건 규칙 시험을 실행합니다:
+   ```bash
+   npm run fixture:7
+   ```
+   - **정상 사건**: `allow`
+   - **복합 이상 사건**: `step_up`
+
 ## 보너스 트랙: XDR 경보 탐지 및 판정
 
 ### 보너스 xdr-01 (brute-force)
