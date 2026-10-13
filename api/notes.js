@@ -113,6 +113,26 @@ export default async function handler(request, response) {
   }
 
   // 브라우저가 보낸 userId, role은 신뢰하지 않고 검증된 identity만 사용
+  let reqBody = request.body;
+  if (typeof reqBody === 'string') {
+    try { reqBody = JSON.parse(reqBody); } catch { reqBody = {}; }
+  } else if (!reqBody || typeof reqBody !== 'object') {
+    reqBody = {};
+  }
+
+  // 화면 메뉴나 요청 본문, 쿼리의 role 주장은 신뢰하지 않고 거부 사유를 남겨 차단
+  if (reqBody.role || request.query?.role) {
+    return response.status(403).json({ error: 'FORBIDDEN', reason: 'UNTRUSTED_ROLE_CLAIM' });
+  }
+
+  // 강사 권한이 필요한 공지 수정 등 자원 접근 차단
+  const pathname = (() => {
+    try { return new URL(request.url || '', 'http://localhost').pathname; } catch { return ''; }
+  })();
+  if ((reqBody.resource === 'notices' || pathname.includes('/notices')) && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    return response.status(403).json({ error: 'FORBIDDEN', reason: 'INSTRUCTOR_ROLE_REQUIRED' });
+  }
+
   const targetDbUrl = supabaseUrl || effectiveConfig.identityProvider?.issuer?.replace(/\/auth\/v1$/, '');
   if (!targetDbUrl || !supabaseSecretKey) {
     return response.status(500).json({ error: 'DATABASE_CONFIG_MISSING' });
@@ -127,8 +147,8 @@ export default async function handler(request, response) {
     let noteId = request.query?.id;
     if (!noteId && request.url) {
       try {
-        const pathname = new URL(request.url, 'http://localhost').pathname;
-        const match = pathname.match(/^\/api\/notes\/([^/?#]+)/);
+        const parsedPath = new URL(request.url, 'http://localhost').pathname;
+        const match = parsedPath.match(/^\/api\/notes\/([^/?#]+)/);
         if (match) {
           noteId = match[1];
         }
@@ -154,7 +174,7 @@ export default async function handler(request, response) {
         }
 
         if (data.owner_id !== identity.userId) {
-          return response.status(403).json({ error: 'FORBIDDEN' });
+          return response.status(403).json({ error: 'FORBIDDEN', reason: 'NOT_OWNER' });
         }
 
         return response.status(200).json({
@@ -166,16 +186,9 @@ export default async function handler(request, response) {
 
       if (request.method === 'PUT') {
         // 단건 수정: 기존 행과 새 행의 소유자가 모두 본인인지 확인, 수정 본문은 {title, body} 유지
-        let reqBody = request.body;
-        if (typeof reqBody === 'string') {
-          try { reqBody = JSON.parse(reqBody); } catch { reqBody = {}; }
-        } else if (!reqBody || typeof reqBody !== 'object') {
-          reqBody = {};
-        }
-
         // 요청 본문의 owner_id가 본인과 다르면 거부
         if (reqBody.owner_id && reqBody.owner_id !== identity.userId) {
-          return response.status(403).json({ error: 'FORBIDDEN' });
+          return response.status(403).json({ error: 'FORBIDDEN', reason: 'CANNOT_CHANGE_OWNER' });
         }
 
         // 1. 기존 행 조회 및 소유자 확인
@@ -190,7 +203,7 @@ export default async function handler(request, response) {
         }
 
         if (existing.owner_id !== identity.userId) {
-          return response.status(403).json({ error: 'FORBIDDEN' });
+          return response.status(403).json({ error: 'FORBIDDEN', reason: 'NOT_OWNER' });
         }
 
         // 2. 수정 본문 { title, body } 반영 (새 행의 소유자도 본인으로 유지)
@@ -216,7 +229,7 @@ export default async function handler(request, response) {
         }
 
         if (data.owner_id !== identity.userId) {
-          return response.status(403).json({ error: 'FORBIDDEN' });
+          return response.status(403).json({ error: 'FORBIDDEN', reason: 'NOT_OWNER' });
         }
 
         return response.status(200).json({
@@ -239,7 +252,7 @@ export default async function handler(request, response) {
         }
 
         if (existing.owner_id !== identity.userId) {
-          return response.status(403).json({ error: 'FORBIDDEN' });
+          return response.status(403).json({ error: 'FORBIDDEN', reason: 'NOT_OWNER' });
         }
 
         const { data, error } = await supabase
@@ -286,11 +299,9 @@ export default async function handler(request, response) {
 
     if (request.method === 'POST') {
       // 메모 추가: { id, title, body } (id 없으면 서버가 UUID 생성하여 { id } 반환, owner_id 저장)
-      let reqBody = request.body;
-      if (typeof reqBody === 'string') {
-        try { reqBody = JSON.parse(reqBody); } catch { reqBody = {}; }
-      } else if (!reqBody || typeof reqBody !== 'object') {
-        reqBody = {};
+      // 요청 본문의 owner_id가 본인과 다르면 거부
+      if (reqBody.owner_id && reqBody.owner_id !== identity.userId) {
+        return response.status(403).json({ error: 'FORBIDDEN', reason: 'CANNOT_SET_OTHER_OWNER' });
       }
 
       const hasClientId = Boolean(reqBody.id);

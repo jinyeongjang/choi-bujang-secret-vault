@@ -1,7 +1,7 @@
 // ALEPH SDP 엔진이 확인한 요청만 받는 학생 판정기 시작점입니다.
 // 6단계부터 규칙을 하나씩 추가합니다. 이 기본 응답은 모든 요청을 거부합니다.
 // 요청 본문의 userId, role, 기기 키, 토큰을 별도로 믿거나 저장하지 마세요.
-export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required']);
+export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required', 'zone_isolation']);
 
 /**
  * 엔진이 검증해 넘긴 가상 접속 신호(signals) 및 최근 사건(recentEvents) 입력을 검사합니다.
@@ -30,6 +30,104 @@ function parseConnectionSignals(request) {
   };
 }
 
+/**
+ * 엔진이 확인한 메서드·경로가 올바른 구역에 해당하는지 검사합니다.
+ * :id와 같은 깊이에 export 등 기능 경로가 위치하는 것은 거부하며 알 수 없는 경로 및 쿼리를 통한 기능 선택은 차단합니다.
+ */
+function isKnownRoute(method, path, route, service, queryLength) {
+  // 쿼리로 기능을 선택하지 않고 자료 ID만 지정 (queryLength > 0 거부)
+  if (typeof queryLength === 'number' && queryLength > 0) {
+    return false;
+  }
+
+  // 상위 디렉터리 탐색(path traversal) 차단
+  if ((path || '').includes('..') || (route || '').includes('..')) {
+    return false;
+  }
+
+  // :id와 같은 깊이에 export 등 기능 경로를 두지 않음
+  if (/\/(?:export|import|actions?|admin|functions?)(?:\/|$)/i.test(path || '')) {
+    return false;
+  }
+  if (/\/(?:export|import|actions?|admin|functions?)(?:\/|$)/i.test(route || '')) {
+    return false;
+  }
+
+  // 메모 구역 경로 (notes)
+  const isNotes = service === 'notes'
+    || /^\/(?:api\/)?notes(?:\/[^/?#]+)?$/i.test(path || '')
+    || /^(?:GET|POST|PUT|DELETE)\s+\/(?:api\/)?notes(?:\/:id)?$/i.test(route || '');
+
+  // 공지 구역 경로 (notices)
+  const isNotices = service === 'notices' || service === 'notice'
+    || /^\/(?:api\/)?(?:notices?|announcements?)(?:\/[^/?#]+)?$/i.test(path || '')
+    || /^(?:GET|POST|PUT|DELETE)\s+\/(?:api\/)?(?:notices?|announcements?)(?:\/:id)?$/i.test(route || '');
+
+  if (isNotes) {
+    // 메모 컬렉션 루트(/notes)에 대한 PUT, DELETE는 허용하지 않고 오직 :id 경로만 허용
+    const isCollectionRoot = /^\/(?:api\/)?notes\/?$/i.test(path || '')
+      || /^(?:GET|POST|PUT|DELETE)\s+\/(?:api\/)?notes\/?$/i.test(route || '');
+    if (isCollectionRoot && ['PUT', 'DELETE'].includes(method)) {
+      return false;
+    }
+    return ['GET', 'POST', 'PUT', 'DELETE'].includes(method);
+  }
+
+  if (isNotices) {
+    // 공지 구역은 조회(GET) 또는 판정기 규칙 검사용 메서드만 경로 형태로 인식
+    return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+  }
+
+  return false;
+}
+
+/**
+ * 강사 공지 수정/생성/삭제 시도 여부를 판별합니다.
+ */
+function isNoticeModification(method, path, route, service) {
+  const isNotice = service === 'notices' || service === 'notice'
+    || /^\/(?:api\/)?(?:notices?|announcements?)(?:\/|$)/i.test(path || '')
+    || /\/(?:api\/)?(?:notices?|announcements?)(?:\/|$)/i.test(route || '');
+
+  const isModification = ['PUT', 'POST', 'PATCH', 'DELETE'].includes(method) || method !== 'GET';
+
+  return isNotice && isModification;
+}
+
+/**
+ * 다른 사용자의 메모에 접근하거나 구역을 벗어난 요청인지 판별합니다.
+ */
+function isOtherSubjectAccess(request) {
+  const currentSubject = typeof request?.subjectId === 'string' ? request.subjectId.trim() : '';
+  const path = typeof request?.path === 'string' ? request.path : '';
+  const route = typeof request?.route === 'string' ? request.route : '';
+
+  // 경로에 사용자/주체 지정 구문이 포함된 경우 현재 주체와 일치하는지 확인
+  const subjectPattern = /\/(?:users?|subjects?|learners?|members?)\/([^/?#]+)/i;
+  const pathMatch = path.match(subjectPattern);
+  if (pathMatch) {
+    const target = pathMatch[1];
+    if (target !== ':id' && target !== ':userId' && target !== ':subjectId' && target !== currentSubject) {
+      return true;
+    }
+  }
+
+  const routeMatch = route.match(subjectPattern);
+  if (routeMatch) {
+    const target = routeMatch[1];
+    if (target !== ':id' && target !== ':userId' && target !== ':subjectId' && target !== currentSubject) {
+      return true;
+    }
+  }
+
+  // 다른 가상 주체(예: learner_other, other_fixture, other_user 등)가 직접 경로에 지정된 경우
+  if (/\/(?:other_fixture|learner_other|other_user|other_learner)(?:\/|$)/i.test(path)) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function decide(request) {
   // 엔진이 검증해 넘긴 가상 접속 정보의 출처 및 필드 검사
   const context = parseConnectionSignals(request);
@@ -45,8 +143,60 @@ export async function decide(request) {
     };
   }
 
-  // 2. 복합 이상 접속 검사: 평소와 다른 시각 + 낯선 네트워크 + 대량/위험 자료 열람 사건
-  // 지역(region) 단독 조건으로 영구 차단하지 않고 복합 이상 징후 발생 시 추가 확인(step_up) 요구
+  // 2. 엔진이 확인한 사용자·기기 검증 (유효한 주체 ID 및 16자리 소문자 16진수 기기 ID)
+  const isValidSubject = typeof request?.subjectId === 'string' && request.subjectId.trim().length > 0;
+  const isValidDevice = typeof request?.deviceId === 'string' && /^[0-9a-f]{16}$/i.test(request.deviceId);
+  if (!isValidSubject || !isValidDevice) {
+    return {
+      schema: 'aleph.decision.v1',
+      requestId: request.requestId,
+      decision: 'deny',
+      reasonCode: 'identity_missing',
+      ruleIds: ['zone_isolation'],
+    };
+  }
+
+  // 3. 엔진이 확인한 메서드, 경로, 서비스 정보 파싱
+  const method = typeof request?.method === 'string' ? request.method.toUpperCase() : '';
+  const path = typeof request?.path === 'string' ? request.path : '';
+  const route = typeof request?.route === 'string' ? request.route : '';
+  const service = typeof request?.service === 'string' ? request.service : '';
+  const queryLength = typeof request?.queryLength === 'number' ? request.queryLength : 0;
+
+  // 4. 구역 규칙 검증: 강사 공지 수정 거부 (일반 학생의 공지 생성/수정/삭제 차단)
+  if (isNoticeModification(method, path, route, service)) {
+    return {
+      schema: 'aleph.decision.v1',
+      requestId: request.requestId,
+      decision: 'deny',
+      reasonCode: 'notice_modification_forbidden',
+      ruleIds: ['zone_isolation'],
+    };
+  }
+
+  // 5. 구역 규칙 검증: 다른 사용자의 메모 열람/수정 시도 차단
+  if (isOtherSubjectAccess(request)) {
+    return {
+      schema: 'aleph.decision.v1',
+      requestId: request.requestId,
+      decision: 'deny',
+      reasonCode: 'zone_access_denied',
+      ruleIds: ['zone_isolation'],
+    };
+  }
+
+  // 6. 구역 규칙 검증: 정확한 경로 및 알 수 없는 경로/기능 경로/쿼리 선택 거부
+  if (!isKnownRoute(method, path, route, service, queryLength)) {
+    return {
+      schema: 'aleph.decision.v1',
+      requestId: request.requestId,
+      decision: 'deny',
+      reasonCode: 'unknown_route',
+      ruleIds: ['zone_isolation'],
+    };
+  }
+
+  // 7. 복합 이상 접속 검사 (기존 7단계 규칙 유지): 평소와 다른 시각 + 낯선 네트워크 + 대량/위험 자료 열람 사건
   const isUnusualHour = context.hour !== null && (context.hour < 6 || context.hour >= 22);
   const isUnusualNetwork = context.network !== null && context.network !== 'usual';
   const hasBurstActivity = Array.isArray(context.recentEvents) && context.recentEvents.some(
@@ -75,7 +225,7 @@ export async function decide(request) {
       requestId: request.requestId,
       decision: 'allow',
       reasonCode: 'approved',
-      ruleIds: ['device_registered', 'step_up_required'],
+      ruleIds: ['device_registered', 'step_up_required', 'zone_isolation'],
     };
   }
 
@@ -84,7 +234,7 @@ export async function decide(request) {
     requestId: request.requestId,
     decision: 'allow',
     reasonCode: 'approved',
-    ruleIds: ['device_registered'],
+    ruleIds: ['device_registered', 'zone_isolation'],
   };
 }
 

@@ -41,11 +41,12 @@
     .note-actions { display: flex; gap: 8px; justify-content: flex-end; }
     .note-edit-form { display: flex; flex-direction: column; gap: 10px; }
     .note-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .resource-tag { display: inline-flex; align-items: center; padding: 2px 8px; font-size: 12px; font-weight: 600; border-radius: 6px; background: #1f334a; color: #8ad8df; border: 1px solid #3c546e; }
   </style>
 </head>
 <body>
   <main>
-    <div class="eyebrow">BYTE BACK · 3단계 진짜 로그인 및 메모 CRUD</div>
+    <div class="eyebrow">BYTE BACK · 자료실 보호</div>
     <h1>점령된 자료실</h1>
     <p>지금은 보호 장치를 단계별로 구축하는 상태입니다. 아래 기록은 실습을 위한 가상 자료입니다.</p>
 
@@ -98,8 +99,23 @@
       <div id="add-note-msg" class="action-msg" role="status"></div>
     </section>
 
-    <div class="notice">로그인 사용자 토큰(Bearer)으로 보호되는 가상 메모 CRUD 시스템입니다.</div>
-    <ul id="notes" aria-live="polite"><li>가상 자료를 불러오는 중입니다.</li></ul>
+    <!-- 강사 공지 영역 (자원 ID: notices) -->
+    <section class="notice" aria-labelledby="notice-title" data-resource-id="notices">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <strong id="notice-title" style="color: #8ad8df; font-size: 16px;">강사 공지</strong>
+        <span class="resource-tag">자원 ID: notices</span>
+      </div>
+      <div>로그인 사용자 토큰(Bearer)으로 보호되는 가상 메모 CRUD 시스템입니다. 자료 구역별 분리가 적용됩니다.</div>
+    </section>
+
+    <!-- 내 자료실의 메모 영역 (자원 ID: notes) -->
+    <section aria-labelledby="notes-section-title" data-resource-id="notes">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 14px;">
+        <h2 id="notes-section-title" style="margin: 0; font-size: 20px; color: #8ad8df;">내 자료실 메모</h2>
+        <span class="resource-tag">자원 ID: notes</span>
+      </div>
+      <ul id="notes" aria-live="polite"><li>가상 자료를 불러오는 중입니다.</li></ul>
+    </section>
   </main>
 
   <script type="module">
@@ -200,15 +216,26 @@
     function renderNoteItem(note, session) {
       const item = document.createElement('li');
       item.dataset.id = note.id;
+      item.dataset.resourceId = 'notes';
 
       const viewContainer = document.createElement('div');
 
       const header = document.createElement('div');
       header.className = 'note-header';
+      const titleWrapper = document.createElement('div');
+      titleWrapper.style.display = 'flex';
+      titleWrapper.style.alignItems = 'center';
+      titleWrapper.style.gap = '8px';
       const title = document.createElement('h3');
       title.className = 'note-title';
       title.textContent = note.title;
-      header.appendChild(title);
+      const resTag = document.createElement('span');
+      resTag.className = 'resource-tag';
+      resTag.style.fontSize = '11px';
+      resTag.style.padding = '1px 6px';
+      resTag.textContent = '자원 ID: notes';
+      titleWrapper.append(title, resTag);
+      header.appendChild(titleWrapper);
 
       const body = document.createElement('p');
       body.className = 'note-body';

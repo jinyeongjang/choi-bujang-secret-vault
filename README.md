@@ -178,6 +178,41 @@
    - **정상 사건**: `allow`
    - **복합 이상 사건**: `step_up`
 
+## 8단계: 자료마다 갈 수 있는 구역을 나눕니다 (자원 ID 표시 및 구역 분리 규칙)
+
+### 현재 작동하는 기능
+- **화면 자원 ID 표시 및 구역 구분 (`public/index.html`)**:
+  - 기존 메모 CRUD 기능, API 주소(`/api/notes`), 화면 메뉴 구조는 온전히 유지하면서 강사 공지 영역(`자원 ID: notices`)과 내 자료실 메모 영역(`자원 ID: notes`)에 각각 다른 자원 ID 배지 및 속성(`data-resource-id`)을 부여했습니다.
+- **판정기 구역 및 경로 분리 규칙 (`src/decider.mjs`)**:
+  - `RULE_IDS`에 `zone_isolation` 규칙을 등록했습니다 (`['device_registered', 'step_up_required', 'zone_isolation']`).
+  - 엔진이 확인한 사용자·기기·메서드·경로를 바탕으로 메모 구역의 정상 요청은 승인합니다.
+  - 강사 공지 구역에 대한 수정/생성/삭제 요청(`PUT`, `POST`, `PATCH`, `DELETE`)은 학생 권한으로 수행할 수 없으므로 `decision: 'deny'`, `reasonCode: 'notice_modification_forbidden'`으로 차단합니다.
+  - `:id`와 같은 깊이에 위치한 기능 경로(예: `/notes/export` 등) 및 알 수 없는 경로는 `decision: 'deny'`, `reasonCode: 'unknown_route'`로 거부합니다.
+  - 이전 6단계 기기 등록 검증 및 7단계 복합 이상 접속 추가 확인 규칙을 온전히 유지합니다.
+- **자료 API 소유자 및 권한 검증 강화 (`api/notes.js`)**:
+  - 요청 본문이나 쿼리에 포함된 클라이언트의 임의 `role` 주장(예: `role: 'instructor'`)을 신뢰하지 않고 즉시 403 Forbidden (`UNTRUSTED_ROLE_CLAIM`)으로 거부합니다.
+  - 타인 소유 메모에 대한 단건 조회/수정/삭제 시 `NOT_OWNER` 사유를 남겨 차단하며, 소유자 변경 시도 및 공지 수정 시도도 각각 명확한 사유로 거부합니다.
+
+### 확인 순서 및 다시 실행하는 방법
+1. 로컬 판정기 단위 검증을 실행합니다:
+   ```bash
+   npm run decider:test
+   ```
+2. 검증 항목별 결과를 확인합니다:
+   - **등록 기기의 정상 요청**: `통과 · 등록 기기의 정상 요청` (`allow`)
+   - **미등록 기기의 가상 요청**: `통과 · 미등록 기기의 가상 요청` (`deny`, 사유: `device_not_registered`)
+   - **복합 이상 접속**: `통과 · 복합 이상 접속` (`step_up`, 사유: `step_up_required`)
+   - **다시 확인한 복합 이상 접속**: `통과 · 다시 확인한 복합 이상 접속` (`allow`)
+3. 가상 사건 규칙 시험을 실행합니다:
+   ```bash
+   npm run fixture:7
+   ```
+   - **정상 사건**: `allow`, **복합 이상 사건**: `step_up`
+4. 로컬 빌드를 검증합니다:
+   ```bash
+   npm run build -- --local
+   ```
+
 ## 보너스 트랙: XDR 경보 탐지 및 판정
 
 ### 보너스 xdr-01 (brute-force)
