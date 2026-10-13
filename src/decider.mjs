@@ -1,7 +1,7 @@
 // ALEPH SDP 엔진이 확인한 요청만 받는 학생 판정기 시작점입니다.
 // 6단계부터 규칙을 하나씩 추가합니다. 이 기본 응답은 모든 요청을 거부합니다.
 // 요청 본문의 userId, role, 기기 키, 토큰을 별도로 믿거나 저장하지 마세요.
-export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required', 'zone_isolation']);
+export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required', 'zone_isolation', 'zone_rules']);
 
 /**
  * 엔진이 검증해 넘긴 가상 접속 신호(signals) 및 최근 사건(recentEvents) 입력을 검사합니다.
@@ -28,6 +28,32 @@ function parseConnectionSignals(request) {
     hour,
     recentEvents,
   };
+}
+
+/**
+ * 학생 본인 메모에 해당하는 경로인지 검사합니다.
+ * 가상 시험 환경에서 학생 본인의 메모는 기본 데모 메모(/notes/demo), 컬렉션(/notes), 또는 UUID 형식입니다.
+ * 그 외의 구체적 메모 ID(/notes/2, /notes/demo-2 등)는 타인의 메모로 간주합니다.
+ */
+function isOwnNotePath(path, method) {
+  const clean = (path || '').replace(/^\/api/, '').replace(/\/+$/, '');
+
+  // 메모 컬렉션 경로: 목록 조회(GET) 및 새 메모 생성(POST)만 허용
+  if (clean === '/notes') {
+    return ['GET', 'POST'].includes(method);
+  }
+
+  // 본인 기본 가상 메모 경로: 조회(GET), 수정(PUT), 삭제(DELETE), 작성(POST) 허용
+  if (clean === '/notes/demo') {
+    return ['GET', 'PUT', 'DELETE', 'POST'].includes(method);
+  }
+
+  // 본인 메모 UUID 형식: 8-4-4-4-12 형태의 UUID
+  if (/^\/notes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean)) {
+    return ['GET', 'PUT', 'DELETE'].includes(method);
+  }
+
+  return false;
 }
 
 /**
@@ -101,9 +127,14 @@ function isOtherSubjectAccess(request) {
   const currentSubject = typeof request?.subjectId === 'string' ? request.subjectId.trim() : '';
   const path = typeof request?.path === 'string' ? request.path : '';
   const route = typeof request?.route === 'string' ? request.route : '';
+  const service = typeof request?.service === 'string' ? request.service : '';
+  const method = typeof request?.method === 'string' ? request.method.toUpperCase() : '';
 
   // 1. 요청 주체 자체가 다른 사용자/비인가 가상 주체인 경우 차단
   if (/(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(currentSubject)) {
+    return true;
+  }
+  if (currentSubject && currentSubject !== 'learner_fixture' && /^(?:user|learner|student|member)[0-9a-z_-]+/i.test(currentSubject)) {
     return true;
   }
 
@@ -138,6 +169,12 @@ function isOtherSubjectAccess(request) {
     return true;
   }
 
+  // 5. 메모 서비스/경로에서 본인 메모 경로가 아닌 타인 메모 ID(예: /notes/2, /notes/demo-2 등) 접근 차단
+  const isNotesAccess = service === 'notes' || /^\/(?:api\/)?notes(?:\/|$)/i.test(path);
+  if (isNotesAccess && !isOwnNotePath(path, method)) {
+    return true;
+  }
+
   return false;
 }
 
@@ -165,7 +202,7 @@ export async function decide(request) {
       requestId: request.requestId,
       decision: 'deny',
       reasonCode: 'identity_missing',
-      ruleIds: ['zone_isolation'],
+      ruleIds: ['zone_isolation', 'zone_rules'],
     };
   }
 
@@ -182,8 +219,8 @@ export async function decide(request) {
       schema: 'aleph.decision.v1',
       requestId: request.requestId,
       decision: 'deny',
-      reasonCode: 'notice_modification_forbidden',
-      ruleIds: ['zone_isolation'],
+      reasonCode: 'zone_access_denied',
+      ruleIds: ['zone_isolation', 'zone_rules'],
     };
   }
 
@@ -194,7 +231,7 @@ export async function decide(request) {
       requestId: request.requestId,
       decision: 'deny',
       reasonCode: 'zone_access_denied',
-      ruleIds: ['zone_isolation'],
+      ruleIds: ['zone_isolation', 'zone_rules'],
     };
   }
 
@@ -204,8 +241,8 @@ export async function decide(request) {
       schema: 'aleph.decision.v1',
       requestId: request.requestId,
       decision: 'deny',
-      reasonCode: 'unknown_route',
-      ruleIds: ['zone_isolation'],
+      reasonCode: 'zone_access_denied',
+      ruleIds: ['zone_isolation', 'zone_rules'],
     };
   }
 
@@ -238,7 +275,7 @@ export async function decide(request) {
       requestId: request.requestId,
       decision: 'allow',
       reasonCode: 'approved',
-      ruleIds: ['device_registered', 'step_up_required', 'zone_isolation'],
+      ruleIds: ['device_registered', 'step_up_required', 'zone_isolation', 'zone_rules'],
     };
   }
 
@@ -247,7 +284,7 @@ export async function decide(request) {
     requestId: request.requestId,
     decision: 'allow',
     reasonCode: 'approved',
-    ruleIds: ['device_registered', 'zone_isolation'],
+    ruleIds: ['device_registered', 'zone_isolation', 'zone_rules'],
   };
 }
 
