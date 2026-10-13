@@ -32,15 +32,17 @@ function parseConnectionSignals(request) {
 
 /**
  * 엔진이 확인한 서비스·메서드·정확한 경로·라우트가 인가된 구역에 부합하는지 엄격히 검사합니다.
- * 허용되지 않은 다른 구역(Other Zone), 타인 메모, 공지 수정, 기능 경로, 쿼리 기능 선택 등은 모두 거부합니다.
+ * - 반 공지나 강사 자료에 대한 쓰기(POST·PUT·PATCH·DELETE)는 누구에게나 거부
+ * - 메모 전체 목록처럼 여러 사람의 자료를 한꺼번에 여는 경로(/notes 목록)는 거부
+ * - 메모 한 건(/notes/:id)의 주인 비교는 API가 하므로 판정기는 단건 연산을 허용
+ * - 기능 경로, 쿼리 기능 선택, 알 수 없는 구역은 거부
  */
 function validateZoneAccess(request) {
-  const service = typeof request?.service === 'string' ? request.service : '';
+  const service = typeof request?.service === 'string' ? request.service.toLowerCase() : '';
   const method = typeof request?.method === 'string' ? request.method.toUpperCase() : '';
   const path = typeof request?.path === 'string' ? request.path : '';
   const route = typeof request?.route === 'string' ? request.route : '';
   const queryLength = typeof request?.queryLength === 'number' ? request.queryLength : 0;
-  const currentSubject = typeof request?.subjectId === 'string' ? request.subjectId.trim() : '';
 
   // 1. 쿼리로 기능을 선택하지 않고 자료 ID만 지정 (queryLength > 0 거부)
   if (queryLength > 0) {
@@ -58,53 +60,39 @@ function validateZoneAccess(request) {
     return false;
   }
 
-  // 4. 경로/라우트에 명시적 타인/비인가 자원 지칭 표기가 있는 경우 차단
-  if (/(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(path)
-      || /(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(route)
-      || /(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(currentSubject)) {
-    return false;
-  }
-
-  // 5. 요청 주체 자체가 학생 본인과 다른 가상 사용자인 경우 차단
-  if (currentSubject && currentSubject !== 'learner_fixture' && /^(?:user|learner|student|member|guest)[0-9a-z_-]+/i.test(currentSubject)) {
-    return false;
-  }
-
   const cleanPath = path.replace(/^\/api/, '').replace(/\/+$/, '');
 
-  // 6. 메모 구역 (service === 'notes')
-  if (service === 'notes') {
-    // 메모 구역에서 경로는 반드시 /notes 로 시작해야 함 (공지나 관리자 등 다른 구역 경로는 차단)
-    if (!cleanPath.startsWith('/notes')) {
-      return false;
-    }
+  // 4. 반 공지나 강사 자료 구역 판별
+  const isNoticeOrMaterial = /notice|announcement|material|instructor|lecture|course/i.test(service)
+    || /notice|announcement|material|instructor|lecture|course/i.test(cleanPath)
+    || /notice|announcement|material|instructor|lecture|course/i.test(route);
 
-    // 메모 컬렉션 경로: 목록 조회(GET) 및 새 메모 작성(POST)만 허용
-    if (cleanPath === '/notes') {
-      return ['GET', 'POST'].includes(method);
-    }
-
-    // 가상 시험 환경에서 본인 소유 메모 경로: 조회(GET), 수정(PUT), 삭제(DELETE)만 허용
-    if (cleanPath === '/notes/demo') {
-      return ['GET', 'PUT', 'DELETE', 'POST'].includes(method);
-    }
-
-    // 그 외의 모든 메모 경로(/notes/2, /notes/demo-2, /notes/123, UUID 등)는 타인의 메모이므로 차단!
-    return false;
-  }
-
-  // 7. 공지 구역 (service === 'notices' 또는 service === 'announcements')
-  if (service === 'notices' || service === 'announcements' || /notice|announcement/i.test(service) || /notice|announcement/i.test(cleanPath)) {
-    // 일반 학생은 공지 수정/생성/삭제 절대 불가 (오직 GET 조회만 허용)
+  if (isNoticeOrMaterial) {
+    // 판정기는 공지·강사 자료 쓰기(POST, PUT, PATCH, DELETE)를 누구에게나 거부
     if (['PUT', 'POST', 'PATCH', 'DELETE'].includes(method) || method !== 'GET') {
       return false;
     }
-
-    // 경로는 반드시 공지 관련 경로여야 함
-    return cleanPath.startsWith('/notices') || cleanPath.startsWith('/announcements');
+    // 읽기(GET)만 허용
+    return method === 'GET';
   }
 
-  // 8. 그 외 모든 서비스 및 경로는 미인가 다른 구역(Other Zone)이므로 거부!
+  // 5. 메모 구역 판별 (service === 'notes' 또는 /notes 경로)
+  const isNotes = service === 'notes' || cleanPath.startsWith('/notes') || /\/notes(?:\/|$)/i.test(route);
+  if (isNotes) {
+    // 메모 전체 목록처럼 여러 사람의 자료를 한꺼번에 여는 경로(/notes)는 판정기에서 거부
+    if (cleanPath === '/notes' || cleanPath === '' || /^(?:GET)\s+\/(?:api\/)?notes\/?$/i.test(route)) {
+      return false;
+    }
+
+    // 메모 한 건(/notes/:id) 경로: 판정기에서는 단건 연산(GET, PUT, DELETE) 허용 (주인 비교는 API가 수행)
+    if (/^\/notes\/[^/?#]+$/i.test(cleanPath)) {
+      return ['GET', 'PUT', 'DELETE'].includes(method);
+    }
+
+    return false;
+  }
+
+  // 6. 그 외 모든 서비스 및 경로는 미인가 다른 구역(Other Zone)이므로 거부!
   return false;
 }
 
