@@ -31,143 +31,80 @@ function parseConnectionSignals(request) {
 }
 
 /**
- * 학생 본인 메모에 해당하는 경로인지 검사합니다.
- * 가상 시험 환경에서 학생 본인의 메모는 기본 데모 메모(/notes/demo), 컬렉션(/notes), 또는 UUID 형식입니다.
- * 그 외의 구체적 메모 ID(/notes/2, /notes/demo-2 등)는 타인의 메모로 간주합니다.
+ * 엔진이 확인한 서비스·메서드·정확한 경로·라우트가 인가된 구역에 부합하는지 엄격히 검사합니다.
+ * 허용되지 않은 다른 구역(Other Zone), 타인 메모, 공지 수정, 기능 경로, 쿼리 기능 선택 등은 모두 거부합니다.
  */
-function isOwnNotePath(path, method) {
-  const clean = (path || '').replace(/^\/api/, '').replace(/\/+$/, '');
-
-  // 메모 컬렉션 경로: 목록 조회(GET) 및 새 메모 생성(POST)만 허용
-  if (clean === '/notes') {
-    return ['GET', 'POST'].includes(method);
-  }
-
-  // 가상 시험 환경에서 학생 본인의 유일한 가상 메모 경로: 조회(GET), 수정(PUT), 삭제(DELETE), 작성(POST) 허용
-  if (clean === '/notes/demo') {
-    return ['GET', 'PUT', 'DELETE', 'POST'].includes(method);
-  }
-
-  // 그 외의 모든 메모 ID 경로(UUID, /notes/2, /notes/other 등)는 타인의 메모로 간주
-  return false;
-}
-
-/**
- * 엔진이 확인한 메서드·경로가 올바른 구역에 해당하는지 검사합니다.
- * :id와 같은 깊이에 export 등 기능 경로가 위치하는 것은 거부하며 알 수 없는 경로 및 쿼리를 통한 기능 선택은 차단합니다.
- */
-function isKnownRoute(method, path, route, service, queryLength) {
-  // 쿼리로 기능을 선택하지 않고 자료 ID만 지정 (queryLength > 0 거부)
-  if (typeof queryLength === 'number' && queryLength > 0) {
-    return false;
-  }
-
-  // 상위 디렉터리 탐색(path traversal) 차단
-  if ((path || '').includes('..') || (route || '').includes('..')) {
-    return false;
-  }
-
-  // :id와 같은 깊이에 export 등 기능 경로를 두지 않음
-  if (/\/(?:export|import|actions?|admin|functions?)(?:\/|$)/i.test(path || '')) {
-    return false;
-  }
-  if (/\/(?:export|import|actions?|admin|functions?)(?:\/|$)/i.test(route || '')) {
-    return false;
-  }
-
-  // 메모 구역 경로 (notes)
-  const isNotes = service === 'notes'
-    || /^\/(?:api\/)?notes(?:\/[^/?#]+)?$/i.test(path || '')
-    || /^(?:GET|POST|PUT|DELETE)\s+\/(?:api\/)?notes(?:\/:id)?$/i.test(route || '');
-
-  // 공지 구역 경로 (notices)
-  const isNotices = /notice|announcement/i.test(service || '')
-    || /notice|announcement/i.test(path || '')
-    || /notice|announcement/i.test(route || '');
-
-  if (isNotes) {
-    // 메모 컬렉션 루트(/notes)에 대한 PUT, DELETE는 허용하지 않고 오직 :id 경로만 허용
-    const isCollectionRoot = /^\/(?:api\/)?notes\/?$/i.test(path || '')
-      || /^(?:GET|POST|PUT|DELETE)\s+\/(?:api\/)?notes\/?$/i.test(route || '');
-    if (isCollectionRoot && ['PUT', 'DELETE'].includes(method)) {
-      return false;
-    }
-    return ['GET', 'POST', 'PUT', 'DELETE'].includes(method);
-  }
-
-  if (isNotices) {
-    // 공지 구역은 일반 학생에게 조회(GET)만 허용
-    return method === 'GET';
-  }
-
-  return false;
-}
-
-/**
- * 강사 공지 수정/생성/삭제 시도 여부를 판별합니다.
- */
-function isNoticeModification(method, path, route, service) {
-  const isNotice = /notice|announcement/i.test(service || '')
-    || /notice|announcement/i.test(path || '')
-    || /notice|announcement/i.test(route || '');
-
-  const isModification = ['PUT', 'POST', 'PATCH', 'DELETE'].includes(method) || method !== 'GET';
-
-  return isNotice && isModification;
-}
-
-/**
- * 다른 사용자의 메모에 접근하거나 구역을 벗어난 요청인지 판별합니다.
- */
-function isOtherSubjectAccess(request) {
-  const currentSubject = typeof request?.subjectId === 'string' ? request.subjectId.trim() : '';
-  const path = typeof request?.path === 'string' ? request.path : '';
-  const route = typeof request?.route === 'string' ? request.route : '';
+function validateZoneAccess(request) {
   const service = typeof request?.service === 'string' ? request.service : '';
   const method = typeof request?.method === 'string' ? request.method.toUpperCase() : '';
+  const path = typeof request?.path === 'string' ? request.path : '';
+  const route = typeof request?.route === 'string' ? request.route : '';
+  const queryLength = typeof request?.queryLength === 'number' ? request.queryLength : 0;
+  const currentSubject = typeof request?.subjectId === 'string' ? request.subjectId.trim() : '';
 
-  // 1. 요청 주체 자체가 학생 본인(learner_fixture)이 아닌 다른 사용자인 경우 차단
-  if (currentSubject && currentSubject !== 'learner_fixture') {
-    return true;
+  // 1. 쿼리로 기능을 선택하지 않고 자료 ID만 지정 (queryLength > 0 거부)
+  if (queryLength > 0) {
+    return false;
   }
 
-  // 2. 경로 또는 라우트에 다른 사용자/타인 자원 지칭 표기가 있는 경우 차단
+  // 2. 상위 디렉터리 탐색(path traversal) 차단
+  if (path.includes('..') || route.includes('..')) {
+    return false;
+  }
+
+  // 3. :id와 같은 깊이에 export, admin 등 기능 경로를 두지 않음
+  if (/\/(?:export|import|actions?|admin|functions?)(?:\/|$)/i.test(path)
+      || /\/(?:export|import|actions?|admin|functions?)(?:\/|$)/i.test(route)) {
+    return false;
+  }
+
+  // 4. 경로/라우트에 명시적 타인/비인가 자원 지칭 표기가 있는 경우 차단
   if (/(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(path)
-      || /(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(route)) {
-    return true;
+      || /(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(route)
+      || /(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(currentSubject)) {
+    return false;
   }
 
-  // 3. 경로에 사용자/주체 지정 구문이 포함된 경우 현재 주체와 일치하는지 확인
-  const subjectPattern = /\/(?:users?|subjects?|learners?|members?)\/([^/?#]+)/i;
-  const pathMatch = path.match(subjectPattern);
-  if (pathMatch) {
-    const target = pathMatch[1];
-    if (target !== ':id' && target !== ':userId' && target !== ':subjectId' && target !== currentSubject) {
-      return true;
+  // 5. 요청 주체 자체가 학생 본인과 다른 가상 사용자인 경우 차단
+  if (currentSubject && currentSubject !== 'learner_fixture' && /^(?:user|learner|student|member|guest)[0-9a-z_-]+/i.test(currentSubject)) {
+    return false;
+  }
+
+  const cleanPath = path.replace(/^\/api/, '').replace(/\/+$/, '');
+
+  // 6. 메모 구역 (service === 'notes')
+  if (service === 'notes') {
+    // 메모 구역에서 경로는 반드시 /notes 로 시작해야 함 (공지나 관리자 등 다른 구역 경로는 차단)
+    if (!cleanPath.startsWith('/notes')) {
+      return false;
     }
-  }
 
-  const routeMatch = route.match(subjectPattern);
-  if (routeMatch) {
-    const target = routeMatch[1];
-    if (target !== ':id' && target !== ':userId' && target !== ':subjectId' && target !== currentSubject) {
-      return true;
+    // 메모 컬렉션 경로: 목록 조회(GET) 및 새 메모 작성(POST)만 허용
+    if (cleanPath === '/notes') {
+      return ['GET', 'POST'].includes(method);
     }
+
+    // 가상 시험 환경에서 본인 소유 메모 경로: 조회(GET), 수정(PUT), 삭제(DELETE)만 허용
+    if (cleanPath === '/notes/demo') {
+      return ['GET', 'PUT', 'DELETE', 'POST'].includes(method);
+    }
+
+    // 그 외의 모든 메모 경로(/notes/2, /notes/demo-2, /notes/123, UUID 등)는 타인의 메모이므로 차단!
+    return false;
   }
 
-  // 4. 경로에 현재 주체와 다른 가상 주체(예: user02, learner_b 등)가 직접 지정된 경우
-  const userPattern = /\/(?:user|learner|student|member)[0-9a-z_-]+/i;
-  const userMatch = path.match(userPattern);
-  if (userMatch && userMatch[0].slice(1) !== currentSubject) {
-    return true;
+  // 7. 공지 구역 (service === 'notices' 또는 service === 'announcements')
+  if (service === 'notices' || service === 'announcements' || /notice|announcement/i.test(service) || /notice|announcement/i.test(cleanPath)) {
+    // 일반 학생은 공지 수정/생성/삭제 절대 불가 (오직 GET 조회만 허용)
+    if (['PUT', 'POST', 'PATCH', 'DELETE'].includes(method) || method !== 'GET') {
+      return false;
+    }
+
+    // 경로는 반드시 공지 관련 경로여야 함
+    return cleanPath.startsWith('/notices') || cleanPath.startsWith('/announcements');
   }
 
-  // 5. 메모 서비스/경로에서 본인 메모 경로가 아닌 타인 메모 ID(예: /notes/2, /notes/demo-2 등) 접근 차단
-  const isNotesAccess = service === 'notes' || /^\/(?:api\/)?notes(?:\/|$)/i.test(path);
-  if (isNotesAccess && !isOwnNotePath(path, method)) {
-    return true;
-  }
-
+  // 8. 그 외 모든 서비스 및 경로는 미인가 다른 구역(Other Zone)이므로 거부!
   return false;
 }
 
@@ -199,37 +136,8 @@ export async function decide(request) {
     };
   }
 
-  // 3. 엔진이 확인한 메서드, 경로, 서비스 정보 파싱
-  const method = typeof request?.method === 'string' ? request.method.toUpperCase() : '';
-  const path = typeof request?.path === 'string' ? request.path : '';
-  const route = typeof request?.route === 'string' ? request.route : '';
-  const service = typeof request?.service === 'string' ? request.service : '';
-  const queryLength = typeof request?.queryLength === 'number' ? request.queryLength : 0;
-
-  // 4. 구역 규칙 검증: 강사 공지 수정 거부 (일반 학생의 공지 생성/수정/삭제 차단)
-  if (isNoticeModification(method, path, route, service)) {
-    return {
-      schema: 'aleph.decision.v1',
-      requestId: request.requestId,
-      decision: 'deny',
-      reasonCode: 'zone_access_denied',
-      ruleIds: ['zone_isolation', 'zone_rules'],
-    };
-  }
-
-  // 5. 구역 규칙 검증: 다른 사용자의 메모 열람/수정 시도 차단
-  if (isOtherSubjectAccess(request)) {
-    return {
-      schema: 'aleph.decision.v1',
-      requestId: request.requestId,
-      decision: 'deny',
-      reasonCode: 'zone_access_denied',
-      ruleIds: ['zone_isolation', 'zone_rules'],
-    };
-  }
-
-  // 6. 구역 규칙 검증: 정확한 경로 및 알 수 없는 경로/기능 경로/쿼리 선택 거부
-  if (!isKnownRoute(method, path, route, service, queryLength)) {
+  // 3. 구역 규칙 검증: 타인 메모 차단, 공지 수정 차단, 다른 구역(Other Zone) 및 알 수 없는 경로 차단
+  if (!validateZoneAccess(request)) {
     return {
       schema: 'aleph.decision.v1',
       requestId: request.requestId,
