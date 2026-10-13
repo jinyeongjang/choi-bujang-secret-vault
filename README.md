@@ -126,4 +126,45 @@
    npm run bundle
    ```
 
+## 6단계: 등록한 기기만 자료실에 들어옵니다 (기기 등록 기반 판정 규칙)
+
+### 현재 작동하는 기능
+- **판정기 기기 검증 (`src/decider.mjs`)**:
+  - `RULE_IDS`에 `device_registered` 규칙을 등록했습니다.
+  - 요청의 `request.deviceRegistered`가 `true`인 경우에만 `decision: 'allow'`, `reasonCode: 'approved'`로 승인합니다.
+  - 기기가 미등록 상태(`false`)이거나 값이 누락된 경우 `decision: 'deny'`, `reasonCode: 'device_not_registered'`로 접근을 거부합니다.
+
+### 확인 순서
+> [!NOTE]
+> 이번 과정에서는 별도의 접속 프로그램을 로컬에 설치하지 않으며, 미등록 기기 접근 차단 시험은 심판이 원격에서 직접 수행합니다.
+
+1. 로컬 판정기 가상 요청 검증을 실행합니다:
+   ```bash
+   npm run decider:test
+   ```
+2. 검증 항목별 결과를 확인합니다:
+   - **등록 기기의 정상 요청**: `allow` 및 `ruleIds: ['device_registered']`로 통과 (`통과 · 등록 기기의 정상 요청`).
+   - **미등록 기기의 가상 요청**: `deny` 및 `reasonCode: 'device_not_registered'`로 차단 (`통과 · 미등록 기기의 가상 요청`).
+   *(주의: 이 명령은 로컬 가상 요청 기반의 사전 연습이며 실제 심판 접수 판정 증거가 아닙니다.)*
+
+## 보너스 트랙: XDR 경보 탐지 및 판정
+
+### 보너스 xdr-01 (brute-force)
+- **현재 작동하는 기능**:
+  - `xdr/brute-force/decide.mjs`: 단시간 집중 로그인 실패 및 계정 간 비밀번호 스프레잉(Password Spraying) 패턴을 분석하여 `block`, `alert`, `record` 판정과 신뢰도를 반환합니다.
+  - 실행기(`scripts/xdr-run.mjs`)를 통해 `xdr/fixtures/brute-force.json` 경보를 판정하고 `xdr/brute-force/result.json`을 생성합니다.
+
+### 보너스 xdr-02 (web-injection)
+- **현재 작동하는 기능**:
+  - `xdr/web-injection/decide.mjs`: 웹 요청에 포함된 SQL Injection, XSS, Path Traversal 등 웹 주입 공격 형태를 식별하여 `block`, `alert`, `record` 판정과 신뢰도를 반환합니다.
+  - 실행기를 통해 `xdr/fixtures/web-injection.json` 경보를 판정하고 `xdr/web-injection/result.json`을 생성합니다.
+
+### 다시 실행하는 방법
+```bash
+npm run xdr:run -- brute-force
+npm run xdr:run -- web-injection
+node --test test/xdr-run.test.mjs
+```
+
+
 
