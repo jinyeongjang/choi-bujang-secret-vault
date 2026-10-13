@@ -43,16 +43,12 @@ function isOwnNotePath(path, method) {
     return ['GET', 'POST'].includes(method);
   }
 
-  // 본인 기본 가상 메모 경로: 조회(GET), 수정(PUT), 삭제(DELETE), 작성(POST) 허용
+  // 가상 시험 환경에서 학생 본인의 유일한 가상 메모 경로: 조회(GET), 수정(PUT), 삭제(DELETE), 작성(POST) 허용
   if (clean === '/notes/demo') {
     return ['GET', 'PUT', 'DELETE', 'POST'].includes(method);
   }
 
-  // 본인 메모 UUID 형식: 8-4-4-4-12 형태의 UUID
-  if (/^\/notes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean)) {
-    return ['GET', 'PUT', 'DELETE'].includes(method);
-  }
-
+  // 그 외의 모든 메모 ID 경로(UUID, /notes/2, /notes/other 등)는 타인의 메모로 간주
   return false;
 }
 
@@ -130,11 +126,8 @@ function isOtherSubjectAccess(request) {
   const service = typeof request?.service === 'string' ? request.service : '';
   const method = typeof request?.method === 'string' ? request.method.toUpperCase() : '';
 
-  // 1. 요청 주체 자체가 다른 사용자/비인가 가상 주체인 경우 차단
-  if (/(?:other|foreign|attacker|stranger|unauthorized|guest|victim|someone)/i.test(currentSubject)) {
-    return true;
-  }
-  if (currentSubject && currentSubject !== 'learner_fixture' && /^(?:user|learner|student|member)[0-9a-z_-]+/i.test(currentSubject)) {
+  // 1. 요청 주체 자체가 학생 본인(learner_fixture)이 아닌 다른 사용자인 경우 차단
+  if (currentSubject && currentSubject !== 'learner_fixture') {
     return true;
   }
 
