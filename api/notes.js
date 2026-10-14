@@ -31,6 +31,27 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 const PRIVATE_BACKUP_STORE = new Map();
 const BACKUP_OWNER_SENTINEL = '00000000-0000-4000-8000-000000000b4c';
 
+// 11단계: 서버에 등록·승인된 기기 식별자 저장소 (userId -> Set of 16-hex deviceIds)
+const SERVER_REGISTERED_DEVICES = new Map();
+
+function registerServerDevice(userId, deviceId) {
+  if (!userId || !deviceId) return;
+  const uid = String(userId).toLowerCase();
+  const did = String(deviceId).toLowerCase();
+  if (!SERVER_REGISTERED_DEVICES.has(uid)) {
+    SERVER_REGISTERED_DEVICES.set(uid, new Set());
+  }
+  SERVER_REGISTERED_DEVICES.get(uid).add(did);
+}
+
+function isDeviceRegisteredOnServer(userId, deviceId) {
+  if (!userId || !deviceId) return false;
+  const uid = String(userId).toLowerCase();
+  const did = String(deviceId).toLowerCase();
+  const userDevices = SERVER_REGISTERED_DEVICES.get(uid);
+  return !!(userDevices && userDevices.has(did));
+}
+
 function computeSha256(text) {
   return createHash('sha256').update(String(text ?? ''), 'utf8').digest('hex');
 }
@@ -219,6 +240,55 @@ export default async function handler(request, response) {
   })();
   if ((reqBody.resource === 'notices' || pathname.includes('/notices')) && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     return response.status(403).json({ error: 'FORBIDDEN', reason: 'INSTRUCTOR_ROLE_REQUIRED' });
+  }
+
+  // 11단계: 기기 승인 요청 및 기기 등록 확인 핸들러
+  if (reqBody.action === 'device_approval' || reqBody.action === 'check_device') {
+    const rawDeviceId = reqBody.deviceId || request.headers['x-device-id'];
+    const deviceId = typeof rawDeviceId === 'string' ? rawDeviceId.trim().toLowerCase() : '';
+
+    if (!deviceId || !/^[0-9a-f]{16}$/i.test(deviceId)) {
+      return response.status(400).json({
+        approved: false,
+        deviceRegistered: false,
+        error: 'INVALID_DEVICE_ID',
+        message: '기기 식별자는 16자리 16진수 문자열이어야 합니다.',
+      });
+    }
+
+    if (reqBody.action === 'device_approval') {
+      registerServerDevice(identity.userId, deviceId);
+      return response.status(200).json({
+        approved: true,
+        deviceRegistered: true,
+        deviceId,
+        userId: identity.userId,
+        message: '서버가 이 기기를 등록 기기로 확인 및 승인했습니다.',
+        approvedAt: new Date().toISOString(),
+      });
+    }
+
+    const isRegistered = isDeviceRegisteredOnServer(identity.userId, deviceId);
+    return response.status(200).json({
+      approved: isRegistered,
+      deviceRegistered: isRegistered,
+      deviceId,
+      userId: identity.userId,
+      message: isRegistered ? '등록 기기로 확인되었습니다.' : '미승인 기기입니다. 승인 요청이 필요합니다.',
+    });
+  }
+
+  // 11단계: 클라이언트가 x-device-id 헤더를 명시한 경우, 미승인 기기 접근 차단
+  const clientDeviceId = request.headers['x-device-id'];
+  if (clientDeviceId) {
+    const normDevice = String(clientDeviceId).trim().toLowerCase();
+    if (!isDeviceRegisteredOnServer(identity.userId, normDevice)) {
+      return response.status(403).json({
+        error: 'FORBIDDEN',
+        reason: 'DEVICE_NOT_REGISTERED',
+        message: '미승인 기기에서는 보호 자료를 조회하거나 수정할 수 없습니다. 기기 승인이 필요합니다.',
+      });
+    }
   }
 
   const targetDbUrl = supabaseUrl || effectiveConfig.identityProvider?.issuer?.replace(/\/auth\/v1$/, '');

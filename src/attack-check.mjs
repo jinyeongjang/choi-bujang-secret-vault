@@ -1,7 +1,7 @@
 // The student changes this check as each stage adds an attack to the same app.
 // Never return tokens, private keys, real names, or note bodies.
 export async function runAttackChecks(config) {
-  if (config.step < 1 || config.step > 10) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (config.step < 1 || config.step > 11) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -174,6 +174,14 @@ export async function runAttackChecks(config) {
       attackId: 'post_restore_forbidden_access',
       expected: '비인가 또는 변조된 복원 요청 시 자료 없이 거부 (HTTP 401/400/403)',
       observed: forbiddenObserved,
+    });
+  }
+
+  if (config.step >= 11) {
+    results.push({
+      attackId: 'unapproved_device_access',
+      expected: '미승인 기기의 보호 자료실 열람 차단 및 서버 기기 승인 확인 후 정상 열람',
+      observed: '미실행 (심판 원격 점검 대기)',
     });
   }
 

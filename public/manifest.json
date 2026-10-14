@@ -1,0 +1,17 @@
+{
+  "name": "최부장 비밀 금고",
+  "short_name": "비밀 금고",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101a28",
+  "theme_color": "#101a28",
+  "description": "BYTE BACK 가상 자료실 설치형 웹앱",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

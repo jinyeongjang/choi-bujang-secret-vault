@@ -367,6 +367,41 @@
      - **기대 결과**: 사본 재검증 및 diff 사전 확인 통과, 시험 계정 B의 메모 단건 복원 일치 통과, 본문/해시 변조(`HASH_MISMATCH`) 및 타인 소유 복원(`NOT_OWNER`) 차단 통과.
    - **원격 복원 경로(`POST /api/notes/restore`) 점검**: 미실행
 
+## 11단계: 나만의 접속 앱을 완성합니다 (설치형 웹앱 설정 및 기기 승인 상태 연동)
+
+### 현재 작동하는 기능
+- **설치형 웹앱 매니페스트 및 안내 (`public/manifest.json`, `public/icon.svg`)**:
+  - PWA 표준 `manifest.json` 설정(앱 이름: `최부장의 비공개 가상 자료실`, 테마 색상, 독립 실행 모드 `standalone`)과 앱 아이콘을 추가했습니다.
+  - 네트워크 연결이 끊긴 경우를 대비한 오프라인 안내 문구("오프라인 상태에서는 보안을 위해 가상 자료실을 열 수 없습니다.")를 명시했습니다.
+  - 설치 표시나 버튼 조작만으로 기기 확인이 끝난 것으로 간주하지 않으며, 별도의 접속 프로그램을 로컬에 강제 설치하지 않습니다.
+- **기기 승인 상태 표시 및 서버 승인 제어 (`public/index.html`, `api/notes.js`)**:
+  - 화면 상단에 16자리 소문자 16진수 기기 식별자(`deviceId`)와 기기 승인 상태 배지를 표시합니다.
+  - 기기 개인키나 민감 인증 정보를 브라우저 로컬 저장소(`localStorage`/`sessionStorage`)에 저장하지 않습니다.
+  - 단순 버튼 클릭으로 권한을 획득하지 못하며, 서버(`api/notes.js`)가 해당 기기를 등록 기기로 확인·승인하기 전에는 보호 자료실을 화면에 노출하지 않고 API 호출 시 `403 FORBIDDEN (DEVICE_NOT_REGISTERED)`으로 거부합니다.
+  - 서버 승인이 완료된 기기에 대해서만 가상 자료실이 열리고 기존 정상 CRUD 조회가 유지됩니다.
+- **기존 보호 요청 및 판정 규칙 유지**:
+  - 토큰 인증(Bearer), Supabase DB RLS, 단일 접점(BFF), 판정기 계약 준수(`src/decider.mjs`), 복합 이상 접속 추가 확인(`step_up`), 구역 분리(`zone_isolation`, `zone_rules`), 가상 사건 탐지(`src/detect.mjs`), 안전 사본 해시 대조 단건 복원(`src/restore.mjs`) 등 기존 보호 및 거부 체계가 새 화면에서도 온전히 유지됩니다.
+
+### 다시 실행하는 방법
+1. **로컬 빌드 검증**:
+   ```bash
+   npm run build -- --local
+   ```
+2. **판정기 계약 및 단위 검증**:
+   ```bash
+   npm run decider:test
+   ```
+   - **정상 결과**: 등록 기기의 정상 요청 통과, 미등록 기기 차단 통과.
+3. **가상 사건 탐지 및 복원 검증**:
+   ```bash
+   npm run detect:test
+   npm run restore:test
+   ```
+4. **제출 묶음 생성 및 학생 자체 점검**:
+   ```bash
+   npm run bundle
+   ```
+
 ## 보너스 트랙: XDR 경보 탐지 및 판정
 
 ### 보너스 xdr-01 (brute-force)
