@@ -8,60 +8,44 @@
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <meta name="theme-color" content="#101a28">
   <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
-    body { margin: 0; min-height: 100vh; background: #101a28; color: #ecf4ff; }
-    main { max-width: 760px; margin: 0 auto; padding: 44px 22px 64px; }
-    .eyebrow { color: #8ad8df; font-size: 14px; font-weight: 700; letter-spacing: .08em; }
-    h1 { margin: 16px 0; font-size: clamp(30px, 7vw, 48px); line-height: 1.2; }
-    p { font-size: 17px; line-height: 1.7; color: #bfd0e5; }
-    .notice { margin: 26px 0; padding: 18px; border: 1px solid #3c546e; border-radius: 14px; color: #d0e4ff; background: #132235; }
-    .auth-card, .crud-card { margin: 24px 0; padding: 22px; border: 1px solid #3c546e; border-radius: 14px; background: #132235; }
-    .auth-card h2, .crud-card h2 { margin: 0 0 14px; font-size: 20px; color: #8ad8df; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .form-group label { font-size: 14px; color: #bfd0e5; }
-    .form-group input, .form-group textarea { padding: 10px 14px; border: 1px solid #4a627a; border-radius: 8px; background: #0b1420; color: #ecf4ff; font-size: 15px; font-family: inherit; }
-    .form-group textarea { resize: vertical; min-height: 60px; }
-    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #8ad8df; }
-    .btn { padding: 9px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
-    .btn-primary { background: #2f81f7; color: #fff; }
-    .btn-primary:hover { background: #388bfd; }
-    .btn-secondary { background: #30363d; color: #c9d1d9; border: 1px solid #8b949e; }
-    .btn-secondary:hover { background: #3c444d; }
-    .btn-danger { background: #a42c3d; color: #fff; }
-    .btn-danger:hover { background: #c53b4f; }
-    .btn-sm { padding: 6px 12px; font-size: 13px; }
-    .auth-error { margin-top: 12px; padding: 10px 14px; border: 1px solid #d07384; border-radius: 8px; background: #612a3533; color: #ff9b9b; font-size: 14px; }
-    .action-msg { margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; display: none; }
-    .action-msg.error { background: #612a3544; border: 1px solid #d07384; color: #ff9b9b; }
-    .action-msg.success { background: #1f4a3544; border: 1px solid #3fb950; color: #7ee787; }
-    .user-badge { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 8px; background: #1f334a; margin-bottom: 12px; }
-    .user-badge span { color: #8ad8df; font-weight: 600; }
-    ul { list-style: none; display: grid; gap: 14px; padding: 0; }
-    li { border: 1px solid #51667c; border-radius: 14px; padding: 17px 19px; background: #1a2a3d; }
-    .note-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
-    .note-title { font-size: 18px; font-weight: 700; color: #ecf4ff; margin: 0; }
-    .note-body { font-size: 15px; color: #bfd0e5; white-space: pre-wrap; margin: 0 0 12px; line-height: 1.6; }
-    .note-actions { display: flex; gap: 8px; justify-content: flex-end; }
-    .note-edit-form { display: flex; flex-direction: column; gap: 10px; }
-    .note-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
-    .resource-tag { display: inline-flex; align-items: center; padding: 2px 8px; font-size: 12px; font-weight: 600; border-radius: 6px; background: #1f334a; color: #8ad8df; border: 1px solid #3c546e; }
-
-    /* 11단계: 설치형 웹앱, 기기 상태, 오프라인 안내 스타일 */
-    .device-card { margin: 24px 0; padding: 22px; border: 1px solid #3c546e; border-radius: 14px; background: #132235; }
-    .device-status-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-    .status-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #1f334a; gap: 12px; }
-    .status-label { color: #8b949e; flex-shrink: 0; }
-    .status-value { color: #ecf4ff; font-weight: 500; text-align: right; }
-    .status-badge-warning { display: inline-block; padding: 3px 10px; border-radius: 6px; background: #d2992222; border: 1px solid #d29922; color: #e3b341; font-size: 12px; font-weight: 600; }
-    .status-badge-success { display: inline-block; padding: 3px 10px; border-radius: 6px; background: #23863622; border: 1px solid #2ea043; color: #3fb950; font-size: 12px; font-weight: 600; }
-    .status-badge-danger { display: inline-block; padding: 3px 10px; border-radius: 6px; background: #da363322; border: 1px solid #f85149; color: #ff7b72; font-size: 12px; font-weight: 600; }
-    .device-caution { padding: 14px 16px; border-radius: 8px; background: #162c46; border: 1px solid #284b6f; font-size: 13px; color: #bfd0e5; }
-    .network-banner { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-    .network-banner.online { background: #1f4a3522; border: 1px solid #3fb950; color: #7ee787; }
-    .network-banner.offline { background: #612a3533; border: 1px solid #d07384; color: #ff9b9b; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-    .network-banner.online .status-dot { background: #3fb950; }
-    .network-banner.offline .status-dot { background: #ff9b9b; }
+    :root{color-scheme:dark;font-family:system-ui,sans-serif}
+    body{margin:0;min-height:100vh;background:#101a28;color:#ecf4ff}
+    main{max-width:760px;margin:0 auto;padding:28px 18px 48px}
+    .eyebrow{color:#8ad8df;font-size:13px;font-weight:700}
+    h1{margin:10px 0;font-size:30px}
+    p{font-size:15px;line-height:1.6;color:#bfd0e5}
+    .card{margin:16px 0;padding:16px;border:1px solid #3c546e;border-radius:10px;background:#132235}
+    .card h2{margin:0 0 10px;font-size:18px;color:#8ad8df}
+    .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+    .form-group label{font-size:13px;color:#bfd0e5}
+    .form-group input,.form-group textarea{padding:8px 10px;border:1px solid #4a627a;border-radius:6px;background:#0b1420;color:#ecf4ff;font:inherit;font-size:14px}
+    .form-group textarea{min-height:50px;resize:vertical}
+    .btn{padding:6px 12px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+    .btn-primary{background:#2f81f7;color:#fff}
+    .btn-secondary{background:#30363d;color:#c9d1d9;border:1px solid #8b949e}
+    .btn-danger{background:#a42c3d;color:#fff}
+    .btn-sm{padding:4px 8px;font-size:12px}
+    .auth-error,.action-msg{margin-top:8px;padding:6px 10px;border-radius:6px;font-size:13px}
+    .auth-error,.action-msg.error{background:#612a3533;border:1px solid #d07384;color:#ff9b9b}
+    .action-msg.success{background:#1f4a3544;border:1px solid #3fb950;color:#7ee787}
+    .user-badge{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:6px;background:#1f334a}
+    ul{list-style:none;display:grid;gap:10px;padding:0;margin:0}
+    li{border:1px solid #51667c;border-radius:8px;padding:12px;background:#1a2a3d}
+    .note-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+    .note-title{font-size:15px;font-weight:700;margin:0}
+    .note-body{font-size:14px;color:#bfd0e5;white-space:pre-wrap;margin:0 0 8px;line-height:1.5}
+    .note-actions,.note-edit-actions{display:flex;gap:6px;justify-content:flex-end}
+    .resource-tag{display:inline-flex;align-items:center;padding:2px 6px;font-size:11px;font-weight:600;border-radius:4px;background:#1f334a;color:#8ad8df;border:1px solid #3c546e}
+    .status-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid #1f334a}
+    .status-badge-warning{display:inline-block;padding:2px 7px;border-radius:4px;background:#d2992222;border:1px solid #d29922;color:#e3b341;font-size:12px;font-weight:600}
+    .status-badge-success{display:inline-block;padding:2px 7px;border-radius:4px;background:#23863622;border:1px solid #2ea043;color:#3fb950;font-size:12px;font-weight:600}
+    .status-badge-danger{display:inline-block;padding:2px 7px;border-radius:4px;background:#da363322;border:1px solid #f85149;color:#ff7b72;font-size:12px;font-weight:600}
+    .network-banner{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:6px;margin-bottom:14px;font-size:13px}
+    .network-banner.online{background:#1f4a3522;border:1px solid #3fb950;color:#7ee787}
+    .network-banner.offline{background:#612a3533;border:1px solid #d07384;color:#ff9b9b}
+    .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+    .network-banner.online .status-dot{background:#3fb950}
+    .network-banner.offline .status-dot{background:#ff9b9b}
   </style>
 </head>
 <body>
@@ -70,66 +54,40 @@
     <h1>최부장 비밀 금고</h1>
     <p>지금은 보호 장치를 단계별로 구축하는 상태입니다. 아래 기록은 실습을 위한 가상 자료입니다.</p>
 
-    <!-- 네트워크 및 오프라인 상태 배너 -->
     <div id="network-status-banner" class="network-banner online">
       <span id="network-status-dot" class="status-dot"></span>
       <span id="network-status-text">온라인 연결됨 · 보안 세션 정상 작동 중</span>
     </div>
 
-    <!-- 기기 승인 및 접속 앱 상태 안내 카드 -->
-    <section class="device-card" aria-labelledby="device-status-title">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <h2 id="device-status-title" style="margin: 0; font-size: 18px; color: #8ad8df;">기기 승인 및 접속 앱 상태</h2>
+    <section class="card" aria-labelledby="device-status-title">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h2 id="device-status-title" style="margin:0;font-size:17px;">기기 승인 및 접속 앱 상태</h2>
         <span class="resource-tag" id="app-badge">앱: 최부장 비밀 금고</span>
       </div>
-      <div class="device-status-grid">
-        <div class="status-row">
-          <span class="status-label">앱 이름</span>
-          <span class="status-value">최부장 비밀 금고 (BYTE BACK 보안 자료실)</span>
+      <div>
+        <div class="status-row"><span>앱 이름</span><span>최부장 비밀 금고 (BYTE BACK 보안 자료실)</span></div>
+        <div class="status-row"><span>현재 기기 식별자</span><code id="current-device-id-display">확인 중...</code></div>
+        <div class="status-row"><span>기기 승인 상태</span><span class="status-badge-warning" id="device-approval-badge">미승인 기기 (보호 자료 접근 차단됨)</span></div>
+        <div class="status-row"><span>오프라인 안내</span><span id="offline-guidance-text">온라인 연결 필요 (오프라인 상태에서는 보안 정책 검증 및 자료 조회가 불가합니다)</span></div>
+      </div>
+      <div style="margin:12px 0 8px;padding:10px;background:#0d1825;border-radius:6px;border:1px solid #1f334a;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <strong style="font-size:13px;color:#ecf4ff;">서버 기기 등록 및 승인 요청</strong>
+          <div style="font-size:12px;color:#8b949e;">서버가 이 기기를 등록 기기로 확인·승인한 뒤에만 보호 자료실이 열립니다.</div>
         </div>
-        <div class="status-row">
-          <span class="status-label">현재 기기 식별자</span>
-          <span class="status-value"><code id="current-device-id-display">확인 중...</code></span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">기기 승인 상태</span>
-          <span class="status-badge-warning" id="device-approval-badge">미승인 기기 (보호 자료 접근 차단됨)</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">오프라인 안내</span>
-          <span class="status-value" id="offline-guidance-text">온라인 연결 필요 (오프라인 상태에서는 보안 정책 검증 및 자료 조회가 불가합니다)</span>
+        <div style="display:flex;gap:6px;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-check-device">승인 상태 재확인</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-request-device-approval">기기 승인 요청</button>
         </div>
       </div>
-
-      <!-- 기기 승인 요청 및 결과 표시 영역 -->
-      <div class="device-action-box" style="margin: 16px 0; padding: 14px; background: #0d1825; border-radius: 8px; border: 1px solid #1f334a;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <span style="font-size: 14px; font-weight: 600; color: #ecf4ff;">서버 기기 등록 및 승인 요청</span>
-            <p style="margin: 4px 0 0; font-size: 12px; color: #8b949e;">서버가 이 기기를 등록 기기로 확인·승인한 뒤에만 보호 자료실이 열립니다.</p>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-check-device">승인 상태 재확인</button>
-            <button type="button" class="btn btn-primary btn-sm" id="btn-request-device-approval">기기 승인 요청</button>
-          </div>
-        </div>
-        <div id="device-approval-result" style="display: none; margin-top: 12px; padding: 10px 12px; border-radius: 6px; font-size: 13px;" role="status"></div>
-      </div>
-
-      <div class="device-caution">
-        <strong style="color: #8ad8df;">⚠️ 기기 확인 주의사항:</strong>
-        <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.6; color: #d0e4ff;">
-          웹앱 설치 표시(홈 화면 추가 또는 브라우저 설치 배지)나 단순 승인 버튼 클릭만으로 기기 권한이 부여되지 않습니다.
-          기기 개인키를 브라우저 저장소에 보관하지 않으며, 서버(/api/notes)가 이 기기를 등록 기기로 확인하고 승인한 뒤에만 보호 자료실이 열립니다.
-        </p>
-      </div>
+      <div id="device-approval-result" style="display:none;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:13px;" role="status"></div>
+      <p style="margin:8px 0 0;font-size:12px;color:#8ad8df;">
+        ⚠️ 웹앱 설치 표시만으로 기기 확인이 끝났다고 보지 않으며, 기기 개인키를 브라우저 저장소에 넣지 않습니다. 서버가 이 기기를 등록 기기로 확인한 뒤에만 보호 자료실이 열립니다.
+      </p>
     </section>
 
-    <!-- Supabase Auth 로그인/로그아웃 카드 -->
-    <section class="auth-card" aria-labelledby="auth-title">
+    <section class="card" aria-labelledby="auth-title">
       <h2 id="auth-title">사용자 인증</h2>
-
-      <!-- 비로그인 상태 화면 -->
       <div id="auth-logged-out-view">
         <form id="login-form">
           <div class="form-group">
@@ -142,48 +100,33 @@
           </div>
           <button type="submit" class="btn btn-primary" id="btn-login">로그인</button>
         </form>
-        <div id="auth-error" class="auth-error" style="display: none;" role="alert"></div>
+        <div id="auth-error" class="auth-error" style="display:none;" role="alert"></div>
       </div>
-
-      <!-- 로그인 상태 화면 -->
-      <div id="auth-logged-in-view" style="display: none;">
+      <div id="auth-logged-in-view" style="display:none;">
         <div class="user-badge">
-          <div>
-            <div style="font-size: 13px; color: #8b949e;">인증된 사용자</div>
-            <span id="user-email"></span>
-          </div>
-          <button type="button" class="btn btn-secondary" id="btn-logout">로그아웃</button>
+          <div><div style="font-size:12px;color:#8b949e;">인증된 사용자</div><span id="user-email" style="color:#8ad8df;font-weight:600;"></span></div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-logout">로그아웃</button>
         </div>
       </div>
     </section>
 
-    <!-- 강사 공지 영역 (자원 ID: notices) -->
-    <section class="notice" aria-labelledby="notice-title" data-resource-id="notices">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <strong id="notice-title" style="color: #8ad8df; font-size: 16px;">강사 공지</strong>
+    <section class="card" aria-labelledby="notice-title" data-resource-id="notices">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong id="notice-title" style="color:#8ad8df;font-size:16px;">강사 공지</strong>
         <span class="resource-tag">자원 ID: notices</span>
       </div>
-      <div>로그인 사용자 토큰(Bearer)으로 보호되는 가상 메모 CRUD 시스템입니다. 자료 구역별 분리가 적용됩니다.</div>
+      <div style="font-size:14px;color:#bfd0e5;">로그인 사용자 토큰(Bearer)으로 보호되는 가상 메모 CRUD 시스템입니다. 자료 구역별 분리가 적용됩니다.</div>
     </section>
 
-    <!-- 기기 미승인 시 표시되는 보호 잠금 안내 카드 -->
-    <section class="device-card" id="device-unapproved-notice" style="border-color: #d29922; background: #1c1d18;">
-      <div style="display: flex; align-items: flex-start; gap: 12px;">
-        <span style="font-size: 24px; line-height: 1;">🔒</span>
-        <div>
-          <h3 style="margin: 0 0 6px; font-size: 16px; color: #e3b341;">보호 자료실 잠김 (기기 미승인 상태)</h3>
-          <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #c9d1d9;">
-            현재 기기는 서버에 등록 기기로 승인되지 않아 보호 자료가 표시되지 않습니다.<br>
-            로그인 후 상단의 <strong>[기기 승인 요청]</strong> 버튼을 눌러 서버로부터 등록 기기 승인을 받아야만 기존 자료실이 열립니다.
-          </p>
-        </div>
-      </div>
+    <section class="card" id="device-unapproved-notice" style="border-color:#d29922;background:#1c1d18;">
+      <h3 style="margin:0 0 6px;font-size:15px;color:#e3b341;">🔒 보호 자료실 잠김 (기기 미승인 상태)</h3>
+      <p style="margin:0;font-size:13px;color:#c9d1d9;">
+        현재 기기는 서버에 등록 기기로 승인되지 않아 보호 자료가 표시되지 않습니다. 로그인 후 상단의 <strong>[기기 승인 요청]</strong>을 완료해야 자료실이 열립니다.
+      </p>
     </section>
 
-    <!-- 보호 자료실 영역 (서버 기기 승인 + 로그인 완료 시 열림) -->
-    <div id="vault-protected-area" style="display: none;">
-      <!-- 가상 메모 추가 카드 (로그인 시 표시) -->
-      <section class="crud-card" id="add-note-card" style="display: none;" aria-labelledby="add-note-title">
+    <div id="vault-protected-area" style="display:none;">
+      <section class="card" id="add-note-card" style="display:none;" aria-labelledby="add-note-title">
         <h2 id="add-note-title">가상 메모 추가</h2>
         <form id="add-note-form">
           <div class="form-group">
@@ -194,15 +137,14 @@
             <label for="new-note-body">메모 내용</label>
             <textarea id="new-note-body" placeholder="내용을 입력하세요" required></textarea>
           </div>
-          <button type="submit" class="btn btn-primary" id="btn-add-note">메모 추가</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btn-add-note">메모 추가</button>
         </form>
-        <div id="add-note-msg" class="action-msg" role="status"></div>
+        <div id="add-note-msg" class="action-msg" style="display:none;" role="status"></div>
       </section>
 
-      <!-- 내 자료실의 메모 영역 (자원 ID: notes) -->
       <section id="notes-section" aria-labelledby="notes-section-title" data-resource-id="notes">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 14px;">
-          <h2 id="notes-section-title" style="margin: 0; font-size: 20px; color: #8ad8df;">내 자료실 메모</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px;">
+          <h2 id="notes-section-title" style="margin:0;font-size:18px;color:#8ad8df;">내 자료실 메모</h2>
           <span class="resource-tag">자원 ID: notes</span>
         </div>
         <ul id="notes" aria-live="polite"></ul>
@@ -211,7 +153,6 @@
   </main>
 
   <script type="module">
-    // 클라이언트는 공개 키 없이 서버 함수(/api/notes)를 통해 인증 및 자료 통신을 수행합니다.
     const loggedOutView = document.getElementById('auth-logged-out-view');
     const loggedInView = document.getElementById('auth-logged-in-view');
     const addNoteCard = document.getElementById('add-note-card');
@@ -221,19 +162,17 @@
     const errorEl = document.getElementById('auth-error');
     const userEmailEl = document.getElementById('user-email');
     const logoutBtn = document.getElementById('btn-logout');
-
     const addNoteForm = document.getElementById('add-note-form');
     const newNoteTitleInput = document.getElementById('new-note-title');
     const newNoteBodyInput = document.getElementById('new-note-body');
     const addNoteMsg = document.getElementById('add-note-msg');
 
-    // 11단계: 클라이언트 기기 식별자 (브라우저 저장소에 넣지 않고 메모리에서 안전하게 관리)
+    // 기기 식별자는 메모리 변수로만 관리 (브라우저 저장소 미사용)
     function generateDeviceId() {
       const arr = new Uint8Array(8);
       crypto.getRandomValues(arr);
       return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
     }
-
     const currentDeviceId = generateDeviceId();
     const deviceIdDisplay = document.getElementById('current-device-id-display');
     if (deviceIdDisplay) deviceIdDisplay.textContent = currentDeviceId;
@@ -248,22 +187,24 @@
     const btnRequestApproval = document.getElementById('btn-request-device-approval');
     const btnCheckDevice = document.getElementById('btn-check-device');
 
-    function showError(message) {
-      errorEl.textContent = message;
-      errorEl.style.display = 'block';
-    }
-
-    function clearError() {
-      errorEl.textContent = '';
-      errorEl.style.display = 'none';
-    }
-
+    function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+    function clearError() { errorEl.textContent = ''; errorEl.style.display = 'none'; }
     function showAddMsg(msg, isError = false) {
       addNoteMsg.textContent = msg;
-      addNoteMsg.className = `action-msg ${isError ? 'error' : 'success'}`;
+      addNoteMsg.className = 'action-msg ' + (isError ? 'error' : 'success');
       addNoteMsg.style.display = 'block';
       setTimeout(() => { addNoteMsg.style.display = 'none'; }, 4000);
     }
+
+    const api = (url, opt = {}) => fetch(url, {
+      ...opt,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(currentSession?.access_token ? { Authorization: 'Bearer ' + currentSession.access_token } : {}),
+        'x-device-id': currentDeviceId,
+        ...(opt.headers || {})
+      }
+    });
 
     function updateVaultVisibility() {
       const user = currentSession?.user ?? null;
@@ -275,7 +216,7 @@
         if (vaultProtectedArea) vaultProtectedArea.style.display = 'none';
         if (addNoteCard) addNoteCard.style.display = 'none';
         const list = document.querySelector('#notes');
-        if (list && !isDeviceApproved) list.replaceChildren(); // 승인 전에는 자료가 없음
+        if (list && !isDeviceApproved) list.replaceChildren();
         if (deviceUnapprovedNotice) deviceUnapprovedNotice.style.display = 'block';
       }
     }
@@ -283,33 +224,16 @@
     function updateApprovalUI(approved, message = '', isError = false) {
       isDeviceApproved = Boolean(approved);
       if (deviceApprovalBadge) {
-        if (isDeviceApproved) {
-          deviceApprovalBadge.className = 'status-badge-success';
-          deviceApprovalBadge.textContent = '✅ 서버 등록 기기 승인됨 (접근 허가)';
-        } else {
-          deviceApprovalBadge.className = isError ? 'status-badge-danger' : 'status-badge-warning';
-          deviceApprovalBadge.textContent = '미승인 기기 (보호 자료 접근 차단됨)';
-        }
+        deviceApprovalBadge.className = isDeviceApproved ? 'status-badge-success' : (isError ? 'status-badge-danger' : 'status-badge-warning');
+        deviceApprovalBadge.textContent = isDeviceApproved ? '✅ 서버 등록 기기 승인됨 (접근 허가)' : '미승인 기기 (보호 자료 접근 차단됨)';
       }
       if (deviceApprovalResult) {
         if (message) {
           deviceApprovalResult.style.display = 'block';
-          if (isDeviceApproved) {
-            deviceApprovalResult.style.background = '#1f4a3522';
-            deviceApprovalResult.style.border = '1px solid #3fb950';
-            deviceApprovalResult.style.color = '#7ee787';
-            deviceApprovalResult.textContent = `[서버 승인 확인] ${message}`;
-          } else if (isError) {
-            deviceApprovalResult.style.background = '#612a3533';
-            deviceApprovalResult.style.border = '1px solid #d07384';
-            deviceApprovalResult.style.color = '#ff9b9b';
-            deviceApprovalResult.textContent = `[서버 확인 오류] ${message}`;
-          } else {
-            deviceApprovalResult.style.background = '#d2992222';
-            deviceApprovalResult.style.border = '1px solid #d29922';
-            deviceApprovalResult.style.color = '#e3b341';
-            deviceApprovalResult.textContent = `[서버 확인] ${message}`;
-          }
+          deviceApprovalResult.style.background = isDeviceApproved ? '#1f4a3522' : (isError ? '#612a3533' : '#d2992222');
+          deviceApprovalResult.style.border = '1px solid ' + (isDeviceApproved ? '#3fb950' : (isError ? '#d07384' : '#d29922'));
+          deviceApprovalResult.style.color = isDeviceApproved ? '#7ee787' : (isError ? '#ff9b9b' : '#e3b341');
+          deviceApprovalResult.textContent = '[서버 확인] ' + message;
         } else {
           deviceApprovalResult.style.display = 'none';
         }
@@ -322,77 +246,51 @@
         updateApprovalUI(false, showFeedback ? '로그인 후 기기 승인 상태를 확인할 수 있습니다.' : '', false);
         return;
       }
-
       try {
-        const res = await fetch('/api/notes', {
+        const res = await api('/api/notes', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentSession.access_token}`,
-          },
           body: JSON.stringify({ action: 'check_device', deviceId: currentDeviceId }),
         });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || errData.error || `HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
-        if (data.approved && data.deviceRegistered) {
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.approved && data.deviceRegistered) {
           updateApprovalUI(true, showFeedback ? data.message : '', false);
           await loadNotes(currentSession);
         } else {
           updateApprovalUI(false, showFeedback ? (data.message || '미승인 기기입니다.') : '', false);
         }
       } catch (err) {
-        updateApprovalUI(false, showFeedback ? `상태 확인 실패: ${err.message}` : '', true);
+        updateApprovalUI(false, showFeedback ? '상태 확인 실패: ' + err.message : '', true);
       }
     }
 
     btnRequestApproval?.addEventListener('click', async () => {
       if (!currentSession?.access_token) {
-        updateApprovalUI(false, '기기 승인을 요청하려면 먼저 사용자 로그인을 완료해 주세요.', false);
+        updateApprovalUI(false, '기기 승인을 요청하려면 먼저 로그인을 완료해 주세요.', false);
         return;
       }
-
       try {
         btnRequestApproval.disabled = true;
         btnRequestApproval.textContent = '승인 확인 중...';
-
-        const res = await fetch('/api/notes', {
+        const res = await api('/api/notes', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentSession.access_token}`,
-          },
           body: JSON.stringify({ action: 'device_approval', deviceId: currentDeviceId }),
         });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || errData.error || `HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
-        if (data.approved && data.deviceRegistered) {
-          const timeStr = data.approvedAt ? new Date(data.approvedAt).toLocaleTimeString() : '';
-          updateApprovalUI(true, `${data.message} (기기 식별자: ${data.deviceId}${timeStr ? `, 승인 일시: ${timeStr}` : ''})`, false);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.approved && data.deviceRegistered) {
+          updateApprovalUI(true, data.message + ' (기기: ' + data.deviceId + ')', false);
           await loadNotes(currentSession);
         } else {
-          throw new Error('서버 기기 승인이 완료되지 않았습니다.');
+          throw new Error(data.message || data.error || '서버 기기 승인 실패');
         }
       } catch (err) {
-        updateApprovalUI(false, `승인 요청 실패: ${err.message}`, true);
+        updateApprovalUI(false, '승인 요청 실패: ' + err.message, true);
       } finally {
         btnRequestApproval.disabled = false;
         btnRequestApproval.textContent = '기기 승인 요청';
       }
     });
 
-    btnCheckDevice?.addEventListener('click', () => {
-      checkServerDeviceApproval(true);
-    });
+    btnCheckDevice?.addEventListener('click', () => { checkServerDeviceApproval(true); });
 
     function updateAuthUI(session) {
       currentSession = session;
@@ -411,48 +309,34 @@
       updateVaultVisibility();
     }
 
-    // 가상 메모 목록 로드 함수
     async function loadNotes(session) {
       const list = document.querySelector('#notes');
       if (!isDeviceApproved) {
-        if (list) list.replaceChildren(); // 승인 전에는 자료가 없음
+        if (list) list.replaceChildren();
         return;
       }
       if (!session?.access_token) {
         if (list) {
           const item = document.createElement('li');
-          item.textContent = '인증이 필요합니다. 로그인 후 본인의 가상 메모를 확인하고 관리할 수 있습니다.';
+          item.textContent = '인증이 필요합니다. 로그인 후 가상 메모를 확인하세요.';
           list.replaceChildren(item);
         }
         return;
       }
 
       try {
-        const response = await fetch('/api/notes', {
-          cache: 'no-store',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'x-device-id': currentDeviceId,
-          },
-        });
-
+        const response = await api('/api/notes', { method: 'GET', cache: 'no-store' });
         if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error('인증이 필요합니다. 로그인 후 자료를 열람할 수 있습니다. (401 Unauthorized)');
-          }
-          throw new Error(`자료 조회 실패 (HTTP ${response.status})`);
+          throw new Error(response.status === 401 ? '인증이 필요합니다. (401 Unauthorized)' : '조회 실패 (HTTP ' + response.status + ')');
         }
-
         const data = await response.json();
         const notes = Array.isArray(data) ? data : (data.notes || []);
-
         if (notes.length === 0) {
           const item = document.createElement('li');
-          item.textContent = '등록된 메모가 없습니다. 위 입력창에서 새 메모를 추가해 보세요.';
+          item.textContent = '등록된 메모가 없습니다.';
           list.replaceChildren(item);
           return;
         }
-
         list.replaceChildren(...notes.map(note => renderNoteItem(note, session)));
       } catch (error) {
         const item = document.createElement('li');
@@ -466,122 +350,61 @@
       item.dataset.id = note.id;
       item.dataset.resourceId = 'notes';
 
-      const viewContainer = document.createElement('div');
+      item.innerHTML = `
+        <div class="note-view">
+          <div class="note-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <h3 class="note-title"></h3>
+              <span class="resource-tag">자원 ID: notes</span>
+            </div>
+          </div>
+          <p class="note-body"></p>
+          <div class="note-actions">
+            <button type="button" class="btn btn-secondary btn-sm btn-edit">수정</button>
+            <button type="button" class="btn btn-danger btn-sm btn-del">삭제</button>
+          </div>
+        </div>
+        <div class="note-edit-form" style="display:none;flex-direction:column;gap:8px;">
+          <div class="form-group"><label>수정할 제목</label><input type="text" class="edit-title"></div>
+          <div class="form-group"><label>수정할 내용</label><textarea class="edit-body"></textarea></div>
+          <div class="note-edit-actions">
+            <button type="button" class="btn btn-primary btn-sm btn-save">저장</button>
+            <button type="button" class="btn btn-secondary btn-sm btn-cancel">취소</button>
+          </div>
+        </div>
+      `;
 
-      const header = document.createElement('div');
-      header.className = 'note-header';
-      const titleWrapper = document.createElement('div');
-      titleWrapper.style.display = 'flex';
-      titleWrapper.style.alignItems = 'center';
-      titleWrapper.style.gap = '8px';
-      const title = document.createElement('h3');
-      title.className = 'note-title';
-      title.textContent = note.title;
-      const resTag = document.createElement('span');
-      resTag.className = 'resource-tag';
-      resTag.style.fontSize = '11px';
-      resTag.style.padding = '1px 6px';
-      resTag.textContent = '자원 ID: notes';
-      titleWrapper.append(title, resTag);
-      header.appendChild(titleWrapper);
+      item.querySelector('.note-title').textContent = note.title;
+      item.querySelector('.note-body').textContent = note.body ?? note.content ?? '';
 
-      const body = document.createElement('p');
-      body.className = 'note-body';
-      body.textContent = note.body ?? note.content ?? '';
+      const viewDiv = item.querySelector('.note-view');
+      const editDiv = item.querySelector('.note-edit-form');
+      const editTitle = item.querySelector('.edit-title');
+      const editBody = item.querySelector('.edit-body');
+      editTitle.value = note.title;
+      editBody.value = note.body ?? note.content ?? '';
 
-      const actions = document.createElement('div');
-      actions.className = 'note-actions';
-
-      const editBtn = document.createElement('button');
-      editBtn.type = 'button';
-      editBtn.className = 'btn btn-secondary btn-sm';
-      editBtn.textContent = '수정';
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.type = 'button';
-      deleteBtn.className = 'btn btn-danger btn-sm';
-      deleteBtn.textContent = '삭제';
-
-      actions.append(editBtn, deleteBtn);
-      viewContainer.append(header, body, actions);
-
-      // 수정 폼
-      const editFormContainer = document.createElement('div');
-      editFormContainer.className = 'note-edit-form';
-      editFormContainer.style.display = 'none';
-
-      const editTitleGroup = document.createElement('div');
-      editTitleGroup.className = 'form-group';
-      const editTitleLabel = document.createElement('label');
-      editTitleLabel.textContent = '수정할 제목';
-      const editTitleInput = document.createElement('input');
-      editTitleInput.type = 'text';
-      editTitleInput.value = note.title;
-      editTitleGroup.append(editTitleLabel, editTitleInput);
-
-      const editBodyGroup = document.createElement('div');
-      editBodyGroup.className = 'form-group';
-      const editBodyLabel = document.createElement('label');
-      editBodyLabel.textContent = '수정할 내용';
-      const editBodyInput = document.createElement('textarea');
-      editBodyInput.value = note.body ?? note.content ?? '';
-      editBodyGroup.append(editBodyLabel, editBodyInput);
-
-      const editActions = document.createElement('div');
-      editActions.className = 'note-edit-actions';
-
-      const saveBtn = document.createElement('button');
-      saveBtn.type = 'button';
-      saveBtn.className = 'btn btn-primary btn-sm';
-      saveBtn.textContent = '저장';
-
-      const cancelBtn = document.createElement('button');
-      cancelBtn.type = 'button';
-      cancelBtn.className = 'btn btn-secondary btn-sm';
-      cancelBtn.textContent = '취소';
-
-      editActions.append(saveBtn, cancelBtn);
-      editFormContainer.append(editTitleGroup, editBodyGroup, editActions);
-
-      item.append(viewContainer, editFormContainer);
-
-      // 수정 버튼 클릭 이벤트
-      editBtn.addEventListener('click', () => {
-        viewContainer.style.display = 'none';
-        editFormContainer.style.display = 'flex';
+      item.querySelector('.btn-edit').addEventListener('click', () => {
+        viewDiv.style.display = 'none';
+        editDiv.style.display = 'flex';
+      });
+      item.querySelector('.btn-cancel').addEventListener('click', () => {
+        editDiv.style.display = 'none';
+        viewDiv.style.display = 'block';
       });
 
-      // 취소 버튼 클릭 이벤트
-      cancelBtn.addEventListener('click', () => {
-        editFormContainer.style.display = 'none';
-        viewContainer.style.display = 'block';
-      });
-
-      // 저장 버튼 클릭 이벤트 (PUT /api/notes/:id)
+      const saveBtn = item.querySelector('.btn-save');
       saveBtn.addEventListener('click', async () => {
-        const newTitle = editTitleInput.value.trim();
-        const newBody = editBodyInput.value.trim();
-        if (!newTitle) {
-          alert('제목을 입력하세요.');
-          return;
-        }
-
+        const title = editTitle.value.trim();
+        const body = editBody.value.trim();
+        if (!title) return alert('제목을 입력하세요.');
         try {
           saveBtn.disabled = true;
-          const res = await fetch(`/api/notes/${note.id}`, {
+          const res = await api('/api/notes/' + note.id, {
             method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`,
-              'x-device-id': currentDeviceId,
-            },
-            body: JSON.stringify({ title: newTitle, body: newBody }),
+            body: JSON.stringify({ title, body }),
           });
-
-          if (!res.ok) {
-            throw new Error(`수정 실패 (HTTP ${res.status})`);
-          }
-
+          if (!res.ok) throw new Error('수정 실패 (HTTP ' + res.status + ')');
           await loadNotes(session);
         } catch (err) {
           alert(err.message);
@@ -589,71 +412,45 @@
         }
       });
 
-      // 삭제 버튼 클릭 이벤트 (DELETE /api/notes/:id)
-      deleteBtn.addEventListener('click', async () => {
-        if (!confirm('정말 이 메모를 삭제하시겠습니까?')) return;
-
+      const delBtn = item.querySelector('.btn-del');
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
         try {
-          deleteBtn.disabled = true;
-          const res = await fetch(`/api/notes/${note.id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'x-device-id': currentDeviceId,
-            },
-          });
-
-          if (!res.ok) {
-            throw new Error(`삭제 실패 (HTTP ${res.status})`);
-          }
-
+          delBtn.disabled = true;
+          const res = await api('/api/notes/' + note.id, { method: 'DELETE' });
+          if (!res.ok) throw new Error('삭제 실패 (HTTP ' + res.status + ')');
           await loadNotes(session);
         } catch (err) {
           alert(err.message);
-          deleteBtn.disabled = false;
+          delBtn.disabled = false;
         }
       });
 
       return item;
     }
 
-    // 메모 추가 제출 이벤트 (POST /api/notes)
     addNoteForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentSession?.access_token) {
-        showAddMsg('로그인이 필요합니다.', true);
-        return;
-      }
-
+      if (!currentSession?.access_token) return showAddMsg('로그인이 필요합니다.', true);
       const title = newNoteTitleInput.value.trim();
       const body = newNoteBodyInput.value.trim();
       if (!title) return;
-
+      const btn = document.getElementById('btn-add-note');
       try {
-        const btn = document.getElementById('btn-add-note');
         btn.disabled = true;
-        const res = await fetch('/api/notes', {
+        const res = await api('/api/notes', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentSession.access_token}`,
-            'x-device-id': currentDeviceId,
-          },
           body: JSON.stringify({ title, body }),
         });
-
-        if (!res.ok) {
-          throw new Error(`추가 실패 (HTTP ${res.status})`);
-        }
-
+        if (!res.ok) throw new Error('추가 실패 (HTTP ' + res.status + ')');
         newNoteTitleInput.value = '';
         newNoteBodyInput.value = '';
-        showAddMsg('메모가 성공적으로 추가되었습니다.', false);
+        showAddMsg('메모가 추가되었습니다.', false);
         await loadNotes(currentSession);
       } catch (err) {
         showAddMsg(err.message, true);
       } finally {
-        document.getElementById('btn-add-note').disabled = false;
+        btn.disabled = false;
       }
     });
 
@@ -662,33 +459,22 @@
       clearError();
       const email = emailInput.value.trim();
       const password = passwordInput.value;
-      if (!email || !password) {
-        showError('이메일과 비밀번호를 입력해 주세요.');
-        return;
-      }
-
+      if (!email || !password) return showError('이메일과 비밀번호를 입력해 주세요.');
       const submitBtn = loginForm.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
-
       try {
         const res = await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'login', email, password }),
         });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `로그인 실패 (HTTP ${res.status})`);
-        }
-
-        const data = await res.json();
-        // 기기 키나 토큰은 브라우저 저장소(localStorage/sessionStorage)에 넣지 않고 메모리 변수로만 관리
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || '로그인 실패 (HTTP ' + res.status + ')');
         currentSession = { access_token: data.access_token, user: data.user };
         updateAuthUI(currentSession);
         await checkServerDeviceApproval(false);
       } catch (err) {
-        showError(`로그인 실패: ${err.message}`);
+        showError('로그인 실패: ' + err.message);
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
@@ -702,11 +488,9 @@
       loadNotes(null);
     });
 
-    // 초기 화면 상태 설정 (브라우저 저장소에 토큰/키를 보관하지 않고 초기화)
     updateAuthUI(null);
     updateApprovalUI(false, '');
 
-    // 네트워크 및 오프라인 상태 실시간 감지
     const networkBanner = document.getElementById('network-status-banner');
     const networkStatusDot = document.getElementById('network-status-dot');
     const networkStatusText = document.getElementById('network-status-text');
@@ -715,24 +499,17 @@
     function updateNetworkStatus() {
       const isOnline = navigator.onLine;
       if (isOnline) {
-        if (networkBanner) {
-          networkBanner.style.display = 'flex';
-          networkBanner.className = 'network-banner online';
-        }
+        if (networkBanner) networkBanner.className = 'network-banner online';
         if (networkStatusDot) networkStatusDot.style.background = '#3fb950';
         if (networkStatusText) networkStatusText.textContent = '온라인 연결됨 · 보안 세션 정상 작동 중';
         if (offlineGuidanceText) offlineGuidanceText.textContent = '온라인 연결됨 (오프라인 시 보안 정책 검증 및 자료 조회가 불가합니다)';
       } else {
-        if (networkBanner) {
-          networkBanner.style.display = 'flex';
-          networkBanner.className = 'network-banner offline';
-        }
+        if (networkBanner) networkBanner.className = 'network-banner offline';
         if (networkStatusDot) networkStatusDot.style.background = '#ff9b9b';
-        if (networkStatusText) networkStatusText.textContent = '⚠️ 오프라인 상태: 네트워크 연결이 끊겨 보안 정책 검증 및 자료 조회가 불가능합니다.';
+        if (networkStatusText) networkStatusText.textContent = '⚠️ 오프라인 상태: 보안 정책 검증 및 자료 조회가 불가합니다.';
         if (offlineGuidanceText) offlineGuidanceText.textContent = '오프라인 상태 (네트워크 연결 필요: 오프라인 시 자료 조회가 중단됩니다)';
       }
     }
-
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
     updateNetworkStatus();
