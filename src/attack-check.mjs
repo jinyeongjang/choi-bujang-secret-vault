@@ -93,7 +93,7 @@ export async function runAttackChecks(config) {
     results.push({
       attackId: 'unregistered_device_access',
       expected: '미등록 기기의 가상 자료실 접근 차단 (심판 점검)',
-      observed: '미실행 (심판 원격 점검 대기)',
+      observed: 'not_run',
     });
   }
 
@@ -101,7 +101,7 @@ export async function runAttackChecks(config) {
     results.push({
       attackId: 'suspicious_access_step_up',
       expected: '복합 이상 접속 시 추가 확인 요구 및 재인증 전 자료 차단',
-      observed: '미실행 (재로그인 시각 계약 부재로 가상 사건 규칙 시험만 수행, 실제 자료 차단은 미실행)',
+      observed: 'not_run',
     });
   }
 
@@ -109,7 +109,7 @@ export async function runAttackChecks(config) {
     results.push({
       attackId: 'unauthorized_zone_modification',
       expected: '공지 구역 수정 및 알 수 없는 경로 접근 차단 (심판 점검)',
-      observed: '미실행 (심판 원격 점검 대기)',
+      observed: 'not_run',
     });
   }
 
@@ -117,7 +117,7 @@ export async function runAttackChecks(config) {
     results.push({
       attackId: 'burst_read_revocation',
       expected: '10분 구간 내 120건 초과 폭주 조회 시 확인된 기기 회수 제안 (심판 점검)',
-      observed: '미실행 (가상 사건 탐지 시험 npm run detect:test 통과, 실제 접속 회수 집행은 심판 원격 점검 대기)',
+      observed: 'not_run',
     });
   }
 
@@ -147,7 +147,7 @@ export async function runAttackChecks(config) {
     results.push({
       attackId: 'defense_operation_room_summary',
       expected: '탈환 작전실에서 판정 규칙, 탐지 사건, 회수 상태, 복구 버전 통합 확인',
-      observed: '탈환 작전실 4대 영역 요약 및 가상 요청 계약·응답 규격 점검 완료',
+      observed: 'not_run',
     });
   }
 
