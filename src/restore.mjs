@@ -168,10 +168,10 @@ export function restorePolicy(safePolicy, currentTestPolicy, options = {}) {
   };
 
   // 실행 전 버전과 바뀔 항목 표시
-  const previewSummary = `[실행 전 확인] 버전: ${preview.targetVersion}\n`
-    + `- 추가된 항목: ${JSON.stringify(preview.added)}\n`
-    + `- 제거된 항목: ${JSON.stringify(preview.removed)}\n`
-    + `- 변경될 속성: ${JSON.stringify(preview.differences)}`;
+  const previewSummary = `[실행 전 확인] 복원할 버전: ${preview.targetVersion}\n`
+    + `- 변경 범위 (추가): ${JSON.stringify(preview.added)}\n`
+    + `- 변경 범위 (제거): ${JSON.stringify(preview.removed)}\n`
+    + `- 변경 범위 (수정): ${JSON.stringify(preview.differences)}`;
 
   // 3. dryRun(사전 확인) 모드인 경우 실제 적용 없이 버전과 바뀔 항목만 반환
   if (dryRun) {
@@ -275,59 +275,83 @@ export function restoreSingleNote(backupSource, target, options = {}) {
     throw new Error('백업 사본에서 해당 메모를 찾을 수 없습니다 (NOTE_NOT_FOUND_IN_BACKUP).');
   }
 
-  const title = target.title ?? sourceNote.title ?? '';
-  // 변조된 본문이 target으로 전달된 경우 target.content/body를 우선 참조하되, 사본과의 일치 해시를 검증
-  const content = target.content ?? target.body ?? sourceNote.content ?? sourceNote.body ?? '';
-  const ownerId = target.owner_id ?? target.owner ?? sourceNote.owner_id ?? sourceNote.owner;
+  // 사본의 3대 기준값 (ID, 소유자, 내용 해시) 추출
+  const sourceId = sourceNote.id || sourceNote.noteId;
+  const sourceOwner = sourceNote.owner_id ?? sourceNote.owner;
+  const sourceContent = sourceNote.content ?? sourceNote.body ?? '';
+  const sourceHash = (
+    sourceNote.contentHash ||
+    sourceNote.content_hash ||
+    sourceNote.hash ||
+    createHash('sha256').update(sourceContent, 'utf8').digest('hex')
+  ).toLowerCase();
 
-  // 1. 소유자 대조: 백업 사본의 원래 소유자(sourceNote.owner_id)와 현재 사용자(expectedOwner) 대조
-  const originalOwner = sourceNote.owner_id ?? sourceNote.owner;
-  const expectedOwner = currentUserId || target.owner_id;
-  if (originalOwner && expectedOwner && originalOwner !== expectedOwner) {
-    throw new Error('메모 소유자가 일치하지 않습니다 (NOT_OWNER).');
+  // 1. ID 대조 (사본의 ID와 일치 검증)
+  if (noteId !== sourceId) {
+    throw new Error('메모 ID가 사본과 일치하지 않습니다 (ID_MISMATCH).');
   }
-  if (expectedOwner && ownerId && ownerId !== expectedOwner) {
-    throw new Error('메모 소유자가 일치하지 않습니다 (NOT_OWNER).');
+
+  // 2. 소유자 대조 (사본의 소유자와 일치 검증)
+  const targetOwner = target.owner_id ?? target.owner;
+  if (targetOwner && sourceOwner && targetOwner !== sourceOwner) {
+    throw new Error('메모 소유자가 사본과 일치하지 않습니다 (NOT_OWNER).');
+  }
+  if (currentUserId && sourceOwner && currentUserId !== sourceOwner) {
+    throw new Error('메모 소유자가 사본과 일치하지 않습니다 (NOT_OWNER).');
   }
 
   // 기존 메모가 있을 경우 기존 메모 소유자 대조 (타인 메모 덮어쓰기 방지)
-  const existing = existingNotes.find(n => n.id === noteId);
-  if (existing && expectedOwner && existing.owner_id !== expectedOwner) {
-    throw new Error('기존 메모 소유자가 일치하지 않습니다 (NOT_OWNER).');
+  const existing = existingNotes.find(n => n && (n.id === sourceId || n.noteId === sourceId));
+  if (existing) {
+    const existingOwner = existing.owner_id ?? existing.owner;
+    if (existingOwner && sourceOwner && existingOwner !== sourceOwner) {
+      throw new Error('기존 메모 소유자가 사본과 일치하지 않습니다 (NOT_OWNER).');
+    }
   }
 
-  // 2. 내용 해시 대조 (SHA-256)
-  const calculatedHash = createHash('sha256').update(content, 'utf8').digest('hex');
-  const providedHash = target.contentHash || target.content_hash || target.hash || sourceNote.contentHash;
+  // 3. 내용 해시 대조 (사본의 내용 해시와 일치 검증)
+  const providedHash = (target.contentHash || target.content_hash || target.hash || '').toLowerCase();
+  const hasTargetContent = target.content !== undefined || target.body !== undefined;
 
-  if (!providedHash) {
+  if (hasTargetContent) {
+    const targetContent = target.content ?? target.body ?? '';
+    const targetCalculatedHash = createHash('sha256').update(targetContent, 'utf8').digest('hex').toLowerCase();
+    if (targetCalculatedHash !== sourceHash) {
+      throw new Error('내용 해시가 사본과 일치하지 않습니다 (HASH_MISMATCH).');
+    }
+  }
+
+  if (providedHash && providedHash !== sourceHash) {
+    throw new Error('내용 해시가 사본과 일치하지 않습니다 (HASH_MISMATCH).');
+  }
+
+  if (!providedHash && !hasTargetContent && !sourceNote.contentHash) {
     throw new Error('내용 해시가 필요합니다 (CONTENT_HASH_REQUIRED).');
   }
 
-  if (providedHash.toLowerCase() !== calculatedHash.toLowerCase()) {
-    throw new Error('내용 해시가 일치하지 않습니다 (HASH_MISMATCH).');
-  }
-
-  // 3. 지정한 단건 ID만 복원 (다른 메모 보존)
+  // 4. 복원되는 한 건: 사본의 ID·소유자·내용 해시와 정확히 같게 복원
   const restoredNote = {
-    id: noteId,
-    title,
-    body: content,
-    content,
-    owner_id: ownerId || expectedOwner,
-    contentHash: calculatedHash,
+    id: sourceId,
+    title: sourceNote.title ?? target.title ?? '',
+    body: sourceContent,
+    content: sourceContent,
+    owner_id: sourceOwner || targetOwner || currentUserId,
+    contentHash: sourceHash,
     updated_at: new Date().toISOString(),
   };
 
-  const updatedNotes = existingNotes.filter(n => n.id !== noteId).concat([restoredNote]);
+  // 5. 다른 메모는 그대로 유지 (지정한 단건 ID만 교체/추가)
+  const updatedNotes = existingNotes
+    .filter(n => n && (n.id || n.noteId) !== sourceId)
+    .concat([restoredNote]);
 
-  // 4. 감사 기록 보존 및 새 복원 이벤트 추가
+  // 6. 감사 기록 보존 및 새 복원 이벤트 추가
   const auditEntry = {
     action: 'NOTE_RESTORE',
     timestamp: new Date().toISOString(),
-    restoredId: noteId,
+    restoredId: sourceId,
     ownerId: restoredNote.owner_id,
-    contentHash: calculatedHash,
+    contentHash: sourceHash,
     status: 'SUCCESS',
   };
 
@@ -340,7 +364,7 @@ export function restoreSingleNote(backupSource, target, options = {}) {
     body: restoredNote.body,
     content: restoredNote.content,
     owner_id: restoredNote.owner_id,
-    contentHash: calculatedHash,
+    contentHash: restoredNote.contentHash,
     restored: restoredNote,
     audit: auditEntry,
     auditHistory: updatedAuditHistory,
@@ -386,8 +410,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     }
 
     // -------------------------------------------------------------
-    // [검증 2] 한 건 복원 일치 조건 검증 (시험 계정 B의 메모)
+    // [검증 2] 복구 대상 한 건의 ID·소유자·내용 해시 사본 일치 검증
     // -------------------------------------------------------------
+    const testUserIdA = 'a0000000-0000-0000-0000-000000000001';
+    const testNoteIdA = 'a1111111-1111-1111-1111-111111111111';
+    const testNoteContentA = 'A 자료 본문 내용';
+    const correctHashA = createHash('sha256').update(testNoteContentA, 'utf8').digest('hex');
+
     const testUserIdB = 'b0000000-0000-0000-0000-000000000002';
     const testNoteIdB = 'b1111111-1111-1111-1111-111111111111';
     const testNoteContentB = '실습용 가상 B 사용자 메모 기록';
@@ -395,7 +424,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
 
     const backupVault = [
       { id: testNoteIdB, title: 'B의 시험 메모', content: testNoteContentB, owner_id: testUserIdB },
-      { id: 'a1111111-1111-1111-1111-111111111111', title: 'A의 과제', content: 'A 자료', owner_id: 'a0000000-0000-0000-0000-000000000001' },
+      { id: testNoteIdA, title: 'A의 과제', content: testNoteContentA, owner_id: testUserIdA },
     ];
 
     // 정상 단건 복원 수행
@@ -409,25 +438,75 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     });
 
     const isMatch = restoreNoteResult.id === testNoteIdB
+      && restoreNoteResult.owner_id === testUserIdB
       && restoreNoteResult.title === 'B의 시험 메모'
       && restoreNoteResult.body === testNoteContentB
       && restoreNoteResult.contentHash === correctHashB;
 
     if (isMatch) {
-      process.stdout.write(`「한 건 복원 일치」 검증 완료: ID=${restoreNoteResult.id}, 제목=${restoreNoteResult.title}, 해시=${restoreNoteResult.contentHash.slice(0, 8)}...\n`);
+      process.stdout.write(`「한 건 복원 일치」 ID·소유자·내용 해시가 사본과 같음 확인: ID=${restoreNoteResult.id}, 소유자=${restoreNoteResult.owner_id}, 제목=${restoreNoteResult.title}, 해시=${restoreNoteResult.contentHash.slice(0, 8)}...\n`);
     } else {
       throw new Error('한 건 복원 일치 검증에 실패했습니다.');
     }
 
     // -------------------------------------------------------------
-    // [검증 3] 복원 뒤 재시험 검증 (정상 사용 및 금지 요청 차단)
+    // [검증 3] B의 A 자료 요청은 다시 거부되고 A 정상 요청은 유지 검증
     // -------------------------------------------------------------
-    // 1) 정상 요청: 복원된 메모 목록에서 B의 메모가 정확히 1건 존재하고 타 메모 보존됨
-    const normalRestoredNotes = restoreNoteResult.notes;
-    const isOtherPreserved = normalRestoredNotes.some(n => n.id === 'a1111111-1111-1111-1111-111111111111');
-    if (!isOtherPreserved) throw new Error('복원 시 다른 메모가 보존되지 않았습니다.');
+    // 1) B의 A 자료 요청은 다시 거부됨 (타인 메모 접근 및 복원 차단)
+    let bAccessingABlocked = false;
+    try {
+      restoreSingleNote(backupVault, {
+        id: testNoteIdA,
+        owner_id: testUserIdB,
+        contentHash: correctHashA,
+      }, { currentUserId: testUserIdB });
+    } catch (e) {
+      if (e.message.includes('NOT_OWNER')) bAccessingABlocked = true;
+    }
 
-    // 2) 금지 요청 1: 시험 계정 B의 메모 변조 시 복구 차단 (변조된 본문 + 기존 해시)
+    // 2) A의 정상 요청은 유지됨 (A 본인 메모 복원 성공 및 타 메모 보존)
+    const aNormalResult = restoreSingleNote(backupVault, {
+      id: testNoteIdA,
+      owner_id: testUserIdA,
+      contentHash: correctHashA,
+    }, {
+      currentUserId: testUserIdA,
+      existingNotes: restoreNoteResult.notes,
+    });
+    const aNormalMaintained = aNormalResult.id === testNoteIdA
+      && aNormalResult.owner_id === testUserIdA
+      && aNormalResult.contentHash === correctHashA
+      && aNormalResult.notes.some(n => n.id === testNoteIdA && n.owner_id === testUserIdA)
+      && aNormalResult.notes.some(n => n.id === testNoteIdB && n.owner_id === testUserIdB);
+
+    if (bAccessingABlocked && aNormalMaintained) {
+      process.stdout.write('「자료 격리 확인」 B의 A 자료 요청은 다시 거부되고 A 정상 요청은 유지됨: 통과\n');
+    } else {
+      throw new Error('B의 A 자료 거부 또는 A 정상 요청 유지 검증에 실패했습니다.');
+    }
+
+    // -------------------------------------------------------------
+    // [검증 4] 자료와 정책이 돌아오고 이전에 막던 요청이 다시 거부되는지 확인
+    // -------------------------------------------------------------
+    // 1) 정책 복원 실행: 침해 전 안전 규칙이 돌아오고 불법 우회 규칙 제거됨
+    const actualRestoredPolicy = restorePolicy(safeCopy, candidatePolicy, {
+      dryRun: false,
+      otherServiceRules,
+      existingAuditHistory,
+    });
+    const policyRules = actualRestoredPolicy.restoredPolicy.rules;
+    const isPolicyBack = policyRules.includes('device_registered')
+      && policyRules.includes('step_up_required')
+      && policyRules.includes('zone_isolation')
+      && policyRules.includes('zone_rules')
+      && !policyRules.includes('unauthorized_bypass_rule')
+      && actualRestoredPolicy.restoredPolicy.otherServices.includes('service_payment_auth_v1');
+
+    if (!isPolicyBack) {
+      throw new Error('정책 사본 복원에 실패했습니다.');
+    }
+
+    // 2) 이전에 막던 요청들(변조 본문, 변조 쌍, 해시 위변조, ID 불일치)이 다시 거부되는지 확인
     let tamperedContentBlocked = false;
     try {
       restoreSingleNote(backupVault, {
@@ -435,13 +514,26 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         owner_id: testUserIdB,
         title: 'B의 시험 메모',
         content: '공격자에 의해 악의적으로 변조된 B의 메모 내용',
-        contentHash: correctHashB, // 기존 정상 해시를 제출해도 변조된 본문과 불일치하여 차단
+        contentHash: correctHashB,
       }, { currentUserId: testUserIdB });
     } catch (e) {
       if (e.message.includes('HASH_MISMATCH')) tamperedContentBlocked = true;
     }
 
-    // 3) 금지 요청 2: 해시 위변조 시 복구 차단 (정상 본문 + 변조된 임의 해시)
+    let tamperedPairBlocked = false;
+    try {
+      const tamperedContent = '새롭게 위변조된 내용';
+      const tamperedHash = createHash('sha256').update(tamperedContent, 'utf8').digest('hex');
+      restoreSingleNote(backupVault, {
+        id: testNoteIdB,
+        owner_id: testUserIdB,
+        content: tamperedContent,
+        contentHash: tamperedHash,
+      }, { currentUserId: testUserIdB });
+    } catch (e) {
+      if (e.message.includes('HASH_MISMATCH')) tamperedPairBlocked = true;
+    }
+
     let hashBlocked = false;
     try {
       restoreSingleNote(backupVault, {
@@ -454,22 +546,21 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       if (e.message.includes('HASH_MISMATCH')) hashBlocked = true;
     }
 
-    // 4) 금지 요청 3: 타인 소유자 복원 요청 차단
-    let ownerBlocked = false;
+    let idMismatchBlocked = false;
     try {
       restoreSingleNote(backupVault, {
-        id: testNoteIdB,
-        owner_id: 'attacker_user_id',
+        id: 'c3333333-3333-3333-3333-333333333333',
+        owner_id: testUserIdB,
         contentHash: correctHashB,
-      }, { currentUserId: 'attacker_user_id' });
+      }, { currentUserId: testUserIdB });
     } catch (e) {
-      if (e.message.includes('NOT_OWNER')) ownerBlocked = true;
+      idMismatchBlocked = true;
     }
 
-    if (tamperedContentBlocked && hashBlocked && ownerBlocked) {
-      process.stdout.write('「복원 뒤 재시험」 검증 완료: 정상 복원 확인, B 메모 변조 시 복구 차단, 해시 위변조 차단, 타인 소유 복원 차단 통과\n');
+    if (tamperedContentBlocked && tamperedPairBlocked && hashBlocked && idMismatchBlocked) {
+      process.stdout.write('「전체 복원 확인」 자료와 정책이 돌아오고 이전에 막던 요청이 다시 거부됨: 통과\n');
     } else {
-      throw new Error('복원 뒤 금지 요청 재시험 검증에 실패했습니다.');
+      throw new Error('이전에 막던 요청 재거부 검증에 실패했습니다.');
     }
   } catch (error) {
     process.stderr.write(`복원 모듈 검증 오류: ${error.message}\n`);

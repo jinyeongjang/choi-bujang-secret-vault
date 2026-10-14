@@ -107,11 +107,21 @@ function validateZoneAccess(request) {
 }
 
 export async function decide(request) {
+  if (!request || typeof request !== 'object') {
+    return {
+      schema: 'aleph.decision.v1',
+      requestId: '00000000-0000-0000-0000-000000000000',
+      decision: 'deny',
+      reasonCode: 'device_not_registered',
+      ruleIds: ['device_registered'],
+    };
+  }
+
   // 엔진이 검증해 넘긴 가상 접속 정보의 출처 및 필드 검사
   const context = parseConnectionSignals(request);
 
   // 1. 기존 기기 등록 규칙 검증: 미등록 기기 차단
-  if (request?.deviceRegistered !== true) {
+  if (request.deviceRegistered !== true) {
     return {
       schema: 'aleph.decision.v1',
       requestId: request.requestId,
