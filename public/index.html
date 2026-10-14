@@ -1,518 +1,100 @@
-<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>최부장 비밀 금고 | BYTE BACK 자료실</title>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg">
-  <meta name="theme-color" content="#101a28">
-  <style>
-    :root{color-scheme:dark;font-family:system-ui,sans-serif}
-    body{margin:0;min-height:100vh;background:#101a28;color:#ecf4ff}
-    main{max-width:760px;margin:0 auto;padding:28px 18px 48px}
-    .eyebrow{color:#8ad8df;font-size:13px;font-weight:700}
-    h1{margin:10px 0;font-size:30px}
-    p{font-size:15px;line-height:1.6;color:#bfd0e5}
-    .card{margin:16px 0;padding:16px;border:1px solid #3c546e;border-radius:10px;background:#132235}
-    .card h2{margin:0 0 10px;font-size:18px;color:#8ad8df}
-    .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-    .form-group label{font-size:13px;color:#bfd0e5}
-    .form-group input,.form-group textarea{padding:8px 10px;border:1px solid #4a627a;border-radius:6px;background:#0b1420;color:#ecf4ff;font:inherit;font-size:14px}
-    .form-group textarea{min-height:50px;resize:vertical}
-    .btn{padding:6px 12px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
-    .btn-primary{background:#2f81f7;color:#fff}
-    .btn-secondary{background:#30363d;color:#c9d1d9;border:1px solid #8b949e}
-    .btn-danger{background:#a42c3d;color:#fff}
-    .btn-sm{padding:4px 8px;font-size:12px}
-    .auth-error,.action-msg{margin-top:8px;padding:6px 10px;border-radius:6px;font-size:13px}
-    .auth-error,.action-msg.error{background:#612a3533;border:1px solid #d07384;color:#ff9b9b}
-    .action-msg.success{background:#1f4a3544;border:1px solid #3fb950;color:#7ee787}
-    .user-badge{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:6px;background:#1f334a}
-    ul{list-style:none;display:grid;gap:10px;padding:0;margin:0}
-    li{border:1px solid #51667c;border-radius:8px;padding:12px;background:#1a2a3d}
-    .note-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
-    .note-title{font-size:15px;font-weight:700;margin:0}
-    .note-body{font-size:14px;color:#bfd0e5;white-space:pre-wrap;margin:0 0 8px;line-height:1.5}
-    .note-actions,.note-edit-actions{display:flex;gap:6px;justify-content:flex-end}
-    .resource-tag{display:inline-flex;align-items:center;padding:2px 6px;font-size:11px;font-weight:600;border-radius:4px;background:#1f334a;color:#8ad8df;border:1px solid #3c546e}
-    .status-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid #1f334a}
-    .status-badge-warning{display:inline-block;padding:2px 7px;border-radius:4px;background:#d2992222;border:1px solid #d29922;color:#e3b341;font-size:12px;font-weight:600}
-    .status-badge-success{display:inline-block;padding:2px 7px;border-radius:4px;background:#23863622;border:1px solid #2ea043;color:#3fb950;font-size:12px;font-weight:600}
-    .status-badge-danger{display:inline-block;padding:2px 7px;border-radius:4px;background:#da363322;border:1px solid #f85149;color:#ff7b72;font-size:12px;font-weight:600}
-    .network-banner{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:6px;margin-bottom:14px;font-size:13px}
-    .network-banner.online{background:#1f4a3522;border:1px solid #3fb950;color:#7ee787}
-    .network-banner.offline{background:#612a3533;border:1px solid #d07384;color:#ff9b9b}
-    .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-    .network-banner.online .status-dot{background:#3fb950}
-    .network-banner.offline .status-dot{background:#ff9b9b}
-  </style>
-</head>
-<body>
-  <main>
-    <div class="eyebrow">BYTE BACK · 나만의 접속 앱</div>
-    <h1>최부장 비밀 금고</h1>
-    <p>지금은 보호 장치를 단계별로 구축하는 상태입니다. 아래 기록은 실습을 위한 가상 자료입니다.</p>
-
-    <div id="network-status-banner" class="network-banner online">
-      <span id="network-status-dot" class="status-dot"></span>
-      <span id="network-status-text">온라인 연결됨 · 보안 세션 정상 작동 중</span>
-    </div>
-
-    <section class="card" aria-labelledby="device-status-title">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h2 id="device-status-title" style="margin:0;font-size:17px;">기기 승인 및 접속 앱 상태</h2>
-        <span class="resource-tag" id="app-badge">앱: 최부장 비밀 금고</span>
-      </div>
-      <div>
-        <div class="status-row"><span>앱 이름</span><span>최부장 비밀 금고 (BYTE BACK 보안 자료실)</span></div>
-        <div class="status-row"><span>현재 기기 식별자</span><code id="current-device-id-display">확인 중...</code></div>
-        <div class="status-row"><span>기기 승인 상태</span><span class="status-badge-warning" id="device-approval-badge">미승인 기기 (보호 자료 접근 차단됨)</span></div>
-        <div class="status-row"><span>오프라인 안내</span><span id="offline-guidance-text">온라인 연결 필요 (오프라인 상태에서는 보안 정책 검증 및 자료 조회가 불가합니다)</span></div>
-      </div>
-      <div style="margin:12px 0 8px;padding:10px;background:#0d1825;border-radius:6px;border:1px solid #1f334a;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div>
-          <strong style="font-size:13px;color:#ecf4ff;">서버 기기 등록 및 승인 요청</strong>
-          <div style="font-size:12px;color:#8b949e;">서버가 이 기기를 등록 기기로 확인·승인한 뒤에만 보호 자료실이 열립니다.</div>
-        </div>
-        <div style="display:flex;gap:6px;">
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-check-device">승인 상태 재확인</button>
-          <button type="button" class="btn btn-primary btn-sm" id="btn-request-device-approval">기기 승인 요청</button>
-        </div>
-      </div>
-      <div id="device-approval-result" style="display:none;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:13px;" role="status"></div>
-      <p style="margin:8px 0 0;font-size:12px;color:#8ad8df;">
-        ⚠️ 웹앱 설치 표시만으로 기기 확인이 끝났다고 보지 않으며, 기기 개인키를 브라우저 저장소에 넣지 않습니다. 서버가 이 기기를 등록 기기로 확인한 뒤에만 보호 자료실이 열립니다.
-      </p>
-    </section>
-
-    <section class="card" aria-labelledby="auth-title">
-      <h2 id="auth-title">사용자 인증</h2>
-      <div id="auth-logged-out-view">
-        <form id="login-form">
-          <div class="form-group">
-            <label for="login-email">이메일</label>
-            <input type="email" id="login-email" autocomplete="email" placeholder="이메일 입력" required>
-          </div>
-          <div class="form-group">
-            <label for="login-password">비밀번호</label>
-            <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required>
-          </div>
-          <button type="submit" class="btn btn-primary" id="btn-login">로그인</button>
-        </form>
-        <div id="auth-error" class="auth-error" style="display:none;" role="alert"></div>
-      </div>
-      <div id="auth-logged-in-view" style="display:none;">
-        <div class="user-badge">
-          <div><div style="font-size:12px;color:#8b949e;">인증된 사용자</div><span id="user-email" style="color:#8ad8df;font-weight:600;"></span></div>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-logout">로그아웃</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="card" aria-labelledby="notice-title" data-resource-id="notices">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <strong id="notice-title" style="color:#8ad8df;font-size:16px;">강사 공지</strong>
-        <span class="resource-tag">자원 ID: notices</span>
-      </div>
-      <div style="font-size:14px;color:#bfd0e5;">로그인 사용자 토큰(Bearer)으로 보호되는 가상 메모 CRUD 시스템입니다. 자료 구역별 분리가 적용됩니다.</div>
-    </section>
-
-    <section class="card" id="device-unapproved-notice" style="border-color:#d29922;background:#1c1d18;">
-      <h3 style="margin:0 0 6px;font-size:15px;color:#e3b341;">🔒 보호 자료실 잠김 (기기 미승인 상태)</h3>
-      <p style="margin:0;font-size:13px;color:#c9d1d9;">
-        현재 기기는 서버에 등록 기기로 승인되지 않아 보호 자료가 표시되지 않습니다. 로그인 후 상단의 <strong>[기기 승인 요청]</strong>을 완료해야 자료실이 열립니다.
-      </p>
-    </section>
-
-    <div id="vault-protected-area" style="display:none;">
-      <section class="card" id="add-note-card" style="display:none;" aria-labelledby="add-note-title">
-        <h2 id="add-note-title">가상 메모 추가</h2>
-        <form id="add-note-form">
-          <div class="form-group">
-            <label for="new-note-title">메모 제목</label>
-            <input type="text" id="new-note-title" placeholder="제목을 입력하세요" required>
-          </div>
-          <div class="form-group">
-            <label for="new-note-body">메모 내용</label>
-            <textarea id="new-note-body" placeholder="내용을 입력하세요" required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary btn-sm" id="btn-add-note">메모 추가</button>
-        </form>
-        <div id="add-note-msg" class="action-msg" style="display:none;" role="status"></div>
-      </section>
-
-      <section id="notes-section" aria-labelledby="notes-section-title" data-resource-id="notes">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px;">
-          <h2 id="notes-section-title" style="margin:0;font-size:18px;color:#8ad8df;">내 자료실 메모</h2>
-          <span class="resource-tag">자원 ID: notes</span>
-        </div>
-        <ul id="notes" aria-live="polite"></ul>
-      </section>
-    </div>
-  </main>
-
-  <script type="module">
-    const loggedOutView = document.getElementById('auth-logged-out-view');
-    const loggedInView = document.getElementById('auth-logged-in-view');
-    const addNoteCard = document.getElementById('add-note-card');
-    const loginForm = document.getElementById('login-form');
-    const emailInput = document.getElementById('login-email');
-    const passwordInput = document.getElementById('login-password');
-    const errorEl = document.getElementById('auth-error');
-    const userEmailEl = document.getElementById('user-email');
-    const logoutBtn = document.getElementById('btn-logout');
-    const addNoteForm = document.getElementById('add-note-form');
-    const newNoteTitleInput = document.getElementById('new-note-title');
-    const newNoteBodyInput = document.getElementById('new-note-body');
-    const addNoteMsg = document.getElementById('add-note-msg');
-
-    // 기기 식별자는 메모리 변수로만 관리 (브라우저 저장소 미사용)
-    function generateDeviceId() {
-      const arr = new Uint8Array(8);
-      crypto.getRandomValues(arr);
-      return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
-    }
-    const currentDeviceId = generateDeviceId();
-    const deviceIdDisplay = document.getElementById('current-device-id-display');
-    if (deviceIdDisplay) deviceIdDisplay.textContent = currentDeviceId;
-
-    let currentSession = null;
-    let isDeviceApproved = false;
-
-    const deviceApprovalBadge = document.getElementById('device-approval-badge');
-    const deviceApprovalResult = document.getElementById('device-approval-result');
-    const deviceUnapprovedNotice = document.getElementById('device-unapproved-notice');
-    const vaultProtectedArea = document.getElementById('vault-protected-area');
-    const btnRequestApproval = document.getElementById('btn-request-device-approval');
-    const btnCheckDevice = document.getElementById('btn-check-device');
-
-    function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
-    function clearError() { errorEl.textContent = ''; errorEl.style.display = 'none'; }
-    function showAddMsg(msg, isError = false) {
-      addNoteMsg.textContent = msg;
-      addNoteMsg.className = 'action-msg ' + (isError ? 'error' : 'success');
-      addNoteMsg.style.display = 'block';
-      setTimeout(() => { addNoteMsg.style.display = 'none'; }, 4000);
-    }
-
-    const api = (url, opt = {}) => fetch(url, {
-      ...opt,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(currentSession?.access_token ? { Authorization: 'Bearer ' + currentSession.access_token } : {}),
-        'x-device-id': currentDeviceId,
-        ...(opt.headers || {})
-      }
-    });
-
-    function updateVaultVisibility() {
-      const user = currentSession?.user ?? null;
-      if (user && isDeviceApproved) {
-        if (deviceUnapprovedNotice) deviceUnapprovedNotice.style.display = 'none';
-        if (vaultProtectedArea) vaultProtectedArea.style.display = 'block';
-        if (addNoteCard) addNoteCard.style.display = 'block';
-      } else {
-        if (vaultProtectedArea) vaultProtectedArea.style.display = 'none';
-        if (addNoteCard) addNoteCard.style.display = 'none';
-        const list = document.querySelector('#notes');
-        if (list && !isDeviceApproved) list.replaceChildren();
-        if (deviceUnapprovedNotice) deviceUnapprovedNotice.style.display = 'block';
-      }
-    }
-
-    function updateApprovalUI(approved, message = '', isError = false) {
-      isDeviceApproved = Boolean(approved);
-      if (deviceApprovalBadge) {
-        deviceApprovalBadge.className = isDeviceApproved ? 'status-badge-success' : (isError ? 'status-badge-danger' : 'status-badge-warning');
-        deviceApprovalBadge.textContent = isDeviceApproved ? '✅ 서버 등록 기기 승인됨 (접근 허가)' : '미승인 기기 (보호 자료 접근 차단됨)';
-      }
-      if (deviceApprovalResult) {
-        if (message) {
-          deviceApprovalResult.style.display = 'block';
-          deviceApprovalResult.style.background = isDeviceApproved ? '#1f4a3522' : (isError ? '#612a3533' : '#d2992222');
-          deviceApprovalResult.style.border = '1px solid ' + (isDeviceApproved ? '#3fb950' : (isError ? '#d07384' : '#d29922'));
-          deviceApprovalResult.style.color = isDeviceApproved ? '#7ee787' : (isError ? '#ff9b9b' : '#e3b341');
-          deviceApprovalResult.textContent = '[서버 확인] ' + message;
-        } else {
-          deviceApprovalResult.style.display = 'none';
-        }
-      }
-      updateVaultVisibility();
-    }
-
-    async function checkServerDeviceApproval(showFeedback = false) {
-      if (!currentSession?.access_token) {
-        updateApprovalUI(false, showFeedback ? '로그인 후 기기 승인 상태를 확인할 수 있습니다.' : '', false);
-        return;
-      }
-      try {
-        const res = await api('/api/notes', {
-          method: 'POST',
-          body: JSON.stringify({ action: 'check_device', deviceId: currentDeviceId }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data.approved && data.deviceRegistered) {
-          updateApprovalUI(true, showFeedback ? data.message : '', false);
-          await loadNotes(currentSession);
-        } else {
-          updateApprovalUI(false, showFeedback ? (data.message || '미승인 기기입니다.') : '', false);
-        }
-      } catch (err) {
-        updateApprovalUI(false, showFeedback ? '상태 확인 실패: ' + err.message : '', true);
-      }
-    }
-
-    btnRequestApproval?.addEventListener('click', async () => {
-      if (!currentSession?.access_token) {
-        updateApprovalUI(false, '기기 승인을 요청하려면 먼저 로그인을 완료해 주세요.', false);
-        return;
-      }
-      try {
-        btnRequestApproval.disabled = true;
-        btnRequestApproval.textContent = '승인 확인 중...';
-        const res = await api('/api/notes', {
-          method: 'POST',
-          body: JSON.stringify({ action: 'device_approval', deviceId: currentDeviceId }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data.approved && data.deviceRegistered) {
-          updateApprovalUI(true, data.message + ' (기기: ' + data.deviceId + ')', false);
-          await loadNotes(currentSession);
-        } else {
-          throw new Error(data.message || data.error || '서버 기기 승인 실패');
-        }
-      } catch (err) {
-        updateApprovalUI(false, '승인 요청 실패: ' + err.message, true);
-      } finally {
-        btnRequestApproval.disabled = false;
-        btnRequestApproval.textContent = '기기 승인 요청';
-      }
-    });
-
-    btnCheckDevice?.addEventListener('click', () => { checkServerDeviceApproval(true); });
-
-    function updateAuthUI(session) {
-      currentSession = session;
-      const user = session?.user ?? null;
-      if (user) {
-        loggedOutView.style.display = 'none';
-        loggedInView.style.display = 'block';
-        userEmailEl.textContent = user.email || user.id;
-        passwordInput.value = '';
-        clearError();
-      } else {
-        loggedInView.style.display = 'none';
-        loggedOutView.style.display = 'block';
-        userEmailEl.textContent = '';
-      }
-      updateVaultVisibility();
-    }
-
-    async function loadNotes(session) {
-      const list = document.querySelector('#notes');
-      if (!isDeviceApproved) {
-        if (list) list.replaceChildren();
-        return;
-      }
-      if (!session?.access_token) {
-        if (list) {
-          const item = document.createElement('li');
-          item.textContent = '인증이 필요합니다. 로그인 후 가상 메모를 확인하세요.';
-          list.replaceChildren(item);
-        }
-        return;
-      }
-
-      try {
-        const response = await api('/api/notes', { method: 'GET', cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(response.status === 401 ? '인증이 필요합니다. (401 Unauthorized)' : '조회 실패 (HTTP ' + response.status + ')');
-        }
-        const data = await response.json();
-        const notes = Array.isArray(data) ? data : (data.notes || []);
-        if (notes.length === 0) {
-          const item = document.createElement('li');
-          item.textContent = '등록된 메모가 없습니다.';
-          list.replaceChildren(item);
-          return;
-        }
-        list.replaceChildren(...notes.map(note => renderNoteItem(note, session)));
-      } catch (error) {
-        const item = document.createElement('li');
-        item.textContent = error.message;
-        list.replaceChildren(item);
-      }
-    }
-
-    function renderNoteItem(note, session) {
-      const item = document.createElement('li');
-      item.dataset.id = note.id;
-      item.dataset.resourceId = 'notes';
-
-      item.innerHTML = `
-        <div class="note-view">
-          <div class="note-header">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <h3 class="note-title"></h3>
-              <span class="resource-tag">자원 ID: notes</span>
-            </div>
-          </div>
-          <p class="note-body"></p>
-          <div class="note-actions">
-            <button type="button" class="btn btn-secondary btn-sm btn-edit">수정</button>
-            <button type="button" class="btn btn-danger btn-sm btn-del">삭제</button>
-          </div>
-        </div>
-        <div class="note-edit-form" style="display:none;flex-direction:column;gap:8px;">
-          <div class="form-group"><label>수정할 제목</label><input type="text" class="edit-title"></div>
-          <div class="form-group"><label>수정할 내용</label><textarea class="edit-body"></textarea></div>
-          <div class="note-edit-actions">
-            <button type="button" class="btn btn-primary btn-sm btn-save">저장</button>
-            <button type="button" class="btn btn-secondary btn-sm btn-cancel">취소</button>
-          </div>
-        </div>
-      `;
-
-      item.querySelector('.note-title').textContent = note.title;
-      item.querySelector('.note-body').textContent = note.body ?? note.content ?? '';
-
-      const viewDiv = item.querySelector('.note-view');
-      const editDiv = item.querySelector('.note-edit-form');
-      const editTitle = item.querySelector('.edit-title');
-      const editBody = item.querySelector('.edit-body');
-      editTitle.value = note.title;
-      editBody.value = note.body ?? note.content ?? '';
-
-      item.querySelector('.btn-edit').addEventListener('click', () => {
-        viewDiv.style.display = 'none';
-        editDiv.style.display = 'flex';
-      });
-      item.querySelector('.btn-cancel').addEventListener('click', () => {
-        editDiv.style.display = 'none';
-        viewDiv.style.display = 'block';
-      });
-
-      const saveBtn = item.querySelector('.btn-save');
-      saveBtn.addEventListener('click', async () => {
-        const title = editTitle.value.trim();
-        const body = editBody.value.trim();
-        if (!title) return alert('제목을 입력하세요.');
-        try {
-          saveBtn.disabled = true;
-          const res = await api('/api/notes/' + note.id, {
-            method: 'PUT',
-            body: JSON.stringify({ title, body }),
-          });
-          if (!res.ok) throw new Error('수정 실패 (HTTP ' + res.status + ')');
-          await loadNotes(session);
-        } catch (err) {
-          alert(err.message);
-          saveBtn.disabled = false;
-        }
-      });
-
-      const delBtn = item.querySelector('.btn-del');
-      delBtn.addEventListener('click', async () => {
-        if (!confirm('정말 삭제하시겠습니까?')) return;
-        try {
-          delBtn.disabled = true;
-          const res = await api('/api/notes/' + note.id, { method: 'DELETE' });
-          if (!res.ok) throw new Error('삭제 실패 (HTTP ' + res.status + ')');
-          await loadNotes(session);
-        } catch (err) {
-          alert(err.message);
-          delBtn.disabled = false;
-        }
-      });
-
-      return item;
-    }
-
-    addNoteForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentSession?.access_token) return showAddMsg('로그인이 필요합니다.', true);
-      const title = newNoteTitleInput.value.trim();
-      const body = newNoteBodyInput.value.trim();
-      if (!title) return;
-      const btn = document.getElementById('btn-add-note');
-      try {
-        btn.disabled = true;
-        const res = await api('/api/notes', {
-          method: 'POST',
-          body: JSON.stringify({ title, body }),
-        });
-        if (!res.ok) throw new Error('추가 실패 (HTTP ' + res.status + ')');
-        newNoteTitleInput.value = '';
-        newNoteBodyInput.value = '';
-        showAddMsg('메모가 추가되었습니다.', false);
-        await loadNotes(currentSession);
-      } catch (err) {
-        showAddMsg(err.message, true);
-      } finally {
-        btn.disabled = false;
-      }
-    });
-
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearError();
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      if (!email || !password) return showError('이메일과 비밀번호를 입력해 주세요.');
-      const submitBtn = loginForm.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = true;
-      try {
-        const res = await fetch('/api/notes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'login', email, password }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || '로그인 실패 (HTTP ' + res.status + ')');
-        currentSession = { access_token: data.access_token, user: data.user };
-        updateAuthUI(currentSession);
-        await checkServerDeviceApproval(false);
-      } catch (err) {
-        showError('로그인 실패: ' + err.message);
-      } finally {
-        if (submitBtn) submitBtn.disabled = false;
-      }
-    });
-
-    logoutBtn.addEventListener('click', () => {
-      clearError();
-      currentSession = null;
-      updateApprovalUI(false, '');
-      updateAuthUI(null);
-      loadNotes(null);
-    });
-
-    updateAuthUI(null);
-    updateApprovalUI(false, '');
-
-    const networkBanner = document.getElementById('network-status-banner');
-    const networkStatusDot = document.getElementById('network-status-dot');
-    const networkStatusText = document.getElementById('network-status-text');
-    const offlineGuidanceText = document.getElementById('offline-guidance-text');
-
-    function updateNetworkStatus() {
-      const isOnline = navigator.onLine;
-      if (isOnline) {
-        if (networkBanner) networkBanner.className = 'network-banner online';
-        if (networkStatusDot) networkStatusDot.style.background = '#3fb950';
-        if (networkStatusText) networkStatusText.textContent = '온라인 연결됨 · 보안 세션 정상 작동 중';
-        if (offlineGuidanceText) offlineGuidanceText.textContent = '온라인 연결됨 (오프라인 시 보안 정책 검증 및 자료 조회가 불가합니다)';
-      } else {
-        if (networkBanner) networkBanner.className = 'network-banner offline';
-        if (networkStatusDot) networkStatusDot.style.background = '#ff9b9b';
-        if (networkStatusText) networkStatusText.textContent = '⚠️ 오프라인 상태: 보안 정책 검증 및 자료 조회가 불가합니다.';
-        if (offlineGuidanceText) offlineGuidanceText.textContent = '오프라인 상태 (네트워크 연결 필요: 오프라인 시 자료 조회가 중단됩니다)';
-      }
-    }
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-    updateNetworkStatus();
-  </script>
-</body>
-</html>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>최부장 비밀 금고 | BYTE BACK 자료실</title><link rel="manifest" href="/manifest.json"><link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#101a28"><style>:root{color-scheme:dark;font-family:sans-serif}body{margin:0;background:#101a28;color:#ecf4ff}main{max-width:760px;margin:0 auto;padding:12px}.eyebrow{color:#8ad8df;font-size:13px;font-weight:700}h1{margin:6px 0;font-size:22px}p{font-size:13px;color:#bfd0e5;margin:4px 0}.card{margin:8px 0;padding:10px;border:1px solid #3c546e;border-radius:8px;background:#132235}.card h2{margin:0 0 6px;font-size:15px;color:#8ad8df}.fg{display:flex;flex-direction:column;gap:3px;margin-bottom:6px;font-size:12px;color:#bfd0e5}.fg input,.fg textarea{padding:5px;border:1px solid #4a627a;border-radius:6px;background:#0b1420;color:#fff;font:inherit;font-size:13px}.btn{padding:4px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}.btn-primary{background:#2f81f7;color:#fff}.btn-secondary{background:#30363d;color:#c9d1d9;border:1px solid #8b949e}.btn-danger{background:#a42c3d;color:#fff}.btn-sm{padding:3px 6px}.auth-error,.action-msg{margin-top:6px;padding:6px;border-radius:6px;font-size:12px;background:#612a3533;border:1px solid #d07384;color:#ff9b9b}.action-msg.success{background:#1f4a3544;border-color:#3fb950;color:#7ee787}.sb-row,.status-row{display:flex;justify-content:space-between;align-items:center}.status-row{font-size:13px;padding:3px 0;border-bottom:1px solid #1f334a}.user-badge{padding:6px 10px;border-radius:6px;background:#1f334a}.resource-tag{padding:2px 5px;font-size:11px;font-weight:600;border-radius:4px;background:#1f334a;color:#8ad8df;border:1px solid #3c546e}ul{list-style:none;display:grid;gap:8px;padding:0;margin:0}li{border:1px solid #51667c;border-radius:6px;padding:8px;background:#1a2a3d}.note-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.note-title{font-size:14px;font-weight:700;margin:0}.note-body{font-size:13px;color:#bfd0e5;white-space:pre-wrap;margin:0 0 6px}.note-actions,.note-edit-actions{display:flex;gap:6px;justify-content:flex-end}.status-badge-warning,.status-badge-success,.status-badge-danger{padding:2px 6px;border-radius:4px;font-size:12px;border:1px solid}.status-badge-warning{border-color:#d29922;color:#e3b341}.status-badge-success{border-color:#2ea043;color:#3fb950}.status-badge-danger{border-color:#f85149;color:#ff7b72}.network-banner{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:13px;border:1px solid #3fb950;color:#7ee787}.network-banner.offline{border-color:#d07384;color:#ff9b9b}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#3fb950}.network-banner.offline .status-dot{background:#ff9b9b}.ne{display:none;flex-direction:column;gap:6px}</style></head><body><main><div class="eyebrow">BYTE BACK · 나만의 접속 앱</div><h1>최부장 비밀 금고</h1><p>지금은 보호 장치를 단계별로 구축하는 상태입니다. 아래 기록은 실습을 위한 가상 자료입니다.</p><div id="network-status-banner" class="network-banner"><span id="network-status-dot" class="status-dot"></span><span id="network-status-text">온라인 연결됨 · 보안 세션 정상 작동 중</span></div><section class="card" aria-labelledby="device-status-title"><div class="sb-row"><h2 id="device-status-title">기기 승인 및 접속 앱 상태</h2><span class="resource-tag" id="app-badge">앱: 최부장 비밀 금고</span></div><div class="status-row"><span>앱 이름</span><span>최부장 비밀 금고</span></div><div class="status-row"><span>현재 기기 식별자</span><code id="current-device-id-display">확인 중...</code></div><div class="status-row"><span>기기 승인 상태</span><span class="status-badge-warning" id="device-approval-badge">미승인 기기 (보호 자료 접근 차단됨)</span></div><div class="status-row"><span>오프라인 안내</span><span id="offline-guidance-text">오프라인 상태에서는 보안을 위해 가상 자료실을 열 수 없습니다.</span></div><div class="sb-row" style="margin:8px 0 6px;padding:6px;background:#0d1825;border-radius:6px"><div><strong style="font-size:13px">서버 기기 등록 및 승인 요청</strong><div style="font-size:12px;color:#8b949e">서버가 이 기기를 등록 기기로 승인한 뒤에만 보호 자료실이 열립니다.</div></div><div style="display:flex;gap:6px"><button type="button" class="btn btn-secondary btn-sm" id="btn-check-device">승인 상태 재확인</button><button type="button" class="btn btn-primary btn-sm" id="btn-request-device-approval">기기 승인 요청</button></div></div><div id="device-approval-result" style="display:none;margin-top:6px;padding:6px;border-radius:6px;font-size:13px" role="status"></div><p style="margin:6px 0 0;font-size:12px;color:#8ad8df">⚠️ 기기 개인키를 브라우저 저장소에 넣지 않습니다. 서버가 이 기기를 등록 기기로 확인한 뒤에만 보호 자료실이 열립니다.</p></section><section class="card" aria-labelledby="auth-title"><h2 id="auth-title">사용자 인증</h2><div id="auth-logged-out-view"><form id="login-form"><label class="fg">이메일<input type="email" id="login-email" autocomplete="email" placeholder="이메일 입력" required></label><label class="fg">비밀번호<input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required></label><button type="submit" class="btn btn-primary" id="btn-login">로그인</button></form><div id="auth-error" class="auth-error" style="display:none" role="alert"></div></div><div id="auth-logged-in-view" style="display:none"><div class="user-badge sb-row"><div><div style="font-size:12px;color:#8b949e">인증된 사용자</div><span id="user-email" style="color:#8ad8df;font-weight:600"></span></div><button type="button" class="btn btn-secondary btn-sm" id="btn-logout">로그아웃</button></div></div></section><section class="card" aria-labelledby="notice-title" data-resource-id="notices"><div class="sb-row"><strong id="notice-title" style="color:#8ad8df">강사 공지</strong><span class="resource-tag">자원 ID: notices</span></div><p>로그인 사용자 토큰(Bearer)으로 보호되는 가상 메모 CRUD 시스템입니다.</p></section><section class="card" id="device-unapproved-notice" style="border-color:#d29922;background:#1c1d18"><h3 style="margin:0 0 6px;font-size:14px;color:#e3b341">🔒 보호 자료실 잠김 (기기 미승인 상태)</h3><p style="color:#c9d1d9">현재 기기는 서버에 등록 기기로 승인되지 않아 보호 자료가 표시되지 않습니다. 로그인 후 상단의 <strong>[기기 승인 요청]</strong>을 완료해야 자료실이 열립니다.</p></section><div id="vault-protected-area" style="display:none"><section class="card" id="add-note-card" style="display:none" aria-labelledby="add-note-title"><h2 id="add-note-title">가상 메모 추가</h2><form id="add-note-form"><label class="fg">메모 제목<input type="text" id="new-note-title" placeholder="제목" required></label><label class="fg">메모 내용<textarea id="new-note-body" placeholder="내용" required></textarea></label><button type="submit" class="btn btn-primary btn-sm" id="btn-add-note">메모 추가</button></form><div id="add-note-msg" class="action-msg" style="display:none" role="status"></div></section><section id="notes-section" aria-labelledby="notes-section-title" data-resource-id="notes"><div class="sb-row" style="margin:8px 0 6px"><h2 id="notes-section-title" style="margin:0;font-size:16px;color:#8ad8df">내 자료실 메모</h2><span class="resource-tag">자원 ID: notes</span></div><ul id="notes" aria-live="polite"></ul></section></div></main><script type="module">const $=i=>document.getElementById(i),on=(i,e,f)=>$ (i)?.addEventListener(e,f),C=t=>document.createElement(t);
+const devId=Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');
+if($('current-device-id-display'))$('current-device-id-display').textContent=devId;
+let curSes=null,devOk=false;
+const SC='status-badge-success',SD='status-badge-danger',SW='status-badge-warning',CJ='application/json',API='/api/notes';
+const setErr=m=>{const e=$('auth-error');if(e){e.textContent=m;e.style.display=m?'block':'none';}};
+const setMsg=(m,err=false)=>{const el=$('add-note-msg');if(el){el.textContent=m;el.className='action-msg '+(err?'':'success');el.style.display='block';setTimeout(()=>{el.style.display='none';},4000);}};
+const api=(u,o={})=>fetch(u,{...o,headers:{'Content-Type':CJ,...(curSes?.access_token?{Authorization:'Bearer '+curSes.access_token}:{}),'x-device-id':devId,...(o.headers||{})}});
+function syncVault(){
+const ok=Boolean(curSes?.user&&devOk);
+if($('device-unapproved-notice'))$('device-unapproved-notice').style.display=ok?'none':'block';
+if($('vault-protected-area'))$('vault-protected-area').style.display=ok?'block':'none';
+if($('add-note-card'))$('add-note-card').style.display=ok?'block':'none';
+if(!devOk)$('notes')?.replaceChildren();
+}
+function setDevUI(ok,msg='',err=false){
+devOk=Boolean(ok);
+const b=$('device-approval-badge'),r=$('device-approval-result');
+if(b){b.className=devOk?SC:(err?SD:SW);b.textContent=devOk?'✅ 서버 등록 기기 승인됨 (접근 허가)':'미승인 기기 (보호 자료 접근 차단됨)';}
+if(r){r.style.display=msg?'block':'none';if(msg){r.className=devOk?SC:(err?SD:SW);r.textContent='[서버 확인] '+msg;}}
+syncVault();
+}
+async function reqDev(act,fb){
+if(!curSes?.access_token)return setDevUI(false,fb?'로그인 후 기기 승인 상태를 확인할 수 있습니다.':'');
+const btn=$('btn-request-device-approval');
+try{
+if(btn){btn.disabled=true;btn.textContent='확인 중...';}
+const r=await api(API,{method:'POST',body:JSON.stringify({action:act,deviceId:devId})});
+const d=await r.json().catch(()=>({})),ok=Boolean(r.ok&&d.approved&&d.deviceRegistered);
+setDevUI(ok,fb?(d.message||(ok?'기기 승인 완료':'미승인 기기')):'',!ok&&!r.ok);
+if(ok)await loadNotes(curSes);
+else if(!r.ok)throw new Error(d.message||d.error||'기기 승인 실패');
+}catch(e){setDevUI(false,fb?'승인 오류: '+e.message:'',true);}
+finally{if(btn){btn.disabled=false;btn.textContent='기기 승인 요청';}}
+}
+on('btn-request-device-approval','click',()=>reqDev('device_approval',true));
+on('btn-check-device','click',()=>reqDev('check_device',true));
+function syncAuth(s){
+curSes=s;const u=s?.user??null,o=$('auth-logged-out-view'),i=$('auth-logged-in-view');
+if(u){if(o)o.style.display='none';if(i)i.style.display='block';if($('user-email'))$('user-email').textContent=u.email||u.id;if($('login-password'))$('login-password').value='';setErr('');}
+else{if(i)i.style.display='none';if(o)o.style.display='block';if($('user-email'))$('user-email').textContent='';}
+syncVault();
+}
+async function loadNotes(s){
+const list=$('notes');if(!devOk){list?.replaceChildren();return;}
+if(!s?.access_token){if(list){const it=C('li');it.textContent='인증이 필요합니다. 로그인 후 가상 메모를 확인하세요.';list.replaceChildren(it);}return;}
+try{
+const r=await api(API,{cache:'no-store'});
+if(!r.ok)throw new Error(r.status===401?'인증 필요 (401)':'조회 실패 (HTTP '+r.status+')');
+const d=await r.json(),notes=Array.isArray(d)?d:(d.notes||[]);
+if(!notes.length){const it=C('li');it.textContent='등록된 메모가 없습니다.';list.replaceChildren(it);return;}
+list.replaceChildren(...notes.map(n=>mkNote(n,s)));
+}catch(e){const it=C('li');it.textContent=e.message;list?.replaceChildren(it);}
+}
+function mkNote(n,s){
+const li=C('li');li.dataset.id=n.id;li.dataset.resourceId='notes';
+li.innerHTML='<div class="nv"><div class="note-header"><strong class="note-title"></strong> <span class="resource-tag">자원 ID: notes</span></div><p class="note-body"></p><div class="note-actions"><button class="btn btn-secondary btn-sm btn-edit">수정</button><button class="btn btn-danger btn-sm btn-del">삭제</button></div></div><div class="ne"><label class="fg">제목<input class="edit-title"></label><label class="fg">내용<textarea class="edit-body"></textarea></label><div class="note-edit-actions"><button class="btn btn-primary btn-sm btn-save">저장</button><button class="btn btn-secondary btn-sm btn-cancel">취소</button></div></div>';
+li.querySelector('.note-title').textContent=n.title;li.querySelector('.note-body').textContent=n.body??n.content??'';
+const nv=li.querySelector('.nv'),ne=li.querySelector('.ne'),et=li.querySelector('.edit-title'),eb=li.querySelector('.edit-body');
+et.value=n.title;eb.value=n.body??n.content??'';
+li.querySelector('.btn-edit').onclick=()=>{nv.style.display='none';ne.style.display='flex';};
+li.querySelector('.btn-cancel').onclick=()=>{ne.style.display='none';nv.style.display='block';};
+li.querySelector('.btn-save').onclick=async()=>{
+const title=et.value.trim(),body=eb.value.trim();if(!title)return alert('제목을 입력하세요.');
+try{const r=await api(API+'/'+n.id,{method:'PUT',body:JSON.stringify({title,body})});if(!r.ok)throw new Error('수정 실패');await loadNotes(s);}catch(e){alert(e.message);}
+};
+li.querySelector('.btn-del').onclick=async()=>{
+if(!confirm('정말 삭제하시겠습니까?'))return;
+try{const r=await api(API+'/'+n.id,{method:'DELETE'});if(!r.ok)throw new Error('삭제 실패');await loadNotes(s);}catch(e){alert(e.message);}
+};
+return li;
+}
+on('add-note-form','submit',async e=>{
+e.preventDefault();if(!curSes?.access_token)return setMsg('로그인이 필요합니다.',true);
+const ti=$('new-note-title'),bo=$('new-note-body'),title=ti?.value.trim()||'',body=bo?.value.trim()||'';
+if(!title)return;const btn=$('btn-add-note');
+try{if(btn)btn.disabled=true;const r=await api(API,{method:'POST',body:JSON.stringify({title,body})});if(!r.ok)throw new Error('추가 실패');if(ti)ti.value='';if(bo)bo.value='';setMsg('메모가 추가되었습니다.',false);await loadNotes(curSes);}
+catch(e){showMsg(e.message,true);}finally{if(btn)btn.disabled=false;}
+});
+on('login-form','submit',async e=>{
+e.preventDefault();setErr('');
+const em=$('login-email'),pw=$('login-password'),email=em?.value.trim()||'',password=pw?.value||'';
+if(!email||!password)return setErr('이메일과 비밀번호를 입력해 주세요.');
+const sub=$('btn-login');if(sub)sub.disabled=true;
+try{
+const r=await fetch(API,{method:'POST',headers:{'Content-Type':CJ},body:JSON.stringify({action:'login',email,password})});
+const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'로그인 실패 (HTTP '+r.status+')');
+curSes={access_token:d.access_token,user:d.user};syncAuth(curSes);await reqDev('check_device',false);
+}catch(e){setErr('로그인 실패: '+e.message);}finally{if(sub)sub.disabled=false;}
+});
+on('btn-logout','click',()=>{setErr('');curSes=null;setDevUI(false,'');syncAuth(null);loadNotes(null);});
+syncAuth(null);setDevUI(false,'');
+function syncNet(){
+const on=navigator.onLine,nb=$('network-status-banner'),nd=$('network-status-dot'),nt=$('network-status-text'),ot=$('offline-guidance-text');
+if(nb)nb.className='network-banner '+(on?'':'offline');
+if(nd)nd.style.background=on?'#3fb950':'#ff9b9b';
+if(nt)nt.textContent=on?'온라인 연결됨 · 보안 세션 정상 작동 중':'⚠️ 오프라인 상태: 보안 정책 검증 및 자료 조회가 불가합니다.';
+if(ot)ot.textContent=on?'온라인 연결됨 (오프라인 시 보안 정책 검증 및 자료 조회가 불가합니다)':'오프라인 상태에서는 보안을 위해 가상 자료실을 열 수 없습니다.';
+}
+window.addEventListener('online',syncNet);window.addEventListener('offline',syncNet);syncNet();</script></body></html>
