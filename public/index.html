@@ -227,24 +227,14 @@
     const newNoteBodyInput = document.getElementById('new-note-body');
     const addNoteMsg = document.getElementById('add-note-msg');
 
-    // 11단계: 클라이언트 기기 식별자 (개인키나 비밀키가 아닌 단순 공개 식별자)
-    function getOrCreateDeviceId() {
-      let id = '';
-      try {
-        id = sessionStorage.getItem('aleph_device_id');
-      } catch (_e) {}
-      if (!id || !/^[0-9a-f]{16}$/i.test(id)) {
-        const arr = new Uint8Array(8);
-        crypto.getRandomValues(arr);
-        id = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
-        try {
-          sessionStorage.setItem('aleph_device_id', id);
-        } catch (_e) {}
-      }
-      return id;
+    // 11단계: 클라이언트 기기 식별자 (브라우저 저장소에 넣지 않고 메모리에서 안전하게 관리)
+    function generateDeviceId() {
+      const arr = new Uint8Array(8);
+      crypto.getRandomValues(arr);
+      return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    const currentDeviceId = getOrCreateDeviceId();
+    const currentDeviceId = generateDeviceId();
     const deviceIdDisplay = document.getElementById('current-device-id-display');
     if (deviceIdDisplay) deviceIdDisplay.textContent = currentDeviceId;
 
@@ -693,8 +683,8 @@
         }
 
         const data = await res.json();
+        // 기기 키나 토큰은 브라우저 저장소(localStorage/sessionStorage)에 넣지 않고 메모리 변수로만 관리
         currentSession = { access_token: data.access_token, user: data.user };
-        try { sessionStorage.setItem('auth_session', JSON.stringify(currentSession)); } catch (_e) {}
         updateAuthUI(currentSession);
         await checkServerDeviceApproval(false);
       } catch (err) {
@@ -707,23 +697,14 @@
     logoutBtn.addEventListener('click', () => {
       clearError();
       currentSession = null;
-      try { sessionStorage.removeItem('auth_session'); } catch (_e) {}
       updateApprovalUI(false, '');
       updateAuthUI(null);
       loadNotes(null);
     });
 
-    // 세션 복원 및 초기화
-    try {
-      const saved = sessionStorage.getItem('auth_session');
-      if (saved) currentSession = JSON.parse(saved);
-    } catch (_e) {}
-    updateAuthUI(currentSession);
-    if (currentSession?.access_token) {
-      checkServerDeviceApproval(false);
-    } else {
-      updateApprovalUI(false, '');
-    }
+    // 초기 화면 상태 설정 (브라우저 저장소에 토큰/키를 보관하지 않고 초기화)
+    updateAuthUI(null);
+    updateApprovalUI(false, '');
 
     // 네트워크 및 오프라인 상태 실시간 감지
     const networkBanner = document.getElementById('network-status-banner');
