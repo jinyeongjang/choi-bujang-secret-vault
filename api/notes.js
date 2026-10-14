@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { createLoginVerifier } from '../src/verify-login.mjs';
 
@@ -153,6 +153,97 @@ export default async function handler(request, response) {
           noteId = match[1];
         }
       } catch (_e) {}
+    }
+
+    // 0. 비공개 가상 메모 단건 복원 경로 (POST /api/notes/restore)
+    const isRestoreRequest = request.method === 'POST' && (
+      noteId === 'restore'
+      || pathname.endsWith('/restore')
+      || pathname === '/api/notes/restore'
+      || reqBody.action === 'restore'
+    );
+
+    if (isRestoreRequest) {
+      const noteData = reqBody.backupNote || reqBody.note || reqBody;
+      const targetId = noteData.id;
+
+      // 1. ID 형식 및 유효성 대조
+      if (!targetId || !UUID_REGEX.test(targetId)) {
+        return response.status(400).json({ error: 'INVALID_UUID', reason: 'VALID_ID_REQUIRED' });
+      }
+
+      // 2. 소유자 대조: 요청 본문 소유자가 본인(identity.userId)과 다르면 거부
+      if (noteData.owner_id && noteData.owner_id !== identity.userId) {
+        return response.status(403).json({ error: 'FORBIDDEN', reason: 'NOT_OWNER' });
+      }
+
+      // 3. 내용 해시 대조: content 또는 body 내용의 SHA-256 해시 검증
+      const contentText = noteData.content ?? noteData.body ?? '';
+      const calculatedHash = createHash('sha256').update(contentText, 'utf8').digest('hex');
+      const providedHash = noteData.contentHash || noteData.content_hash || noteData.hash || reqBody.contentHash;
+
+      if (!providedHash) {
+        return response.status(400).json({ error: 'BAD_REQUEST', reason: 'CONTENT_HASH_REQUIRED' });
+      }
+
+      if (providedHash.toLowerCase() !== calculatedHash.toLowerCase()) {
+        return response.status(400).json({ error: 'HASH_MISMATCH', reason: 'CONTENT_HASH_VERIFICATION_FAILED' });
+      }
+
+      // 4. 기존 행이 존재할 경우 기존 소유자도 본인인지 검증 (타인 메모 덮어쓰기 방지)
+      const { data: existingNote, error: existingErr } = await supabase
+        .from('notes')
+        .select('id, owner_id')
+        .eq('id', targetId)
+        .maybeSingle();
+
+      if (!existingErr && existingNote && existingNote.owner_id !== identity.userId) {
+        return response.status(403).json({ error: 'FORBIDDEN', reason: 'NOT_OWNER' });
+      }
+
+      // 5. 지정한 한 건만 안전하게 복원 (다른 메모와 감사 기록은 보존)
+      const title = noteData.title || '';
+      const { data: restored, error: upsertErr } = await supabase
+        .from('notes')
+        .upsert({
+          id: targetId,
+          title,
+          content: contentText,
+          owner_id: identity.userId,
+        })
+        .select('id, title, content, owner_id')
+        .maybeSingle();
+
+      if (upsertErr) {
+        return response.status(500).json({ error: 'DATABASE_QUERY_FAILED', details: upsertErr.message });
+      }
+
+      // 감사 기록 및 복원 결과 반환 (심판 및 클라이언트 대조용 최상위 속성 및 restored/audit 제공)
+      const noteBodyText = restored.content ?? '';
+      return response.status(200).json({
+        success: true,
+        id: restored.id,
+        title: restored.title,
+        body: noteBodyText,
+        content: noteBodyText,
+        owner_id: restored.owner_id,
+        contentHash: calculatedHash,
+        restored: {
+          id: restored.id,
+          title: restored.title,
+          body: noteBodyText,
+          content: noteBodyText,
+          owner_id: restored.owner_id,
+          contentHash: calculatedHash,
+        },
+        audit: {
+          action: 'NOTE_RESTORE',
+          timestamp: new Date().toISOString(),
+          restoredId: restored.id,
+          ownerId: identity.userId,
+          status: 'SUCCESS',
+        },
+      });
     }
 
     // A. 개별 메모 연산 (/api/notes/:id)

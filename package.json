@@ -10,6 +10,7 @@
     "decider:test": "node scripts/decider-test.mjs",
     "detect:test": "node scripts/detect-test.mjs",
     "fixture:7": "node scripts/fixture-7.mjs",
+    "restore:test": "node src/restore.mjs",
     "xdr:run": "node scripts/xdr-run.mjs"
   },
   "engines": {

@@ -240,6 +240,109 @@
    - **10분 밖으로 흩어진 조회 200건**: `통과 · 10분 밖으로 흩어진 조회 200건` (`observe`)
    *(주의: 이 시험은 가상 사건 연습이며 실제 운영 반 엔진의 사건 전달·접속 회수가 연결됐거나 심판 통과 증거가 아닙니다.)*
 
+## 10단계: 백업에서 자료실을 되살립니다 (정책 차이 비교 및 비공개 가상 메모 단건 복원)
+
+### 서비스 및 경로
+- **서비스 (Service)**: `notes`
+- **복원 경로 (Restore Route)**: `POST /api/notes/restore`
+
+### 현재 작동하는 기능
+- **안전 정책 사본 비교 및 사전 검증 (`src/restore.mjs`)**:
+  - `diffPolicies(safePolicy, testPolicy)`: 침해 전 검증된 안전 정책 사본과 현재 시험 정책의 차이(추가/제거/수정된 규칙)만 계산하며, 사본이 없거나 검증 실패 시 실제 운영 정책을 건드리지 않고 즉시 중단합니다.
+  - `restorePolicy(safePolicy, testPolicy, options)`: `dryRun: true`를 통해 실행 전 바뀔 항목(diff)을 미리 확인할 수 있으며, 다른 서비스 규칙과 감사 이력을 유실 없이 보존하면서 안전 정책 버전으로 되돌립니다.
+- **비공개 가상 메모 사본 단건 복원 (`api/notes.js` - `POST /api/notes/restore`)**:
+  - 메모 ID(`UUID`), 소유자(`owner_id`), 본문 내용의 SHA-256 해시(`contentHash`)를 엄격히 대조하여 위변조 여부를 검증합니다.
+  - 타인 소유자의 메모 복원 시도나 해시 불일치 시 각각 `403 FORBIDDEN (NOT_OWNER)`, `400 HASH_MISMATCH`로 차단합니다.
+  - 지정한 단건 ID의 메모만 안전하게 복원(upsert)하며, 다른 사용자의 메모와 복원 감사 이력(`NOTE_RESTORE`)은 온전히 보존합니다.
+  - 시험 계정 B의 메모(`B의 시험 메모`)로만 소유권 및 해시 대조 복원 동작을 확인합니다.
+
+### 복구 뒤 1~9단계 정상·금지 요청 재실행 순서
+
+복구 완료 후 1~9단계의 정상 요청과 금지 요청을 다시 확인할 수 있는 실행 순서입니다. 직접 실행하지 않은 시험은 `미실행`으로 두고 결과를 꾸미지 않습니다.
+
+1. **1~2단계: 정적 자료 분리 및 공개 노출 여부 점검**
+   - **실행 명령**:
+     ```bash
+     curl.exe -s -i https://choi-bujang-secret-vault-jinyeong.vercel.app/data.json
+     ```
+   - **기대 결과**: 공개 `data.json`에서 가상 메모 문장이 노출되지 않아야 함 (빈 배열 또는 404).
+   - **현재 상태**: 미실행 (재실행 전)
+
+2. **3단계: 로그인 연동 및 비인가 요청 차단 점검**
+   - **금지 요청 (비로그인 조회)**:
+     ```bash
+     curl.exe -s -i https://choi-bujang-secret-vault-jinyeong.vercel.app/api/notes
+     ```
+     - **기대 결과**: `401 Unauthorized` (`{"error":"UNAUTHORIZED"}`)로 거부.
+     - **현재 상태**: 미실행 (재실행 전)
+   - **정상 요청 (유효한 Bearer 토큰 첨부 조회)**:
+     ```bash
+     curl.exe -s -i -H "Authorization: Bearer <유효한_토큰>" https://choi-bujang-secret-vault-jinyeong.vercel.app/api/notes
+     ```
+     - **기대 결과**: `200 OK` 및 로그인 사용자의 메모 목록 반환.
+     - **현재 상태**: 미실행 (학생/심판 토큰 확인 필요)
+
+3. **4단계: 객체 수준 인가 및 소유자 대조 점검**
+   - **금지 요청 (타인 메모 단건 조회·수정·삭제 또는 비로그인 접근)**:
+     ```bash
+     curl.exe -s -i https://choi-bujang-secret-vault-jinyeong.vercel.app/api/notes/00000000-0000-0000-0000-000000000001
+     ```
+     - **기대 결과**: 비로그인 시 `401 Unauthorized`, 타인 소유 메모 접근 시 `403 Forbidden` (`NOT_OWNER`).
+     - **현재 상태**: 미실행 (재실행 전)
+   - **정상 요청 (본인 소유 메모 단건 조회·수정·삭제)**:
+     - **기대 결과**: `200 OK` 및 본인 메모 `{id, title, body}` 반환.
+     - **현재 상태**: 미실행 (학생/심판 토큰 확인 필요)
+
+4. **5단계: 원본 자료 API 직접 접근 차단 (BFF 패턴) 점검**
+   - **금지 요청 (원본 Supabase REST API 직접 호출)**:
+     ```bash
+     curl.exe -s -i https://rumiyxkamhgodrrdvvft.supabase.co/rest/v1/notes
+     ```
+     - **기대 결과**: 직접 권한 회수(`REVOKE ALL`) 및 인증 부재로 직접 조회 차단(`401`).
+     - **현재 상태**: 미실행 (재실행 전)
+   - **정상 요청 (서버 함수 `/api/notes` 단일 접점 경유)**:
+     - **현재 상태**: 미실행 (학생/심판 토큰 확인 필요)
+
+5. **6단계: 등록 기기 검문 판정 점검**
+   - **로컬 연습 명령**:
+     ```bash
+     npm run decider:test
+     ```
+     - **기대 결과**: 등록 기기 정상 요청은 `allow`, 미등록 기기 요청은 `deny` (`device_not_registered`). *(가상 요청 연습이며 실제 심판 판정이 아님)*
+   - **실제 원격 기기 점검**: 미실행
+
+6. **7단계: 복합 이상 접속 추가 확인(`step_up`) 판정 점검**
+   - **로컬 연습 명령**:
+     ```bash
+     npm run fixture:7
+     ```
+     - **기대 결과**: 정상 사건은 `allow`, 심야·낯선 네트워크·대량 조회 복합 이상 사건은 `step_up` (`step_up_required`), 추가 확인 완료 요청은 `allow`. *(가상 요청 연습이며 실제 심판 판정이 아님)*
+   - **실제 원격 재확인 점검**: 미실행
+
+7. **8단계: 구역 분리 및 권한 상승 차단 점검**
+   - **로컬 연습 명령**:
+     ```bash
+     npm run decider:test
+     ```
+     - **기대 결과**: 메모 구역 정상 요청은 `allow`, 강사 공지 구역 쓰기(`notice_modification_forbidden`) 및 알 수 없는 경로(`unknown_route`)는 `deny`.
+   - **실제 원격 구역 분리 점검**: 미실행
+
+8. **9단계: 가상 사건 탐지 및 권한 회수 제안 점검**
+   - **로컬 연습 명령**:
+     ```bash
+     npm run detect:test
+     ```
+     - **기대 결과**: 10분 내 120건 이하 조회 또는 분산 조회는 `observe`, 10분 내 120건 초과 + 낯선 네트워크 복합 폭주는 해당 가상 기기 1개에 대해 `propose_revocation` (`burst_read`). *(가상 사건 연습이며 운영 반 엔진 연결 결과가 아님)*
+   - **실제 원격 탐지·회수 점검**: 미실행
+
+9. **10단계: 안전 정책 비교 및 단건 메모 복원 점검**
+   - **로컬 복원 검증 명령**:
+     ```bash
+     npm run restore:test
+     ```
+     - **기대 결과**: 사본 재검증 및 diff 사전 확인 통과, 시험 계정 B의 메모 단건 복원 일치 통과, 본문/해시 변조(`HASH_MISMATCH`) 및 타인 소유 복원(`NOT_OWNER`) 차단 통과.
+   - **원격 복원 경로(`POST /api/notes/restore`) 점검**: 미실행
+
 ## 보너스 트랙: XDR 경보 탐지 및 판정
 
 ### 보너스 xdr-01 (brute-force)
