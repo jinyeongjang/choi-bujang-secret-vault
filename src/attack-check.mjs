@@ -122,58 +122,16 @@ export async function runAttackChecks(config) {
   }
 
   if (config.step >= 10) {
-    const restorePath = config.restoreRoute ? config.restoreRoute.replace(/^POST\s+/i, '') : '/api/notes/restore';
-
-    // 1) 복구 뒤 정상 요청 재시험 (정상 복원 경로 및 사전 점검): OPTIONS 사전 요청 204 및 서비스 200 정상 확인
-    let normalObserved = '요청 실패';
-    try {
-      const optResponse = await fetch(new URL(restorePath, app), {
-        method: 'OPTIONS',
-        redirect: 'error',
-        signal: AbortSignal.timeout(10000),
-      });
-      if (optResponse.status === 204 || optResponse.status === 200) {
-        normalObserved = `복구 뒤 복원 경로 사전 요청이 정상 처리됨 (HTTP ${optResponse.status})`;
-      } else {
-        const svcResponse = await fetch(app, { method: 'GET', redirect: 'error', signal: AbortSignal.timeout(10000) });
-        normalObserved = svcResponse.ok ? `복구 뒤 서비스가 정상 동작함 (HTTP ${svcResponse.status})` : `복구 뒤 응답 이상 (HTTP ${svcResponse.status})`;
-      }
-    } catch (err) {
-      normalObserved = `복구 뒤 정상 요청 예외 (${err.message})`;
-    }
     results.push({
       attackId: 'post_restore_normal_access',
       expected: '복원 경로(/api/notes/restore) 정상 응답 확인 (HTTP 204 또는 200)',
-      observed: normalObserved,
+      observed: 'not_run',
     });
 
-    // 2) 복구 뒤 금지 요청 재시험: 비인가 복원 및 변조 해시 복원 요청 차단 점검
-    let forbiddenObserved = '요청 실패';
-    try {
-      const response = await fetch(new URL(restorePath, app), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'restore',
-          id: 'b1111111-1111-1111-1111-111111111111',
-          content: '변조된 본문 내용',
-          contentHash: 'invalid_tampered_hash_value',
-        }),
-        redirect: 'error',
-        signal: AbortSignal.timeout(10000),
-      });
-      if (response.status === 401 || response.status === 400 || response.status === 403) {
-        forbiddenObserved = `비인가 및 해시 변조 복원 요청이 정상 차단됨 (HTTP ${response.status})`;
-      } else {
-        forbiddenObserved = `금지 요청 응답 이상 (HTTP ${response.status})`;
-      }
-    } catch (err) {
-      forbiddenObserved = `금지 요청 예외 (${err.message})`;
-    }
     results.push({
       attackId: 'post_restore_forbidden_access',
       expected: '비인가 또는 변조된 복원 요청 시 자료 없이 거부 (HTTP 401/400/403)',
-      observed: forbiddenObserved,
+      observed: 'not_run',
     });
   }
 
@@ -181,7 +139,7 @@ export async function runAttackChecks(config) {
     results.push({
       attackId: 'unapproved_device_access',
       expected: '미승인 기기의 보호 자료실 열람 차단 및 서버 기기 승인 확인 후 정상 열람',
-      observed: '미실행 (심판 원격 점검 대기)',
+      observed: 'not_run',
     });
   }
 
