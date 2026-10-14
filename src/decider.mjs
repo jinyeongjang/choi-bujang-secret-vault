@@ -76,7 +76,13 @@ function validateZoneAccess(request) {
     return method === 'GET';
   }
 
-  // 5. 메모 전체 목록 경로 판별: 여러 사람의 자료를 한꺼번에 여는 경로는 무조건 거부
+  // 5. 비공개 가상 메모 단건 복원 경로(POST /notes/restore) 허용 (소유자·해시 대조는 API가 수행)
+  const cleanRoute = route.replace(/^[A-Z]+\s+/i, '').replace(/^\/api/, '').replace(/\/+$/, '');
+  if (method === 'POST' && (cleanPath === '/notes/restore' || cleanRoute === '/notes/restore')) {
+    return true;
+  }
+
+  // 6. 메모 전체 목록 경로 판별: 여러 사람의 자료를 한꺼번에 여는 경로는 무조건 거부
   // - 경로가 컬렉션 루트(/notes)인 경우
   // - 라우트에 :id가 없는 경우 (예: GET /notes)
   // - 경로에 all, list, bulk 등이 지정된 경우
@@ -88,7 +94,7 @@ function validateZoneAccess(request) {
     return false;
   }
 
-  // 6. 메모 한 건(/notes/:id) 경로 판별: 단건 연산(GET, PUT, DELETE) 허용 (주인 비교는 API가 수행)
+  // 7. 메모 한 건(/notes/:id) 경로 판별: 단건 연산(GET, PUT, DELETE) 허용 (주인 비교는 API가 수행)
   const isSingleNote = (service === 'notes' || cleanPath.startsWith('/notes') || route.includes('/notes/:id'))
     && /^\/notes\/[^/?#]+$/i.test(cleanPath);
 
