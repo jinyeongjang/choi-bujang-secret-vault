@@ -402,6 +402,101 @@
    npm run bundle
    ```
 
+## 12단계: 탈환 작전실을 완성합니다 (통합 설치·실행·중지·복구 가이드)
+
+### 기준 커밋 및 운영 환경
+- **검사한 기준 커밋**: `63c05ce fix: 경량화 적용`
+- **배포 주소**: `https://choi-bujang-secret-vault-jinyeong.vercel.app`
+- **원본 API (Supabase REST)**: `https://rumiyxkamhgodrrdvvft.supabase.co/rest/v1/notes`
+- **심판 접수 서버**: `https://aleph-judge-production.up.railway.app/defense/judge`
+
+### 학생 몫과 제공 엔진의 출처 구분
+
+| 구분 | 구성 요소 | 출처 및 역할 | 주요 책임 및 구현 내용 |
+| :--- | :--- | :--- | :--- |
+| **제공 엔진** | **ALEPH SDP 엔진** (운영 반 / 심판 서버) | **운영 측 제공 엔진** | • 판정기 호출 규격(`docs/DECIDER_REQUEST.md`) 정의<br>• 가상 사건 로그 규격(`docs/DETECT_EVENTS.md`) 전달<br>• 원격 41종 침투 및 방어 평가 집행 (기기 미등록 침투, 폭주 조회 차단, 원격 복구 평가 등) |
+| **학생 몫** | **학생 판정기** (`src/decider.mjs`) | **학생 구현** | • 4대 규칙 구현 (`RULE_IDS: ['device_registered', 'step_up_required', 'zone_isolation', 'zone_rules']`)<br>• 엔진 계약 준수: `request.deviceRegistered`, `request.stepUp`, `request.signals`만 사용<br>• 계약된 5개 필수 항목 응답 반환 |
+| **학생 몫** | **탐지 규칙** (`src/detect.mjs`) | **학생 구현** | • 가상 사건 로그 입력 정제 (메모 본문·비밀값 배제)<br>• 10분 구간 내 120건 초과 + 낯선 네트워크 복합 의심 탐지<br>• 가상 기기 1건 회수 제안(`propose_revocation`, `burst_read`) |
+| **학생 몫** | **비공개 복원 모듈** (`src/restore.mjs`) | **학생 구현** | • 안전 사본 비교(`diffPolicies`) 및 변경 범위 사전 표시(`dryRun`)<br>• 안전 버전(`v1.0-safe-backup`) 무손실 정책 복원(`restorePolicy`)<br>• ID·소유자·내용 해시(SHA-256) 삼중 일치 단건 복원 및 변조 차단 |
+| **학생 몫** | **나만의 접속 앱 & 탈환 작전실** (`public/index.html`) | **학생 구현** | • 설치형 웹앱 PWA 규격(`manifest.json`, `icon.svg`) 및 오프라인 안내<br>• 화면 기기 승인 상태 연동 및 미승인 시 보호 자료실 차단<br>• 4대 요약 카드, 1~11단계 정상·금지 요청 실측 대조표 및 실시간 재검증 절차<br>• 가린 서버 감사 기록 (메모 본문 비공개 마스킹) |
+| **학생 몫** | **자료실 서버 함수** (`api/notes.js`) | **학생 구현** | • 단일 접점(BFF) 구조로 원본 DB 직접 접근 차단<br>• JWT Bearer 토큰 검증 및 `owner_id` 객체 수준 소유자 인가<br>• 서버 등록 기기 승인 검증 및 단건 안전 복원 경로(`/api/notes/restore`) 제공 |
+
+### 설치·실행·중지·복구 재현 순서
+
+#### 1. 설치 (Prerequisites & Installation)
+1. **런타임 환경**: Node.js >= 22 준비
+2. **의존성 설치**:
+   ```bash
+   npm install
+   ```
+3. **비밀값 관리 안내 (비밀값 포장 금지)**:
+   - 데이터베이스 접속 키(`SUPABASE_SECRET_KEY`)나 비밀번호, 토큰 등 실제 비밀값을 코드, 저장소, 문서에 직접 적지 않습니다.
+   - Vercel 프로젝트 대시보드의 **Settings** -> **Environment Variables** 화면에 접속하여 공식 비밀 입력란에 `SUPABASE_URL` 및 `SUPABASE_SECRET_KEY`(`service_role` 키)를 직접 입력합니다.
+
+#### 2. 실행 (Execution & Verification)
+1. **로컬 빌드 검증**:
+   ```bash
+   npm run build -- --local
+   ```
+   - 정상 결과: `public/data.json` 제거 확인 및 로컬 번들 준비 완료.
+2. **학생 판정기 계약 단위 검증 (가상 요청 연습)**:
+   ```bash
+   npm run decider:test
+   ```
+   - 정상 요청 (등록 기기): `allow` 통과
+   - 금지 요청 (미등록 기기): `deny` (`device_not_registered`) 차단
+   - 복합 이상 접속: `step_up` (`step_up_required`) 추가 확인 요구
+   - *(주의: 이 명령은 가상 요청 기반 로컬 연습이며 실제 심판 판정 증거가 아닙니다.)*
+3. **가상 사건 탐지 및 회수 제안 검증**:
+   ```bash
+   npm run detect:test
+   ```
+   - 정상/분산 조회: `observe`
+   - 10분 내 120건 초과 + 낯선 네트워크 복합 조회: `propose_revocation` (`burst_read`)
+   - *(주의: 가상 사건 연습이며 실제 운영 반 엔진 연결이나 심판 통과 증거가 아닙니다.)*
+4. **복합 이상 접속 사건 규칙 시험**:
+   ```bash
+   npm run fixture:7
+   ```
+   - 정상 사건: `allow`, 복합 이상 사건: `step_up`
+5. **안전 정책 사본 비교 및 단건 복원 검증**:
+   ```bash
+   npm run restore:test
+   ```
+   - 사본 diff 사전 확인(`dryRun`) 통과
+   - ID·소유자·해시 삼중 일치 메모 단건 복원 통과
+   - 타인 메모 변조 및 해시 불일치 복원 요청 차단 통과
+6. **접속 앱 및 탈환 작전실 화면 실행**:
+   - 브라우저에서 `https://choi-bujang-secret-vault-jinyeong.vercel.app` 접속
+   - **탈환 작전실 상황판**에서 **[1~11단계 실측 검증 실행]** 버튼 클릭
+   - 실측 결과 확인:
+     - 금지 요청 거부: `/data.json` 404 차단, 비로그인 `/api/notes` 401 차단, 변조 해시 복원 400 차단
+     - 정상 요청 허용: 복원 사전 점검 204 허용, 기기 승인 연동 허용
+     - 미실행 41종 시험: `미실행 (심판 41종 점검 대기)` 상태 보존
+   - 미승인 기기 안내 확인 -> 로그인 -> **[기기 승인 요청]** 클릭 후 승인 완료 시 보호 자료실 메모 열람
+
+#### 3. 중지 (Stop & Teardown)
+1. **접속 앱 세션 및 기기 권한 중지**:
+   - 웹 화면 상단의 **[로그아웃]** 버튼을 클릭합니다.
+   - 브라우저 메모리의 세션 토큰이 파기되고 기기 승인 상태가 초기화되어 보호 자료실(`vault-protected-area`)이 즉시 잠금 상태(`display: none`)로 전환됩니다.
+2. **로컬 검증 프로세스 중지**:
+   - 실행 중인 로컬 터미널에서 `Ctrl + C`를 눌러 프로세스를 종료합니다.
+3. **비인가 세션 강제 만료 (운영 시)**:
+   - 침해 의심 계정 발생 시 Supabase 대시보드(Authentication -> Users)에서 해당 사용자의 세션을 강제 만료(Sign out)합니다.
+
+#### 4. 복구 (Disaster Recovery & Rollback)
+1. **정책 침해/변조 복구**:
+   - 검증 스크립트 실행:
+     ```bash
+     npm run restore:test
+     ```
+   - `diffPolicies`를 통해 침해된 정책과 안전 사본의 차이를 사전 비교하고, `restorePolicy`를 호출하여 안전 기준 버전(`v1.0-safe-backup`)으로 즉시 원복합니다.
+2. **가상 메모 단건 복구**:
+   - 메모 본문 손상이나 변조 발생 시 `POST /api/notes/restore` 엔드포인트를 호출합니다.
+   - 복구 대상 단건의 `id`, `owner_id`, SHA-256 `contentHash`가 사본과 삼중 일치할 때만 복원(upsert)되며, 변조된 본문/해시 요청은 `400 Bad Request`로 거부됩니다.
+3. **복구 후 정상/금지 요청 재검증**:
+   - 탈환 작전실 상황판의 **[1~11단계 실측 검증 실행]**을 눌러 정상 요청 허용과 금지 요청 거부가 이전과 동일하게 유지되는지 실시간 확인합니다.
+
 ## 보너스 트랙: XDR 경보 탐지 및 판정
 
 ### 보너스 xdr-01 (brute-force)

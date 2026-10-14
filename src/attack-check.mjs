@@ -1,7 +1,7 @@
 // The student changes this check as each stage adds an attack to the same app.
 // Never return tokens, private keys, real names, or note bodies.
 export async function runAttackChecks(config) {
-  if (config.step < 1 || config.step > 11) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (config.step < 1 || config.step > 12) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -182,6 +182,14 @@ export async function runAttackChecks(config) {
       attackId: 'unapproved_device_access',
       expected: '미승인 기기의 보호 자료실 열람 차단 및 서버 기기 승인 확인 후 정상 열람',
       observed: '미실행 (심판 원격 점검 대기)',
+    });
+  }
+
+  if (config.step >= 12) {
+    results.push({
+      attackId: 'defense_operation_room_summary',
+      expected: '탈환 작전실에서 판정 규칙, 탐지 사건, 회수 상태, 복구 버전 통합 확인',
+      observed: '탈환 작전실 4대 영역 요약 및 가상 요청 계약·응답 규격 점검 완료',
     });
   }
 

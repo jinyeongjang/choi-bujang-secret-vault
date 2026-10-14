@@ -107,10 +107,14 @@ function validateZoneAccess(request) {
 }
 
 export async function decide(request) {
+  const requestId = typeof request?.requestId === 'string' && request.requestId.length > 0
+    ? request.requestId
+    : '00000000-0000-0000-0000-000000000000';
+
   if (!request || typeof request !== 'object') {
     return {
       schema: 'aleph.decision.v1',
-      requestId: '00000000-0000-0000-0000-000000000000',
+      requestId,
       decision: 'deny',
       reasonCode: 'device_not_registered',
       ruleIds: ['device_registered'],
@@ -124,7 +128,7 @@ export async function decide(request) {
   if (request.deviceRegistered !== true) {
     return {
       schema: 'aleph.decision.v1',
-      requestId: request.requestId,
+      requestId,
       decision: 'deny',
       reasonCode: 'device_not_registered',
       ruleIds: ['device_registered'],
@@ -137,7 +141,7 @@ export async function decide(request) {
   if (!isValidSubject || !isValidDevice) {
     return {
       schema: 'aleph.decision.v1',
-      requestId: request.requestId,
+      requestId,
       decision: 'deny',
       reasonCode: 'identity_missing',
       ruleIds: ['zone_isolation', 'zone_rules'],
@@ -148,7 +152,7 @@ export async function decide(request) {
   if (!validateZoneAccess(request)) {
     return {
       schema: 'aleph.decision.v1',
-      requestId: request.requestId,
+      requestId,
       decision: 'deny',
       reasonCode: 'zone_access_denied',
       ruleIds: ['zone_isolation', 'zone_rules'],
@@ -172,7 +176,7 @@ export async function decide(request) {
     if (!isStepUpVerified) {
       return {
         schema: 'aleph.decision.v1',
-        requestId: request.requestId,
+        requestId,
         decision: 'step_up',
         reasonCode: 'step_up_required',
         ruleIds: ['step_up_required'],
@@ -181,7 +185,7 @@ export async function decide(request) {
 
     return {
       schema: 'aleph.decision.v1',
-      requestId: request.requestId,
+      requestId,
       decision: 'allow',
       reasonCode: 'approved',
       ruleIds: ['device_registered', 'step_up_required', 'zone_isolation', 'zone_rules'],
@@ -190,7 +194,7 @@ export async function decide(request) {
 
   return {
     schema: 'aleph.decision.v1',
-    requestId: request.requestId,
+    requestId,
     decision: 'allow',
     reasonCode: 'approved',
     ruleIds: ['device_registered', 'zone_isolation', 'zone_rules'],
