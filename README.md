@@ -519,7 +519,11 @@
 - **현재 작동하는 기능**:
   - `xdr/persistence/decide.mjs`: MITRE ATT&CK T1543 및 T1053 기반으로 서명 없는 새 서비스 등록, 낯선 예약 작업, 시작 폴더 변조 공격 패턴을 분석하여 `block`, `alert`, `record` 판정과 신뢰도를 반환합니다.
   - 실행기(`scripts/xdr-run.mjs`)를 통해 `xdr/fixtures/persistence.json` 경보를 판정하고 `xdr/persistence/result.json`을 생성합니다.
-  - `xdr/persistence/respond.mjs`: 차단 후보를 ZTNA 거부 규칙(`xdr/persistence/blocked-rules.json`)으로 변환 및 `xdr/alerts.log`에 기록하며, 시험 경보 재검증을 수행합니다.
+### 보너스 xdr-05 (privilege)
+- **현재 작동하는 기능**:
+  - `xdr/privilege/decide.mjs`: MITRE ATT&CK T1068 및 T1078 기반으로 관리자 그룹 추가, 처음 보는 관리자 명령, 업무 시간 밖 권한 사용 패턴을 분석하여 `block`, `alert`, `record` 판정과 신뢰도를 반환합니다.
+  - 실행기(`scripts/xdr-run.mjs`)를 통해 `xdr/fixtures/privilege.json` 경보를 판정하고 `xdr/privilege/result.json`을 생성합니다.
+  - `xdr/privilege/respond.mjs`: 차단 후보를 ZTNA 거부 규칙(`xdr/privilege/blocked-rules.json`)으로 변환 및 `xdr/alerts.log`에 기록하며, 시험 경보 재검증을 수행합니다.
 
 ### 다시 실행하는 방법
 ```bash
@@ -527,8 +531,10 @@ npm run xdr:run -- brute-force
 npm run xdr:run -- web-injection
 npm run xdr:run -- known-cve
 npm run xdr:run -- persistence
+npm run xdr:run -- privilege
 node --test test/xdr-run.test.mjs
 ```
+
 
 
 

@@ -1,0 +1,21 @@
+{
+  "schema": "aleph.xdr.patterns.v1",
+  "moduleKey": "privilege",
+  "patterns": [
+    {
+      "name": "admin_group_addition",
+      "condition": "일반 사용자 계정이 원격 주소에서 관리자 그룹에 비인가 추가되거나 복수의 계정이 일괄적으로 관리자 그룹에 등록되는 경우",
+      "rationale": "MITRE ATT&CK T1078 (Valid Accounts) - 정상 계정을 도용하거나 비인가 경로를 통해 계정을 임의로 관리자 그룹에 편입시키는 공격 형태입니다."
+    },
+    {
+      "name": "unfamiliar_admin_execution",
+      "condition": "일반 계정이 관리자로 승격된 직후 처음 보는 주소에서 관리자 명령을 실행하거나 타 계정의 권한으로 명령을 수행하는 경우",
+      "rationale": "MITRE ATT&CK T1068 (Exploitation for Privilege Escalation) - 획득한 고위험 권한을 이용해 평소 보지 못한 위치나 세션에서 특권 명령을 즉시 실행하는 공격 형태입니다."
+    },
+    {
+      "name": "off_hours_privilege_abuse",
+      "condition": "수업 시간이나 일반적인 업무 시간대 밖의 낯선 시각에 관리자 그룹 추가 또는 관리자 명령 실행이 관측되는 경우",
+      "rationale": "MITRE ATT&CK T1078 (Valid Accounts) - 감시를 피하기 위해 업무 외 시간에 도용된 계정 권한을 악용하여 관리자 작업을 수행하는 공격 형태입니다."
+    }
+  ]
+}

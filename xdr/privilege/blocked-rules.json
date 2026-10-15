@@ -1,0 +1,113 @@
+{
+  "schema": "aleph.ztna.blocked-rules.v1",
+  "rules": [
+    {
+      "ruleId": "xdr.block.privilege.pv-01",
+      "alertId": "pv-01",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "203.0.113.11",
+      "account": "user01",
+      "pattern": "admin_group_addition",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-02",
+      "alertId": "pv-02",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "203.0.113.11",
+      "account": "user01",
+      "pattern": "unfamiliar_admin_execution",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-03",
+      "alertId": "pv-03",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "198.51.100.11",
+      "account": "user02",
+      "pattern": "off_hours_privilege_abuse",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-04",
+      "alertId": "pv-04",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "192.0.2.11",
+      "account": "user03",
+      "pattern": "unfamiliar_admin_execution",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-05",
+      "alertId": "pv-05",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "203.0.113.17",
+      "account": "user04",
+      "pattern": "admin_group_addition",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-06",
+      "alertId": "pv-06",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "198.51.100.17",
+      "account": "user05",
+      "pattern": "unfamiliar_admin_execution",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-07",
+      "alertId": "pv-07",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "192.0.2.17",
+      "account": "user06",
+      "pattern": "off_hours_privilege_abuse",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-08",
+      "alertId": "pv-08",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "203.0.113.27",
+      "account": "user07",
+      "pattern": "unfamiliar_admin_execution",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    },
+    {
+      "ruleId": "xdr.block.privilege.pv-09",
+      "alertId": "pv-09",
+      "action": "deny",
+      "reasonCode": "xdr_privilege_detected",
+      "ip": "198.51.100.27",
+      "account": "user08",
+      "pattern": "admin_group_addition",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:28:19.444Z",
+      "expiresAt": "2026-10-15T03:28:19.444Z"
+    }
+  ]
+}
