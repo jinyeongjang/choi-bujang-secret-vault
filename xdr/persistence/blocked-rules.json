@@ -1,0 +1,101 @@
+{
+  "schema": "aleph.ztna.blocked-rules.v1",
+  "rules": [
+    {
+      "ruleId": "xdr.block.persistence.ps-01",
+      "alertId": "ps-01",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "203.0.113.12",
+      "path": "C:\\Users\\user01\\AppData\\Local\\Temp\\helper.exe",
+      "pattern": "unsigned_service_creation",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    },
+    {
+      "ruleId": "xdr.block.persistence.ps-02",
+      "alertId": "ps-02",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "203.0.113.12",
+      "path": "C:\\Users\\user01\\AppData\\Local\\Temp\\task-run.exe",
+      "pattern": "unfamiliar_scheduled_task",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    },
+    {
+      "ruleId": "xdr.block.persistence.ps-03",
+      "alertId": "ps-03",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "198.51.100.12",
+      "path": "C:\\Users\\user02\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\note-helper.exe",
+      "pattern": "startup_folder_modification",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    },
+    {
+      "ruleId": "xdr.block.persistence.ps-04",
+      "alertId": "ps-04",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "192.0.2.12",
+      "path": null,
+      "pattern": "unsigned_service_creation",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    },
+    {
+      "ruleId": "xdr.block.persistence.ps-05",
+      "alertId": "ps-05",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "203.0.113.19",
+      "path": "C:\\Users\\user04\\AppData\\Local\\Temp\\a1b2c3.exe",
+      "pattern": "unfamiliar_scheduled_task",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    },
+    {
+      "ruleId": "xdr.block.persistence.ps-06",
+      "alertId": "ps-06",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "198.51.100.19",
+      "path": "C:\\Users\\user05\\AppData\\Local\\Temp\\svc-update.exe",
+      "pattern": "unsigned_service_creation",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    },
+    {
+      "ruleId": "xdr.block.persistence.ps-07",
+      "alertId": "ps-07",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "192.0.2.19",
+      "path": "C:\\Users\\user06\\AppData\\Local\\Temp\\stay.exe",
+      "pattern": "startup_folder_modification",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    },
+    {
+      "ruleId": "xdr.block.persistence.ps-08",
+      "alertId": "ps-08",
+      "action": "deny",
+      "reasonCode": "xdr_persistence_detected",
+      "ip": "203.0.113.33",
+      "path": "C:\\Users\\user07\\AppData\\Local\\Temp\\remain.exe",
+      "pattern": "unsigned_service_creation",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T02:08:18.686Z",
+      "expiresAt": "2026-10-15T03:08:18.686Z"
+    }
+  ]
+}

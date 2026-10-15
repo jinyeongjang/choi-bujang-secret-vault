@@ -1,0 +1,21 @@
+{
+  "schema": "aleph.xdr.patterns.v1",
+  "moduleKey": "persistence",
+  "patterns": [
+    {
+      "name": "unsigned_service_creation",
+      "condition": "서명되지 않은 새 서비스가 등록되거나 기존 서비스의 실행 파일이 임시 폴더(Temp) 등 비정상 위치의 미서명 바이너리로 변경되는 경우",
+      "rationale": "MITRE ATT&CK T1543 (Create or Modify System Process) - 시스템 재부팅 시 지속성을 확보하기 위해 서명 없는 악성 실행 파일을 새 서비스로 등록하거나 변경하는 공격 형태입니다."
+    },
+    {
+      "name": "unfamiliar_scheduled_task",
+      "condition": "처음 보는 예약 작업이 임의 문자열 이름으로 등록되거나 비인가 시간대에 임시 폴더의 실행 파일을 주기적으로 실행하도록 등록된 경우",
+      "rationale": "MITRE ATT&CK T1053 (Scheduled Task/Job) - 작업 스케줄러를 통해 시스템 재시작이나 특정 주기에 악성 프로그램을 자동 실행시켜 지속성을 유지하려는 공격 형태입니다."
+    },
+    {
+      "name": "startup_folder_modification",
+      "condition": "사용자 또는 시스템 시작(Startup) 폴더에 평소 목록에 없거나 임시 폴더의 프로그램을 가리키는 비인가 실행 파일이 추가되는 경우",
+      "rationale": "MITRE ATT&CK T1543 (Create or Modify System Process) - 사용자 로그인 시 악성 프로세스가 자동으로 구동되도록 시작 폴더에 지속성 프로그램을 심어두는 공격 형태입니다."
+    }
+  ]
+}

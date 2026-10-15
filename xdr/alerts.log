@@ -24,3 +24,11 @@
 [2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-06 action=deny ruleId=xdr.block.knowncve.kc-06 srcip=198.51.100.24 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_parameter_injection
 [2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-07 action=deny ruleId=xdr.block.knowncve.kc-07 srcip=192.0.2.24 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_header_injection
 [2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-08 action=deny ruleId=xdr.block.knowncve.kc-08 srcip=203.0.113.31 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_header_injection
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-01 action=deny ruleId=xdr.block.persistence.ps-01 srcip=203.0.113.12 expiresAt=2026-10-15T03:08:18.686Z pattern=unsigned_service_creation
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-02 action=deny ruleId=xdr.block.persistence.ps-02 srcip=203.0.113.12 expiresAt=2026-10-15T03:08:18.686Z pattern=unfamiliar_scheduled_task
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-03 action=deny ruleId=xdr.block.persistence.ps-03 srcip=198.51.100.12 expiresAt=2026-10-15T03:08:18.686Z pattern=startup_folder_modification
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-04 action=deny ruleId=xdr.block.persistence.ps-04 srcip=192.0.2.12 expiresAt=2026-10-15T03:08:18.686Z pattern=unsigned_service_creation
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-05 action=deny ruleId=xdr.block.persistence.ps-05 srcip=203.0.113.19 expiresAt=2026-10-15T03:08:18.686Z pattern=unfamiliar_scheduled_task
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-06 action=deny ruleId=xdr.block.persistence.ps-06 srcip=198.51.100.19 expiresAt=2026-10-15T03:08:18.686Z pattern=unsigned_service_creation
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-07 action=deny ruleId=xdr.block.persistence.ps-07 srcip=192.0.2.19 expiresAt=2026-10-15T03:08:18.686Z pattern=startup_folder_modification
+[2026-10-15T02:08:18.686Z] [ZTNA_RULE_SYNC] alertId=ps-08 action=deny ruleId=xdr.block.persistence.ps-08 srcip=203.0.113.33 expiresAt=2026-10-15T03:08:18.686Z pattern=unsigned_service_creation
