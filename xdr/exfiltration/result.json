@@ -1,0 +1,191 @@
+{
+  "schema": "aleph.xdr.result.v1",
+  "moduleKey": "exfiltration",
+  "decisions": [
+    {
+      "alertId": "ex-01",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-02",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "off_hours_archive_exfiltration"
+    },
+    {
+      "alertId": "ex-03",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-04",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "anomalous_port_continuous_transfer"
+    },
+    {
+      "alertId": "ex-05",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-06",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "off_hours_archive_exfiltration"
+    },
+    {
+      "alertId": "ex-07",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "anomalous_port_continuous_transfer"
+    },
+    {
+      "alertId": "ex-08",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-09",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-10",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "anomalous_port_continuous_transfer"
+    },
+    {
+      "alertId": "ex-11",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-12",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-13",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "off_hours_archive_exfiltration"
+    },
+    {
+      "alertId": "ex-14",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-15",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-16",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-17",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-18",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-19",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "unfamiliar_destination_large_transfer"
+    },
+    {
+      "alertId": "ex-20",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "off_hours_archive_exfiltration"
+    },
+    {
+      "alertId": "ex-21",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-22",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-23",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-24",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-25",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-26",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-27",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-28",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-29",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    },
+    {
+      "alertId": "ex-30",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_transfer_activity"
+    }
+  ],
+  "counts": {
+    "block": 10,
+    "alert": 10,
+    "record": 10
+  }
+}

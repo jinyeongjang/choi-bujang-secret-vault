@@ -525,6 +525,13 @@
   - 실행기(`scripts/xdr-run.mjs`)를 통해 `xdr/fixtures/privilege.json` 경보를 판정하고 `xdr/privilege/result.json`을 생성합니다.
   - `xdr/privilege/respond.mjs`: 차단 후보를 ZTNA 거부 규칙(`xdr/privilege/blocked-rules.json`)으로 변환 및 `xdr/alerts.log`에 기록하며, 시험 경보 재검증을 수행합니다.
 
+### 보너스 xdr-06 (exfiltration)
+- **현재 작동하는 기능**:
+  - `xdr/exfiltration/patterns.json`: MITRE ATT&CK T1041(명령 통로 유출) 및 T1048(대체 프로토콜 유출) 기반 3대 유출 공격 패턴 정의.
+  - `xdr/exfiltration/decide.mjs`: 외부 의존성(`import`) 없이 경보를 분석하여 `block`(10건), `alert`(10건), `record`(10건) 판정과 확신도를 반환합니다.
+  - 실행기(`scripts/xdr-run.mjs`)를 통해 `xdr/fixtures/exfiltration.json` 경보를 판정하고 `xdr/exfiltration/result.json`을 생성합니다.
+  - `xdr/exfiltration/respond.mjs`: 차단 후보를 ZTNA 거부 규칙(`xdr/exfiltration/blocked-rules.json`)으로 변환 및 `xdr/alerts.log`에 기록하며, 시험 경보 재검증을 수행합니다.
+
 ### 다시 실행하는 방법
 ```bash
 npm run xdr:run -- brute-force
@@ -532,8 +539,10 @@ npm run xdr:run -- web-injection
 npm run xdr:run -- known-cve
 npm run xdr:run -- persistence
 npm run xdr:run -- privilege
+npm run xdr:run -- exfiltration
 node --test test/xdr-run.test.mjs
 ```
+
 
 
 

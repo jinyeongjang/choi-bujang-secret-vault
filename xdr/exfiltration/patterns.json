@@ -1,0 +1,21 @@
+{
+  "schema": "aleph.xdr.patterns.v1",
+  "moduleKey": "exfiltration",
+  "patterns": [
+    {
+      "name": "unfamiliar_destination_large_transfer",
+      "condition": "처음 보는 목적지나 외부 주소로 짧은 시간에 대용량 자료 전송, 전체 복사 또는 연속 반복 전송이 명령 통로를 통해 발생하는 경우",
+      "rationale": "MITRE ATT&CK T1041 (Exfiltration Over C2 Channel) - 확립된 명령 제어 통로를 악용하여 대량의 기밀 자료를 처음 보는 외부 서버로 은밀히 빼돌리는 공격 형태입니다."
+    },
+    {
+      "name": "off_hours_archive_exfiltration",
+      "condition": "수업 시간이나 정상적인 업무 시간대 밖의 낯선 시각에 압축 파일 또는 자료 묶음이 처음 보는 외부 주소로 반출되는 경우",
+      "rationale": "MITRE ATT&CK T1048 (Exfiltration Over Alternative Protocol) - 모니터링이 취약한 업무 외 시간에 대체 프로토콜을 사용하여 압축된 기밀 자료를 외부로 유출하는 공격 형태입니다."
+    },
+    {
+      "name": "anomalous_port_continuous_transfer",
+      "condition": "평소 사용하지 않던 비인가 포트나 대체 프로토콜을 통해 다수의 파일 및 압축 자료가 처음 보는 목적지로 연속 전송되는 경우",
+      "rationale": "MITRE ATT&CK T1048 (Exfiltration Over Alternative Protocol) - 네트워크 보안 감시를 우회하기 위해 평소에 쓰지 않던 비표준 포트나 대체 프로토콜로 자료를 연속 유출하는 공격 형태입니다."
+    }
+  ]
+}
