@@ -1,0 +1,155 @@
+{
+  "schema": "aleph.xdr.result.v1",
+  "moduleKey": "known-cve",
+  "decisions": [
+    {
+      "alertId": "kc-01",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "jndi_header_injection"
+    },
+    {
+      "alertId": "kc-02",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "jndi_parameter_injection"
+    },
+    {
+      "alertId": "kc-03",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "jndi_parameter_injection"
+    },
+    {
+      "alertId": "kc-04",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "jndi_header_injection"
+    },
+    {
+      "alertId": "kc-05",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "vulnerability_scanner_and_exploit_probing"
+    },
+    {
+      "alertId": "kc-06",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "jndi_parameter_injection"
+    },
+    {
+      "alertId": "kc-07",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "jndi_header_injection"
+    },
+    {
+      "alertId": "kc-08",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "jndi_header_injection"
+    },
+    {
+      "alertId": "kc-09",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "jndi_parameter_injection"
+    },
+    {
+      "alertId": "kc-10",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "jndi_parameter_injection"
+    },
+    {
+      "alertId": "kc-11",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "vulnerability_scanner_and_exploit_probing"
+    },
+    {
+      "alertId": "kc-12",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "jndi_header_injection"
+    },
+    {
+      "alertId": "kc-13",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "vulnerability_scanner_and_exploit_probing"
+    },
+    {
+      "alertId": "kc-14",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "vulnerability_scanner_and_exploit_probing"
+    },
+    {
+      "alertId": "kc-15",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "jndi_parameter_injection"
+    },
+    {
+      "alertId": "kc-16",
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "jndi_parameter_injection"
+    },
+    {
+      "alertId": "kc-17",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    },
+    {
+      "alertId": "kc-18",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    },
+    {
+      "alertId": "kc-19",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    },
+    {
+      "alertId": "kc-20",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    },
+    {
+      "alertId": "kc-21",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    },
+    {
+      "alertId": "kc-22",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    },
+    {
+      "alertId": "kc-23",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    },
+    {
+      "alertId": "kc-24",
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "normal_event"
+    }
+  ],
+  "counts": {
+    "block": 8,
+    "alert": 8,
+    "record": 8
+  }
+}

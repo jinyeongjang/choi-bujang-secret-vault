@@ -509,12 +509,20 @@
   - `xdr/web-injection/decide.mjs`: 웹 요청에 포함된 SQL Injection, XSS, Path Traversal 등 웹 주입 공격 형태를 식별하여 `block`, `alert`, `record` 판정과 신뢰도를 반환합니다.
   - 실행기를 통해 `xdr/fixtures/web-injection.json` 경보를 판정하고 `xdr/web-injection/result.json`을 생성합니다.
 
+### 보너스 xdr-03 (known-cve)
+- **현재 작동하는 기능**:
+  - `xdr/known-cve/decide.mjs`: CVE-2021-44228 원격 조회 구문 및 취약점 점검 도구 흔적 패턴을 분석하여 `block`, `alert`, `record` 판정과 신뢰도를 반환합니다.
+  - 실행기(`scripts/xdr-run.mjs`)를 통해 `xdr/fixtures/known-cve.json` 경보를 판정하고 `xdr/known-cve/result.json`을 생성합니다.
+  - `xdr/known-cve/respond.mjs`: 차단 후보를 ZTNA 거부 규칙(`xdr/known-cve/blocked-rules.json`)으로 변환 및 `xdr/alerts.log`에 기록하며, 시험 경보 재검증을 수행합니다.
+
 ### 다시 실행하는 방법
 ```bash
 npm run xdr:run -- brute-force
 npm run xdr:run -- web-injection
+npm run xdr:run -- known-cve
 node --test test/xdr-run.test.mjs
 ```
+
 
 
 

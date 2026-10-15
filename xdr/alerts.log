@@ -16,3 +16,11 @@
 [2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-06 action=deny ruleId=xdr.block.webinjection.wi-06 srcip=198.51.100.18 expiresAt=2026-10-07T09:38:40.135Z pattern=sql_injection_attempt
 [2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-07 action=deny ruleId=xdr.block.webinjection.wi-07 srcip=192.0.2.21 expiresAt=2026-10-07T09:38:40.135Z pattern=path_traversal_attempt
 [2026-10-07T08:38:40.135Z] [ZTNA_RULE_SYNC] alertId=wi-08 action=deny ruleId=xdr.block.webinjection.wi-08 srcip=203.0.113.22 expiresAt=2026-10-07T09:38:40.135Z pattern=sql_injection_attempt
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-01 action=deny ruleId=xdr.block.knowncve.kc-01 srcip=203.0.113.10 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_header_injection
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-02 action=deny ruleId=xdr.block.knowncve.kc-02 srcip=203.0.113.10 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_parameter_injection
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-03 action=deny ruleId=xdr.block.knowncve.kc-03 srcip=198.51.100.16 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_parameter_injection
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-04 action=deny ruleId=xdr.block.knowncve.kc-04 srcip=192.0.2.16 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_header_injection
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-05 action=deny ruleId=xdr.block.knowncve.kc-05 srcip=203.0.113.24 expiresAt=2026-10-15T02:31:31.131Z pattern=vulnerability_scanner_and_exploit_probing
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-06 action=deny ruleId=xdr.block.knowncve.kc-06 srcip=198.51.100.24 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_parameter_injection
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-07 action=deny ruleId=xdr.block.knowncve.kc-07 srcip=192.0.2.24 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_header_injection
+[2026-10-15T01:31:31.131Z] [ZTNA_RULE_SYNC] alertId=kc-08 action=deny ruleId=xdr.block.knowncve.kc-08 srcip=203.0.113.31 expiresAt=2026-10-15T02:31:31.131Z pattern=jndi_header_injection
