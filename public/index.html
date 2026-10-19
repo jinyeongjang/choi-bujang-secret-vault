@@ -1,157 +1,233 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>최부장 비밀 금고 | BYTE BACK 자료실</title><link rel="manifest" href="/manifest.json"><link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#101a28"><style>:root{color-scheme:dark;font-family:sans-serif}body{margin:0;background:#101a28;color:#ecf4ff}main{max-width:760px;margin:0 auto;padding:12px}.eyebrow{color:#8ad8df;font-size:13px;font-weight:700}h1{margin:6px 0;font-size:22px}p{font-size:13px;color:#bfd0e5;margin:4px 0}.card{margin:8px 0;padding:10px;border:1px solid #3c546e;border-radius:8px;background:#132235}.card h2{margin:0 0 6px;font-size:15px;color:#8ad8df}.fg{display:flex;flex-direction:column;gap:3px;margin-bottom:6px;font-size:12px;color:#bfd0e5}.fg input,.fg textarea{padding:5px;border:1px solid #4a627a;border-radius:6px;background:#0b1420;color:#fff;font:inherit;font-size:13px}.btn{padding:4px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}.btn-primary{background:#2f81f7;color:#fff}.btn-secondary{background:#30363d;color:#c9d1d9;border:1px solid #8b949e}.btn-danger{background:#a42c3d;color:#fff}.btn-sm{padding:3px 6px}.auth-error,.action-msg{margin-top:6px;padding:6px;border-radius:6px;font-size:12px;background:#612a3533;border:1px solid #d07384;color:#ff9b9b}.action-msg.success{background:#1f4a3544;border-color:#3fb950;color:#7ee787}.sb-row,.status-row{display:flex;justify-content:space-between;align-items:center}.status-row{font-size:13px;padding:3px 0;border-bottom:1px solid #1f334a}.user-badge{padding:6px 10px;border-radius:6px;background:#1f334a}.resource-tag{padding:2px 5px;font-size:11px;font-weight:600;border-radius:4px;background:#1f334a;color:#8ad8df;border:1px solid #3c546e}ul{list-style:none;display:grid;gap:8px;padding:0;margin:0}li{border:1px solid #51667c;border-radius:6px;padding:8px;background:#1a2a3d}.note-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.note-title{font-size:14px;font-weight:700;margin:0}.note-body{font-size:13px;color:#bfd0e5;white-space:pre-wrap;margin:0 0 6px}.note-actions,.note-edit-actions{display:flex;gap:6px;justify-content:flex-end}.status-badge-warning,.status-badge-success,.status-badge-danger{padding:2px 6px;border-radius:4px;font-size:12px;border:1px solid}.status-badge-warning{border-color:#d29922;color:#e3b341}.status-badge-success{border-color:#2ea043;color:#3fb950}.status-badge-danger{border-color:#f85149;color:#ff7b72}.network-banner{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:13px;border:1px solid #3fb950;color:#7ee787}.network-banner.offline{border-color:#d07384;color:#ff9b9b}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#3fb950}.network-banner.offline .status-dot{background:#ff9b9b}.ne{display:none;flex-direction:column;gap:6px}.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:8px 0}.stat-box{padding:8px;border-radius:6px;background:#0d1825;border:1px solid #293d54}.stat-val{font-size:16px;font-weight:700;color:#8ad8df;margin:2px 0}.audit-log{font-family:monospace;font-size:11px;line-height:1.5;background:#090f17;padding:8px;border-radius:6px;border:1px solid #233446;overflow-x:auto;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}.matrix-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}.matrix-table th,.matrix-table td{border:1px solid #293d54;padding:4px 6px;text-align:left;vertical-align:middle}.matrix-table th{background:#0d1825;color:#8ad8df;white-space:nowrap}.matrix-table tr:nth-child(even){background:#0a131e}.type-deny{display:inline-block;padding:1px 4px;border-radius:3px;font-size:10px;font-weight:700;background:#441a20;color:#ff7b72;border:1px solid #f85149}.type-allow{display:inline-block;padding:1px 4px;border-radius:3px;font-size:10px;font-weight:700;background:#153922;color:#7ee787;border:1px solid #2ea043}</style></head><body><main><div class="eyebrow">BYTE BACK · 나만의 접속 앱 & 탈환 작전실</div><h1>최부장 비밀 금고</h1><p>지금은 보호 장치를 단계별로 구축하는 상태입니다. 아래 기록은 실습을 위한 가상 자료입니다.</p><div id="network-status-banner" class="network-banner"><span id="network-status-dot" class="status-dot"></span><span id="network-status-text">온라인 연결됨 · 보안 세션 정상 작동 중</span></div><section class="card" aria-labelledby="device-status-title"><div class="sb-row"><h2 id="device-status-title">기기 승인 및 접속 앱 상태</h2><span class="resource-tag" id="app-badge">앱: 최부장 비밀 금고</span></div><div class="status-row"><span>앱 이름</span><span>최부장 비밀 금고</span></div><div class="status-row"><span>현재 기기 식별자</span><code id="current-device-id-display">확인 중...</code></div><div class="status-row"><span>기기 승인 상태</span><span class="status-badge-warning" id="device-approval-badge">미승인 기기 (보호 자료 접근 차단됨)</span></div><div class="status-row"><span>오프라인 안내</span><span id="offline-guidance-text">오프라인 상태에서는 보안을 위해 가상 자료실을 열 수 없습니다.</span></div><div class="sb-row" style="margin:8px 0 6px;padding:6px;background:#0d1825;border-radius:6px"><div><strong style="font-size:13px">서버 기기 등록 및 승인 요청</strong><div style="font-size:12px;color:#8b949e">서버가 이 기기를 등록 기기로 승인한 뒤에만 보호 자료실이 열립니다.</div></div><div style="display:flex;gap:6px"><button type="button" class="btn btn-secondary btn-sm" id="btn-check-device">승인 상태 재확인</button><button type="button" class="btn btn-primary btn-sm" id="btn-request-device-approval">기기 승인 요청</button></div></div><div id="device-approval-result" style="display:none;margin-top:6px;padding:6px;border-radius:6px;font-size:13px" role="status"></div><p style="margin:6px 0 0;font-size:12px;color:#8ad8df">⚠️ 기기 개인키를 브라우저 저장소에 넣지 않습니다. 서버가 이 기기를 등록 기기로 확인한 뒤에만 보호 자료실이 열립니다.</p></section><section class="card" aria-labelledby="auth-title"><h2 id="auth-title">사용자 인증</h2><div id="auth-logged-out-view"><form id="login-form"><label class="fg">이메일<input type="email" id="login-email" autocomplete="email" placeholder="이메일 입력" required></label><label class="fg">비밀번호<input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required></label><button type="submit" class="btn btn-primary" id="btn-login">로그인</button></form><div id="auth-error" class="auth-error" style="display:none" role="alert"></div></div><div id="auth-logged-in-view" style="display:none"><div class="user-badge sb-row"><div><div style="font-size:12px;color:#8b949e">인증된 사용자</div><span id="user-email" style="color:#8ad8df;font-weight:600"></span></div><button type="button" class="btn btn-secondary btn-sm" id="btn-logout">로그아웃</button></div></div></section><section class="card" aria-labelledby="notice-title" data-resource-id="notices"><div class="sb-row"><strong id="notice-title" style="color:#8ad8df">강사 공지</strong><span class="resource-tag">자원 ID: notices</span></div><p>로그인 사용자 토큰(Bearer)으로 보호되는 가상 메모 CRUD 시스템입니다.</p></section><section class="card" id="war-room-section" aria-labelledby="war-room-title"><div class="sb-row"><h2 id="war-room-title">⚔️ 탈환 작전실 상황판</h2><span class="resource-tag">작전실 상태: 방어·감시 가동</span></div><p>판정기 규칙·탐지 사건·회수 상태·복구 버전의 요약 및 실제 API 응답 검증 결과와 가린 서버 기록입니다.</p><div class="grid-2"><div class="stat-box"><div style="font-size:12px;color:#8b949e">판정기 규칙 (src/decider.mjs)</div><div class="stat-val"><span id="stat-rule-count">4</span>개 규칙</div><div style="font-size:11px;color:#bfd0e5">device_registered, step_up_required, zone_isolation, zone_rules</div></div><div class="stat-box"><div style="font-size:12px;color:#8b949e">탐지 사건 기준 (src/detect.mjs)</div><div class="stat-val"><span id="stat-burst-limit">120</span>건 임계치</div><div style="font-size:11px;color:#bfd0e5">10분 내 120건 초과 + 낯선 망 복합 의심 탐지 (burst_read)</div></div><div class="stat-box"><div style="font-size:12px;color:#8b949e">기기 회수 제안 상태</div><div class="stat-val"><span id="stat-revoke-count">1</span>건 제안 · <span style="font-size:13px;color:#e3b341">미실행</span></div><div style="font-size:11px;color:#bfd0e5">가상 기기 1건 propose_revocation / 실제 접속 회수 집행은 미실행</div></div><div class="stat-box"><div style="font-size:12px;color:#8b949e">복구 버전 (src/restore.mjs)</div><div class="stat-val" style="font-size:15px;color:#7ee787">v1.0-safe-backup</div><div style="font-size:11px;color:#bfd0e5">ID·소유자·해시 3대 일치 단건 복원 (/api/notes/restore)</div></div></div><div style="margin:8px 0"><div class="sb-row" style="margin-bottom:4px"><strong style="font-size:13px;color:#7ee787">실제 API 응답 확인 결과 (<span id="stat-verified-count">5</span>건 확인됨)</strong><button type="button" class="btn btn-secondary btn-sm" id="btn-run-api-check">API 응답 실시간 재검증</button></div><div id="verified-checks-list"><div class="status-row"><span>1. 비로그인 정적 자료 노출 차단 (/data.json)</span><span class="status-badge-success" id="chk-static">확인됨 (HTTP 404 차단)</span></div><div class="status-row"><span>2. 비로그인 자료 API 접근 차단 (/api/notes)</span><span class="status-badge-success" id="chk-api">확인됨 (HTTP 401 UNAUTHORIZED)</span></div><div class="status-row"><span>3. 복원 경로 사전 요청 처리 (/api/notes/restore)</span><span class="status-badge-success" id="chk-restore-opt">확인됨 (HTTP 204 OPTIONS)</span></div><div class="status-row"><span>4. 변조 해시 복원 요청 차단 (/api/notes/restore)</span><span class="status-badge-success" id="chk-restore-tamper">확인됨 (HTTP 400/401 차단)</span></div><div class="status-row"><span>5. 등록 기기 승인 연동 상태</span><span class="status-badge-success" id="chk-device-appr">확인됨 (서버 기기 승인 연동)</span></div></div></div><div style="margin:8px 0"><div style="margin-bottom:4px"><strong style="font-size:13px;color:#e3b341">미실행 항목 (<span id="stat-unexecuted-count">5</span>건 미실행 · 심판 원격 점검 대기)</strong></div><div class="status-row"><span>1. 미등록 기기 가상 자료실 접근 차단</span><span class="status-badge-warning">미실행 (심판 원격 점검 대기)</span></div><div class="status-row"><span>2. 복합 이상 접속 추가 확인 및 재인증 전 자료 차단</span><span class="status-badge-warning">미실행 (시각 계약 부재로 실자료 차단 미실행)</span></div><div class="status-row"><span>3. 공지 구역 수정 및 알 수 없는 경로 차단</span><span class="status-badge-warning">미실행 (심판 원격 점검 대기)</span></div><div class="status-row"><span>4. 10분 내 폭주 조회 실제 접속 회수 집행</span><span class="status-badge-warning">미실행 (운영 반 엔진 접속 회수 집행 대기)</span></div><div class="status-row"><span>5. 원격 실운영 환경 단건 복원 집행</span><span class="status-badge-warning">미실행 (심판 원격 점검 대기)</span></div></div><div style="margin-top:10px"><div class="sb-row" style="margin-bottom:4px"><strong style="font-size:13px;color:#8ad8df">가린 서버 감사 기록 (<span id="stat-audit-count">10</span>건의 기록 대조)</strong><span style="font-size:11px;color:#8b949e">※ 메모 본문·비밀값 비공개 마스킹 처리됨</span></div><div class="audit-log" id="war-room-audit-log" role="log" aria-live="polite"><div>[확인됨 · 2026-10-14] ACTION=STATIC_ACCESS PATH=/data.json RESULT=404_NOT_FOUND (가상 메모 문장 미노출)</div><div>[확인됨 · 2026-10-14] ACTION=AUTH_CHECK PATH=/api/notes RESULT=401_UNAUTHORIZED (비인가 요청 차단)</div><div>[확인됨 · 2026-10-14] ACTION=RESTORE_PREFLIGHT PATH=/api/notes/restore METHOD=OPTIONS RESULT=204_NO_CONTENT</div><div>[확인됨 · 2026-10-14] ACTION=RESTORE_TAMPER PATH=/api/notes/restore REASON=HASH_MISMATCH RESULT=400_BLOCKED</div><div>[확인됨 · 2026-10-14] ACTION=DEVICE_APPROVAL DEV=<code id="audit-dev-id">...</code> STATUS=APPROVED RESULT=200_OK</div><div style="color:#d29922">[미실행 · 2026-10-14] ACTION=REMOTE_DEVICE_INSPECT TARGET=UNREGISTERED_DEV STATUS=PENDING_JUDGE</div><div style="color:#d29922">[미실행 · 2026-10-14] ACTION=STEP_UP_VAULT_BLOCK TARGET=SUSPICIOUS_SESSION STATUS=OMITTED_NO_CONTRACT</div><div style="color:#d29922">[미실행 · 2026-10-14] ACTION=ZONE_ISOLATION_INSPECT TARGET=NOTICE_MUTATION STATUS=PENDING_JUDGE</div><div style="color:#d29922">[미실행 · 2026-10-14] ACTION=REVOCATION_ENFORCEMENT TARGET=BURST_DEVICE STATUS=PENDING_JUDGE</div><div style="color:#d29922">[미실행 · 2026-10-14] ACTION=REMOTE_RESTORE_EXECUTION TARGET=SAFE_SNAPSHOT STATUS=PENDING_JUDGE</div></div></div><div style="margin-top:10px"><div class="sb-row" style="margin-bottom:4px"><div><strong style="font-size:13px;color:#8ad8df">1~11단계 정상·금지 요청 실측 대조표</strong><div style="font-size:11px;color:#8b949e">금지 요청 거부 및 정상 요청 허용 실측 결과 · 미실행 41종 심판 시험 대기 구분</div></div><button type="button" class="btn btn-primary btn-sm" id="btn-run-all-matrix">1~11단계 실측 검증 실행</button></div><div style="overflow-x:auto"><table class="matrix-table" id="test-matrix-table"><thead><tr><th>단계</th><th>구분</th><th>요청 ID</th><th>대상 경로 / 유형</th><th>기대 결과</th><th>실제 API 결과</th><th>확인 시각</th></tr></thead><tbody id="matrix-tbody"><tr><td>1단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S01-STATIC</code></td><td>GET /data.json 비인가 열람</td><td>HTTP 404 차단</td><td><span class="status-badge-success" id="mat-res-01">확인됨 (HTTP 404 차단)</span></td><td id="mat-time-01">2026-10-14 14:15</td></tr><tr><td>2단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S02-STATIC-SEC</code></td><td>정적 파일 노출 방지 대조</td><td>HTTP 404 차단</td><td><span class="status-badge-success" id="mat-res-02">확인됨 (HTTP 404 차단)</span></td><td id="mat-time-02">2026-10-14 14:15</td></tr><tr><td>3단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S03-UNAUTH</code></td><td>GET /api/notes 비로그인 조회</td><td>HTTP 401 차단</td><td><span class="status-badge-success" id="mat-res-03-deny">확인됨 (HTTP 401 차단)</span></td><td id="mat-time-03-deny">2026-10-14 14:15</td></tr><tr><td>3단계</td><td><span class="type-allow">정상 요청</span></td><td><code>REQ-S03-AUTH</code></td><td>GET /api/notes 인증 토큰 조회</td><td>HTTP 200 허용</td><td><span class="status-badge-warning" id="mat-res-03-allow">대기 (로그인 후 실측)</span></td><td id="mat-time-03-allow">-</td></tr><tr><td>4단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S04-CROSS-ID</code></td><td>타인 가상 메모 접근 (ID 위조)</td><td>HTTP 403 차단</td><td><span class="status-badge-warning">미실행 (심판 41종 점검 대기)</span></td><td>-</td></tr><tr><td>5단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S05-DIRECT-DB</code></td><td>Supabase REST 원본 API 직접 호출</td><td>HTTP 401 차단</td><td><span class="status-badge-warning">미실행 (심판 41종 점검 대기)</span></td><td>-</td></tr><tr><td>6단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S06-UNREG-DEV</code></td><td>미등록 기기 가상 자료실 접근</td><td>판정 deny 차단</td><td><span class="status-badge-warning">미실행 (심판 41종 점검 대기)</span></td><td>-</td></tr><tr><td>7단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S07-STEPUP-REQ</code></td><td>심야·낯선망·대량 복합 이상 접속</td><td>step_up 요구 및 자료 차단</td><td><span class="status-badge-warning">미실행 (시각 계약 부재로 실자료 차단 미실행)</span></td><td>-</td></tr><tr><td>8단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S08-ZONE-MUT</code></td><td>강사 공지 구역 위조 및 불명 경로</td><td>판정 deny 차단</td><td><span class="status-badge-warning">미실행 (심판 41종 점검 대기)</span></td><td>-</td></tr><tr><td>9단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S09-BURST-REV</code></td><td>10분 내 120건 초과 폭주 조회</td><td>기기 회수 제안 및 차단</td><td><span class="status-badge-warning">미실행 (detect:test 통과 · 실제 회수 집행 대기)</span></td><td>-</td></tr><tr><td>10단계</td><td><span class="type-allow">정상 요청</span></td><td><code>REQ-S10-RESTORE-OPT</code></td><td>OPTIONS /api/notes/restore 사전 요청</td><td>HTTP 204 허용</td><td><span class="status-badge-success" id="mat-res-10-opt">확인됨 (HTTP 204 허용)</span></td><td id="mat-time-10-opt">2026-10-14 14:15</td></tr><tr><td>10단계</td><td><span class="type-deny">금지 요청</span></td><td><code>REQ-S10-RESTORE-DENY</code></td><td>POST /api/notes/restore 변조 해시 복원</td><td>HTTP 400 차단</td><td><span class="status-badge-success" id="mat-res-10-deny">확인됨 (HTTP 400 차단)</span></td><td id="mat-time-10-deny">2026-10-14 14:15</td></tr><tr><td>11단계</td><td><span class="type-allow">정상 요청</span></td><td><code>REQ-S11-DEVICE-AUTH</code></td><td>서버 등록 기기 승인 및 보호 자료실 연동</td><td>승인 시 정상 열람</td><td><span class="status-badge-success" id="mat-res-11">확인됨 (기기 승인 연동)</span></td><td id="mat-time-11">2026-10-14 14:15</td></tr></tbody></table></div></div></section><section class="card" id="device-unapproved-notice" style="border-color:#d29922;background:#1c1d18"><h3 style="margin:0 0 6px;font-size:14px;color:#e3b341">🔒 보호 자료실 잠김 (기기 미승인 상태)</h3><p style="color:#c9d1d9">현재 기기는 서버에 등록 기기로 승인되지 않아 보호 자료가 표시되지 않습니다. 로그인 후 상단의 <strong>[기기 승인 요청]</strong>을 완료해야 자료실이 열립니다.</p></section><div id="vault-protected-area" style="display:none"><section class="card" id="add-note-card" style="display:none" aria-labelledby="add-note-title"><h2 id="add-note-title">가상 메모 추가</h2><form id="add-note-form"><label class="fg">메모 제목<input type="text" id="new-note-title" placeholder="제목" required></label><label class="fg">메모 내용<textarea id="new-note-body" placeholder="내용" required></textarea></label><button type="submit" class="btn btn-primary btn-sm" id="btn-add-note">메모 추가</button></form><div id="add-note-msg" class="action-msg" style="display:none" role="status"></div></section><section id="notes-section" aria-labelledby="notes-section-title" data-resource-id="notes"><div class="sb-row" style="margin:8px 0 6px"><h2 id="notes-section-title" style="margin:0;font-size:16px;color:#8ad8df">내 자료실 메모</h2><span class="resource-tag">자원 ID: notes</span></div><ul id="notes" aria-live="polite"></ul></section></div></main><script type="module">const $=i=>document.getElementById(i),on=(i,e,f)=>$ (i)?.addEventListener(e,f),C=t=>document.createElement(t);
-const devId=Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');
-if($('current-device-id-display'))$('current-device-id-display').textContent=devId;
-if($('audit-dev-id'))$('audit-dev-id').textContent=devId;
-let curSes=null,devOk=false;
-const SC='status-badge-success',SD='status-badge-danger',SW='status-badge-warning',CJ='application/json',API='/api/notes';
-const setErr=m=>{const e=$('auth-error');if(e){e.textContent=m;e.style.display=m?'block':'none';}};
-const setMsg=(m,err=false)=>{const el=$('add-note-msg');if(el){el.textContent=m;el.className='action-msg '+(err?'':'success');el.style.display='block';setTimeout(()=>{el.style.display='none';},4000);}};
-const api=(u,o={})=>fetch(u,{...o,headers:{'Content-Type':CJ,...(curSes?.access_token?{Authorization:'Bearer '+curSes.access_token}:{}),'x-device-id':devId,...(o.headers||{})}});
-function syncVault(){
-const ok=Boolean(curSes?.user&&devOk);
-if($('device-unapproved-notice'))$('device-unapproved-notice').style.display=ok?'none':'block';
-if($('vault-protected-area'))$('vault-protected-area').style.display=ok?'block':'none';
-if($('add-note-card'))$('add-note-card').style.display=ok?'block':'none';
-if(!devOk)$('notes')?.replaceChildren();
-}
-function setDevUI(ok,msg='',err=false){
-devOk=Boolean(ok);
-const b=$('device-approval-badge'),r=$('device-approval-result');
-if(b){b.className=devOk?SC:(err?SD:SW);b.textContent=devOk?'✅ 서버 등록 기기 승인됨 (접근 허가)':'미승인 기기 (보호 자료 접근 차단됨)';}
-if(r){r.style.display=msg?'block':'none';if(msg){r.className=devOk?SC:(err?SD:SW);r.textContent='[서버 확인] '+msg;}}
-if($('chk-device-appr'))$('chk-device-appr').textContent=devOk?'확인됨 (서버 등록 기기 승인됨)':'확인됨 (서버 기기 미승인 상태 차단)';
-syncVault();
-}
-async function reqDev(act,fb){
-if(!curSes?.access_token)return setDevUI(false,fb?'로그인 후 기기 승인 상태를 확인할 수 있습니다.':'');
-const btn=$('btn-request-device-approval');
-try{
-if(btn){btn.disabled=true;btn.textContent='확인 중...';}
-const r=await api(API,{method:'POST',body:JSON.stringify({action:act,deviceId:devId})});
-const d=await r.json().catch(()=>({})),ok=Boolean(r.ok&&d.approved&&d.deviceRegistered);
-setDevUI(ok,fb?(d.message||(ok?'기기 승인 완료':'미승인 기기')):'',!ok&&!r.ok);
-if(ok)await loadNotes(curSes);
-else if(!r.ok)throw new Error(d.message||d.error||'기기 승인 실패');
-}catch(e){setDevUI(false,fb?'승인 오류: '+e.message:'',true);}
-finally{if(btn){btn.disabled=false;btn.textContent='기기 승인 요청';}}
-}
-on('btn-request-device-approval','click',()=>reqDev('device_approval',true));
-on('btn-check-device','click',()=>reqDev('check_device',true));
-function syncAuth(s){
-curSes=s;const u=s?.user??null,o=$('auth-logged-out-view'),i=$('auth-logged-in-view');
-if(u){if(o)o.style.display='none';if(i)i.style.display='block';if($('user-email'))$('user-email').textContent=u.email||u.id;if($('login-password'))$('login-password').value='';setErr('');}
-else{if(i)i.style.display='none';if(o)o.style.display='block';if($('user-email'))$('user-email').textContent='';}
-syncVault();
-}
-async function loadNotes(s){
-const list=$('notes');if(!devOk){list?.replaceChildren();return;}
-if(!s?.access_token){if(list){const it=C('li');it.textContent='인증이 필요합니다. 로그인 후 가상 메모를 확인하세요.';list.replaceChildren(it);}return;}
-try{
-const r=await api(API,{cache:'no-store'});
-if(!r.ok)throw new Error(r.status===401?'인증 필요 (401)':'조회 실패 (HTTP '+r.status+')');
-const d=await r.json(),notes=Array.isArray(d)?d:(d.notes||[]);
-if(!notes.length){const it=C('li');it.textContent='등록된 메모가 없습니다.';list.replaceChildren(it);return;}
-list.replaceChildren(...notes.map(n=>mkNote(n,s)));
-}catch(e){const it=C('li');it.textContent=e.message;list?.replaceChildren(it);}
-}
-function mkNote(n,s){
-const li=C('li');li.dataset.id=n.id;li.dataset.resourceId='notes';
-li.innerHTML='<div class="nv"><div class="note-header"><strong class="note-title"></strong> <span class="resource-tag">자원 ID: notes</span></div><p class="note-body"></p><div class="note-actions"><button class="btn btn-secondary btn-sm btn-edit">수정</button><button class="btn btn-danger btn-sm btn-del">삭제</button></div></div><div class="ne"><label class="fg">제목<input class="edit-title"></label><label class="fg">내용<textarea class="edit-body"></textarea></label><div class="note-edit-actions"><button class="btn btn-primary btn-sm btn-save">저장</button><button class="btn btn-secondary btn-sm btn-cancel">취소</button></div></div>';
-li.querySelector('.note-title').textContent=n.title;li.querySelector('.note-body').textContent=n.body??n.content??'';
-const nv=li.querySelector('.nv'),ne=li.querySelector('.ne'),et=li.querySelector('.edit-title'),eb=li.querySelector('.edit-body');
-et.value=n.title;eb.value=n.body??n.content??'';
-li.querySelector('.btn-edit').onclick=()=>{nv.style.display='none';ne.style.display='flex';};
-li.querySelector('.btn-cancel').onclick=()=>{ne.style.display='none';nv.style.display='block';};
-li.querySelector('.btn-save').onclick=async()=>{
-const title=et.value.trim(),body=eb.value.trim();if(!title)return alert('제목을 입력하세요.');
-try{const r=await api(API+'/'+n.id,{method:'PUT',body:JSON.stringify({title,body})});if(!r.ok)throw new Error('수정 실패');await loadNotes(s);}catch(e){alert(e.message);}
-};
-li.querySelector('.btn-del').onclick=async()=>{
-if(!confirm('정말 삭제하시겠습니까?'))return;
-try{const r=await api(API+'/'+n.id,{method:'DELETE'});if(!r.ok)throw new Error('삭제 실패');await loadNotes(s);}catch(e){alert(e.message);}
-};
-return li;
-}
-on('add-note-form','submit',async e=>{
-e.preventDefault();if(!curSes?.access_token)return setMsg('로그인이 필요합니다.',true);
-const ti=$('new-note-title'),bo=$('new-note-body'),title=ti?.value.trim()||'',body=bo?.value.trim()||'';
-if(!title)return;const btn=$('btn-add-note');
-try{if(btn)btn.disabled=true;const r=await api(API,{method:'POST',body:JSON.stringify({title,body})});if(!r.ok)throw new Error('추가 실패');if(ti)ti.value='';if(bo)bo.value='';setMsg('메모가 추가되었습니다.',false);await loadNotes(curSes);}
-catch(e){showMsg(e.message,true);}finally{if(btn)btn.disabled=false;}
-});
-on('login-form','submit',async e=>{
-e.preventDefault();setErr('');
-const em=$('login-email'),pw=$('login-password'),email=em?.value.trim()||'',password=pw?.value||'';
-if(!email||!password)return setErr('이메일과 비밀번호를 입력해 주세요.');
-const sub=$('btn-login');if(sub)sub.disabled=true;
-try{
-const r=await fetch(API,{method:'POST',headers:{'Content-Type':CJ},body:JSON.stringify({action:'login',email,password})});
-const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'로그인 실패 (HTTP '+r.status+')');
-curSes={access_token:d.access_token,user:d.user};syncAuth(curSes);await reqDev('check_device',false);
-}catch(e){setErr('로그인 실패: '+e.message);}finally{if(sub)sub.disabled=false;}
-});
-on('btn-logout','click',()=>{setErr('');curSes=null;setDevUI(false,'');syncAuth(null);loadNotes(null);});
-syncAuth(null);setDevUI(false,'');
-function syncNet(){
-const on=navigator.onLine,nb=$('network-status-banner'),nd=$('network-status-dot'),nt=$('network-status-text'),ot=$('offline-guidance-text');
-if(nb)nb.className='network-banner '+(on?'':'offline');
-if(nd)nd.style.background=on?'#3fb950':'#ff9b9b';
-if(nt)nt.textContent=on?'온라인 연결됨 · 보안 세션 정상 작동 중':'⚠️ 오프라인 상태: 보안 정책 검증 및 자료 조회가 불가합니다.';
-if(ot)ot.textContent=on?'온라인 연결됨 (오프라인 시 보안 정책 검증 및 자료 조회가 불가합니다)':'오프라인 상태에서는 보안을 위해 가상 자료실을 열 수 없습니다.';
-}
-window.addEventListener('online',syncNet);window.addEventListener('offline',syncNet);syncNet();
-async function runApiCheck(){
-const btn=$('btn-run-api-check'),mBtn=$('btn-run-all-matrix');
-if(btn){btn.disabled=true;btn.textContent='검증 중...';}
-if(mBtn){mBtn.disabled=true;mBtn.textContent='실측 중...';}
-const now=new Date().toISOString().replace('T',' ').slice(0,19);
-try{
-try{
-const r=await fetch('/data.json',{cache:'no-store'});
-const s=r.status===404?'확인됨 (HTTP 404 차단)':('응답 HTTP '+r.status);
-if($('chk-static'))$('chk-static').textContent=s;
-if($('mat-res-01'))$('mat-res-01').textContent=s;
-if($('mat-res-02'))$('mat-res-02').textContent=s;
-if($('mat-time-01'))$('mat-time-01').textContent=now;
-if($('mat-time-02'))$('mat-time-02').textContent=now;
-}catch(_e){}
-try{
-const r=await fetch('/api/notes',{cache:'no-store'});
-const s=r.status===401?'확인됨 (HTTP 401 UNAUTHORIZED)':('응답 HTTP '+r.status);
-if($('chk-api'))$('chk-api').textContent=s;
-if($('mat-res-03-deny'))$('mat-res-03-deny').textContent=s;
-if($('mat-time-03-deny'))$('mat-time-03-deny').textContent=now;
-}catch(_e){}
-if(curSes?.access_token){
-try{
-const r=await api('/api/notes',{cache:'no-store'});
-if($('mat-res-03-allow'))$('mat-res-03-allow').textContent=r.ok?'확인됨 (HTTP 200 허용)':('응답 HTTP '+r.status);
-if($('mat-time-03-allow'))$('mat-time-03-allow').textContent=now;
-}catch(_e){}
-}
-try{
-const r=await fetch('/api/notes/restore',{method:'OPTIONS'});
-const s=(r.status===204||r.status===200)?'확인됨 (HTTP '+r.status+' 사전 응답)':('응답 HTTP '+r.status);
-if($('chk-restore-opt'))$('chk-restore-opt').textContent=s;
-if($('mat-res-10-opt'))$('mat-res-10-opt').textContent=(r.status===204||r.status===200)?'확인됨 (HTTP '+r.status+' 허용)':('응답 HTTP '+r.status);
-if($('mat-time-10-opt'))$('mat-time-10-opt').textContent=now;
-}catch(_e){}
-try{
-const r=await fetch('/api/notes/restore',{method:'POST',headers:{'Content-Type':CJ},body:JSON.stringify({action:'restore',id:'b1111111-1111-1111-1111-111111111111',contentHash:'tampered'})});
-const s=[400,401,403].includes(r.status)?'확인됨 (HTTP '+r.status+' 차단)':('응답 HTTP '+r.status);
-if($('chk-restore-tamper'))$('chk-restore-tamper').textContent=s;
-if($('mat-res-10-deny'))$('mat-res-10-deny').textContent=s;
-if($('mat-time-10-deny'))$('mat-time-10-deny').textContent=now;
-}catch(_e){}
-const devMsg=devOk?'확인됨 (서버 등록 기기 승인됨)':'확인됨 (서버 기기 미승인 상태 차단)';
-if($('chk-device-appr'))$('chk-device-appr').textContent=devMsg;
-if($('mat-res-11'))$('mat-res-11').textContent=devMsg;
-if($('mat-time-11'))$('mat-time-11').textContent=now;
-}finally{
-if(btn){btn.disabled=false;btn.textContent='API 응답 실시간 재검증';}
-if(mBtn){mBtn.disabled=false;mBtn.textContent='1~11단계 실측 검증 실행';}
-}
-}
-on('btn-run-api-check','click',runApiCheck);
-on('btn-run-all-matrix','click',runApiCheck);
-</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>케셰브 · ZTNA &amp; XDR</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <img class="alekov-art brand-icon" src="/assets/alekov/alekov-app-icon.webp" alt="" aria-hidden="true" width="32" height="32" draggable="false">
+      <span class="brand-mark" id="brand-mark-fallback" aria-hidden="true" hidden>A</span>
+      <span class="brand-name">케셰브 <small>ZTNA &amp; XDR 보안 Agent</small></span>
+    </div>
+    <div class="topbar-status">
+      <span id="mode-badge" class="mode-badge" data-mode="loading" role="status" aria-live="polite">상태 확인 중</span>
+      <span id="checked-at" class="checked-at"></span>
+      <button type="button" id="refresh" class="btn">다시 불러오기</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="주 메뉴">
+      <div role="tablist" aria-orientation="vertical" id="nav">
+        <button type="button" role="tab" id="tab-protection" data-testid="nav-protection" data-view="protection" aria-controls="view-protection" aria-selected="true" tabindex="0">보호 현황</button>
+        <button type="button" role="tab" id="tab-apps" data-testid="nav-apps" data-view="apps" aria-controls="view-apps" aria-selected="false" tabindex="-1">업무 앱</button>
+        <button type="button" role="tab" id="tab-records" data-testid="nav-records" data-view="records" aria-controls="view-records" aria-selected="false" tabindex="-1">보안 기록</button>
+      </div>
+      <p class="sidebar-note">메뉴는 위·아래 방향키로 이동할 수 있습니다.</p>
+    </nav>
+
+    <main id="main" tabindex="-1">
+      <div id="error-message" class="error-banner" data-testid="error-message" role="alert" hidden></div>
+
+      <p class="notice">
+        <strong>제공 공통 UI</strong>와 <strong>학생 구현 표시</strong>(student/extension.mjs)는 구분되어 있습니다.
+        제공 코드는 학생 성취로 계산되지 않으며, 예제(demo)·연결 없음 상태는 실제 연결 성공이 아닙니다.
+      </p>
+
+      <section id="view-protection" class="view" role="tabpanel" aria-labelledby="tab-protection">
+        <h1>보호 현황</h1>
+
+        <div class="grid-2">
+          <section class="card provided" aria-labelledby="identity-title">
+            <h2 id="identity-title">현재 로그인 <span class="tag">제공</span></h2>
+            <dl class="identity">
+              <dt>사용자</dt><dd data-testid="identity-user" id="identity-user">불러오는 중</dd>
+              <dt>기기</dt><dd data-testid="identity-device" id="identity-device">불러오는 중</dd>
+              <dt>세션</dt><dd data-testid="identity-session" id="identity-session">불러오는 중</dd>
+            </dl>
+          </section>
+
+          <section class="card student" aria-labelledby="student-identity-title">
+            <h2 id="student-identity-title">학생 구현 표시 <span class="tag tag-student">student/extension.mjs · renderIdentity</span></h2>
+            <div id="student-identity" class="student-slot" aria-live="polite"></div>
+          </section>
+        </div>
+
+        <div class="grid-2">
+          <section class="card provided" aria-labelledby="devices-title">
+            <h2 id="devices-title">내 기기 <span class="tag">제공</span></h2>
+            <div id="devices" aria-live="polite"></div>
+          </section>
+          <section class="card provided" aria-labelledby="sessions-title">
+            <h2 id="sessions-title">내 세션 <span class="tag">제공</span></h2>
+            <div id="sessions" aria-live="polite"></div>
+          </section>
+        </div>
+
+        <section class="card student" aria-labelledby="student-status-title">
+          <h2 id="student-status-title">학생 상태·알림 표시 <span class="tag tag-student">student/extension.mjs · renderStatus</span></h2>
+          <div id="student-status" class="student-slot" aria-live="polite"></div>
+        </section>
+
+        <section class="card provided" aria-labelledby="diag-title">
+          <h2 id="diag-title">도움정보 <span class="tag">제공</span></h2>
+          <p class="muted">서버의 비밀 없는 연결 점검 결과를 불러와 직접 확인한 뒤 복사할 수 있습니다. 자동으로 전송하지 않습니다.</p>
+          <div class="row">
+            <button type="button" id="diag-load" class="btn">도움정보 불러오기</button>
+            <button type="button" id="diag-copy" class="btn" disabled>확인했으며 복사합니다</button>
+          </div>
+          <p id="diag-status" class="muted" role="status" aria-live="polite"></p>
+          <pre id="diag-output" class="diag-output" tabindex="0" hidden></pre>
+        </section>
+
+        <section class="card provided" aria-labelledby="ai-connect-title" data-testid="ai-connect-card">
+          <h2 id="ai-connect-title">AI 연결 <span class="tag">제공 · 17단계 연결 절차</span></h2>
+          <div class="connect-layout">
+            <div class="connect-body">
+              <div class="native-login" data-testid="native-login">
+                <h3 id="native-login-title">계정 연결 확인 (AI 앱 승인과 별도)</h3>
+                <p class="muted">이 PC의 보안 Agent 앱을 내 ALEPH 계정에 연결합니다. 비밀번호나 API 키를 옮겨 적을 필요가 없습니다. 계정을 연결한 뒤에는 아래에서 AI 사용 승인을 따로 진행하세요.</p>
+                <ol class="connect-steps">
+                  <li>「계정 연결 시작」을 누릅니다.</li>
+                  <li>「계정 확인 페이지 열기」로 포털을 열고, 이 화면에 보이는 6자리 확인 번호를 포털에 입력해 확인합니다.</li>
+                  <li>이 화면으로 돌아와 「로그인 확인 완료」를 누릅니다.</li>
+                  <li>계정 연결이 확인되면 AI 앱 승인은 아래 「AI 연결 시작」으로 따로 진행합니다.</li>
+                </ol>
+                <div class="row">
+                  <button type="button" id="native-login-start" class="btn" disabled>계정 연결 시작</button>
+                  <a id="native-login-open" class="btn btn-link" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" hidden>계정 확인 페이지 열기</a>
+                  <button type="button" id="native-login-redeem" class="btn" disabled>로그인 확인 완료</button>
+                  <button type="button" id="native-login-check" class="btn" disabled>현재 로그인 확인</button>
+                  <button type="button" id="native-login-cancel" class="btn" disabled>계정 연결 취소</button>
+                </div>
+                <div id="native-login-result" class="ai-result" data-testid="native-login-result" data-state="idle" aria-live="polite"></div>
+              </div>
+              <p class="muted">주소·열쇠를 직접 입력하지 않습니다. 기존 Workbench 로그인 승인 화면에서 이 앱 연결을 승인하면 연결 정보는 이 PC의 앱 서버가 따로 보관합니다. 연결 뒤에는 Workbench 를 계속 켜 둘 필요가 없습니다. 이 안내는 연결 절차이며 통과·점수·순위 판정이 아닙니다.</p>
+              <ol class="connect-steps">
+                <li>「AI 연결 시작」을 누릅니다.</li>
+                <li>확인 번호를 보고 「승인 페이지 열기」로 Workbench 승인 화면을 엽니다.</li>
+                <li>같은 번호인지 확인하고 승인한 뒤 「승인했으며 연결 확인」을 누릅니다.</li>
+                <li>연결 완료·실패·확인 불가 중 결과를 확인합니다.</li>
+                <li>연결 완료면 「현재 API 연결 점검」으로 모델 응답을 점검합니다.</li>
+              </ol>
+              <div class="row">
+                <button type="button" id="ai-connect-start" class="btn" disabled>AI 연결 시작</button>
+                <a id="ai-connect-open" class="btn btn-link" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" hidden>승인 페이지 열기</a>
+                <button type="button" id="ai-connect-finish" class="btn" disabled>승인했으며 연결 확인</button>
+                <button type="button" id="ai-connect-status" class="btn" disabled>상태 다시 확인</button>
+                <button type="button" id="ai-connect-cancel" class="btn" disabled>연결 취소</button>
+                <button type="button" id="ai-connect-check" class="btn" hidden>현재 API 연결 점검</button>
+              </div>
+              <div id="ai-connect-result" class="ai-result" data-testid="ai-connect-result" data-state="idle" aria-live="polite"></div>
+              <div class="row">
+                <button type="button" id="ai-connect-help" class="btn">연결 도움정보 보기</button>
+                <button type="button" id="ai-connect-help-copy" class="btn" disabled>확인했으며 복사합니다</button>
+              </div>
+              <p id="ai-connect-help-status" class="muted" role="status" aria-live="polite"></p>
+              <pre id="ai-connect-help-output" class="diag-output" tabindex="0" hidden></pre>
+            </div>
+            <div class="connect-art">
+              <img id="ai-connect-art-connected" class="alekov-art art-connect" src="/assets/alekov/alekov-connect-approval.webp" alt="" aria-hidden="true" draggable="false" hidden>
+              <img id="ai-connect-art-unknown" class="alekov-art art-connect" src="/assets/alekov/alekov-connection-unknown.webp" alt="" aria-hidden="true" draggable="false" hidden>
+            </div>
+          </div>
+        </section>
+
+        <section class="card provided" aria-labelledby="ai-connection-title">
+          <h2 id="ai-connection-title">AI 연결 점검 <span class="tag">제공</span></h2>
+          <p class="muted">현재 로그인과 앱 권한으로 모델 응답을 점검합니다. 설정값 존재·모델 목록 응답은 사건 설명의 성공과 별도로 확인합니다. 브라우저에서 열쇠를 입력하거나 복사하지 않습니다.</p>
+          <div class="row">
+            <button type="button" id="ai-check" class="btn">AI 연결 점검</button>
+            <button type="button" id="ai-check-cancel" class="btn" disabled>AI 연결 점검 취소</button>
+          </div>
+          <div id="ai-connection-result" class="ai-result" data-state="idle" aria-live="polite"></div>
+        </section>
+        <section class="card student" aria-labelledby="student-ai-connection-title">
+          <h2 id="student-ai-connection-title">학생 AI 연결 표시 <span class="tag tag-student">student/extension.mjs · renderAiConnection</span></h2>
+          <div id="student-ai-connection" class="student-slot" aria-live="polite"></div>
+        </section>
+
+        <section class="card provided" aria-labelledby="vulnerabilities-title">
+          <h2 id="vulnerabilities-title">설치 패키지와 취약점 정보 <span class="tag">제공 · OSV</span></h2>
+          <p class="muted">서버에 연결한 프로젝트의 공개 조회 승인 패키지만 정확한 설치 버전으로 대조합니다. 조회 실패와 미조회는 알려진 항목 없음이 아닙니다.</p>
+          <div class="row">
+            <button type="button" id="vulnerabilities-load" class="btn">설치 패키지 조회</button>
+            <button type="button" id="vulnerabilities-cancel" class="btn" disabled>패키지 조회 취소</button>
+          </div>
+          <div id="vulnerabilities-result" class="vulnerabilities-result" aria-live="polite"></div>
+        </section>
+        <section class="card student" aria-labelledby="student-vulnerabilities-title">
+          <h2 id="student-vulnerabilities-title">학생 패키지 조회 표시 <span class="tag tag-student">student/extension.mjs · renderVulnerabilities</span></h2>
+          <div id="student-vulnerabilities" class="student-slot" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section id="view-apps" class="view" role="tabpanel" aria-labelledby="tab-apps" hidden>
+        <h1>업무 앱</h1>
+        <div class="grid-2">
+          <section class="card provided" aria-labelledby="apps-title">
+            <h2 id="apps-title">접속 요청 <span class="tag">제공</span></h2>
+            <p class="muted">앱을 선택하면 서버에 접속 판정을 한 번 요청합니다. 실패해도 자동으로 다시 시도하지 않습니다.</p>
+            <div id="apps" aria-live="polite"></div>
+          </section>
+          <section class="card provided" aria-labelledby="access-title">
+            <h2 id="access-title">판정 결과 <span class="tag">제공</span></h2>
+            <div id="access-result" data-testid="access-result" data-decision="none" aria-live="polite">
+              <p class="muted">아직 요청한 앱이 없습니다.</p>
+            </div>
+          </section>
+        </div>
+        <section class="card student" aria-labelledby="student-decision-title">
+          <h2 id="student-decision-title">학생 구현 표시 <span class="tag tag-student">student/extension.mjs · renderDecision</span></h2>
+          <div id="student-decision" class="student-slot" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section id="view-records" class="view" role="tabpanel" aria-labelledby="tab-records" hidden>
+        <h1>보안 기록</h1>
+        <section class="card provided" aria-labelledby="records-title">
+          <h2 id="records-title">접속·XDR 기록 <span class="tag">제공</span></h2>
+          <p class="muted">AI 설명은 기록 식별자만 보내며, 실패해도 기록은 그대로 유지됩니다. 조치는 원천 권한 확인과 별도의 사람 확인을 거칩니다.</p>
+          <div id="records" aria-live="polite">
+            <ul id="records-list" data-testid="records-list" class="records"></ul>
+          </div>
+        </section>
+        <section class="card student" aria-labelledby="student-events-title">
+          <h2 id="student-events-title">학생 구현 표시 <span class="tag tag-student">student/extension.mjs · renderEvents</span></h2>
+          <div id="student-events" class="student-slot" aria-live="polite"></div>
+        </section>
+        <section class="card student" aria-labelledby="student-explanation-title">
+          <img class="alekov-art art-explain" src="/assets/alekov/alekov-ai-explain.webp" alt="" aria-hidden="true" draggable="false">
+          <h2 id="student-explanation-title">학생 AI 사건 설명 <span class="tag tag-student">student/extension.mjs · renderExplanation</span></h2>
+          <p class="muted">선택한 사건의 근거·규칙·현재 상태와 설명 결과를 함께 확인합니다. 조치 제안은 실행되지 않습니다.</p>
+          <button type="button" id="ai-explanation-cancel" class="btn" disabled>AI 설명 취소</button>
+          <div id="student-explanation" class="student-slot" aria-live="polite"></div>
+        </section>
+        <section class="card provided" aria-labelledby="action-title">
+          <h2 id="action-title">조치 준비와 원천 결과 <span class="tag">제공</span></h2>
+          <p class="muted">현재 선택한 사건의 AI 제안에서 조치를 직접 준비합니다. 사건·실제 대상·확인 기한을 읽은 뒤 사람 확인 버튼을 누르세요. ACK·취소·시간 초과는 효과 없음이나 완료가 아닙니다.</p>
+          <div id="action-result" data-state="idle" aria-live="polite"></div>
+          <div class="row">
+            <button type="button" id="action-confirm" class="btn" disabled>대상과 조치를 확인했으며 집행합니다</button>
+            <button type="button" id="action-result-load" class="btn" disabled>원천 결과만 재조회</button>
+            <button type="button" id="action-cancel" class="btn" disabled>조치 화면 취소</button>
+          </div>
+        </section>
+        <section class="card student" aria-labelledby="student-action-title">
+          <h2 id="student-action-title">학생 조치 상태 표시 <span class="tag tag-student">student/extension.mjs · renderAction</span></h2>
+          <div id="student-action" class="student-slot" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

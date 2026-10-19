@@ -1,23 +1,14 @@
 {
-  "name": "aleph-defense-starter",
+  "name": "alekov-client-starter",
+  "version": "0.2.11",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-public.mjs",
-    "test:r5": "node --test test/r5.test.mjs",
-    "test:package": "node --test test/package-starter.test.mjs",
-    "bundle": "node scripts/bundle.mjs",
-    "decider:test": "node scripts/decider-test.mjs",
-    "detect:test": "node scripts/detect-test.mjs",
-    "fixture:7": "node scripts/fixture-7.mjs",
-    "restore:test": "node src/restore.mjs",
-    "xdr:run": "node scripts/xdr-run.mjs"
+    "start": "node src/server.mjs",
+    "demo": "node src/server.mjs --demo",
+    "check": "node --check student/extension.mjs"
   },
   "engines": {
-    "node": ">=22"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "2.117.2",
-    "jose": "6.2.12"
+    "node": "24.19.0"
   }
 }
