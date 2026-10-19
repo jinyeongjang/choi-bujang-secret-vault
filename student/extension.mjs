@@ -57,7 +57,10 @@ export function createStudentView() {
         revoked: '철회됨',
         unknown: '확인 불가',
       };
-      const statusLabel = (labels, status) => labels[status] || '확인 불가';
+      const statusLabel = (labels, status) => {
+        const text = labels[status] || '확인 불가';
+        return status ? `${text}(${status})` : text;
+      };
       const itemName = (item) => {
         if (typeof item?.label === 'string' && item.label.trim()) return item.label;
         if (typeof item?.id === 'string' && item.id.trim()) return item.id;
