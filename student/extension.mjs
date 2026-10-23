@@ -854,6 +854,163 @@ export function createStudentView() {
       addLine('확인 불가: 사건 설명 상태를 확인할 수 없습니다. 기록은 그대로 유지됩니다.');
       return root;
     },
-    renderAction() { return '학생 구현 대기: 현재 사건·조치·실제 대상·사람 확인·ACK와 원천 효과·unknown을 구분하세요.'; },
+    renderAction(actionState) {
+      const root = document.createElement('div');
+      root.className = 'student-box';
+
+      // 입력 데이터 분해
+      const state = actionState || {};
+      const status = state.status || 'idle';
+      const event = state.event || null;
+      const actionId = state.actionId || null;
+      const target = state.target || null;
+      const receipt = state.receipt || null;
+      const observation = state.observation || null;
+      const message = state.message || '';
+      const confirmationExpiresAt = state.confirmationExpiresAt || null;
+      const error = state.error || null;
+
+      // 바깥 요소에 계약 속성 바인딩
+      if (event && event.id) {
+        root.dataset.studentActionEvent = event.id;
+      }
+      if (receipt && receipt.requestId) {
+        root.dataset.studentActionRequest = receipt.requestId;
+      }
+
+      const addLine = (text, parent = root, className = '') => {
+        const p = document.createElement('p');
+        p.textContent = text;
+        if (className) p.className = className;
+        parent.append(p);
+      };
+
+      // 1. 상태(status)별 안내 문구
+      const statusHeader = document.createElement('h4');
+      statusHeader.textContent = '보안 조치 처리 상태:';
+      root.append(statusHeader);
+
+      if (status === 'idle') {
+        addLine('아직 미실행(idle): 조치 제안은 아직 실행되지 않았습니다.');
+      } else if (status === 'loading') {
+        addLine('조치 준비 또는 결과 조회 중(loading) · 완료 아님');
+      } else if (status === 'prepared') {
+        addLine('준비됨·미실행(prepared): 조치가 준비되었으나 아직 실행되지 않았습니다. 대상과 기한을 확인하세요.');
+        if (confirmationExpiresAt) {
+          addLine(`확인 기한: ${confirmationExpiresAt}`);
+        }
+        addLine('안내: 제공 화면의 확인 버튼을 눌러 승인해야 집행 단계로 진행됩니다.');
+      } else if (status === 'executing') {
+        addLine('서버에 전달 중(executing) · 결과 미확인 / 완료 아님');
+      } else if (status === 'pending') {
+        addLine('서버 접수·처리 중(pending) · 서버가 요청을 접수(ACK)했으나 실제 조치 효과는 아직 확인되지 않았습니다(완료 아님).');
+      } else if (status === 'succeeded') {
+        // succeeded이면서 observation.effectApplied === true일 때만 효과 확인으로 표시
+        if (observation && observation.effectApplied === true) {
+          addLine('효과 확인(succeeded): 연동 시스템에서 실제 조치 효과가 확인되었습니다.');
+          addLine(`effectApplied: true`);
+          if (observation.observedAt) {
+            addLine(`관측 시각: ${observation.observedAt}`);
+          }
+          if (receipt?.receiptId) {
+            addLine(`접수 영수증(receiptId): ${receipt.receiptId}`);
+          }
+        } else {
+          // effectApplied가 true가 아니면 효과 없음/성공으로 단정하지 않고 결과 불명으로 처리
+          addLine('결과 불명(unknown): 연동 시스템에서 실제 효과가 확인되지 않았습니다. 효과 없음으로도 성공으로도 단정하지 마시고 결과만 재조회하십시오.');
+        }
+      } else if (status === 'denied') {
+        addLine(`거절(denied): 연동 시스템에서 조치를 거절했습니다. ${message || ''}`);
+      } else if (status === 'failed') {
+        addLine(`실패(failed): 연동 시스템에서 조치 처리에 실패했습니다. ${message || ''}`);
+      } else if (status === 'unknown') {
+        addLine('결과 불명(unknown): 효과 없음으로도 성공으로도 단정하지 마십시오. 연동 시스템 결과만 재조회하십시오.');
+      } else if (status === 'expired') {
+        addLine('확인 기한 지남(expired): 사람 확인 기한이 지났습니다. 이번 준비로는 집행할 수 없으니 다시 준비하십시오.');
+      } else if (status === 'error') {
+        const errCode = error?.code || 'ACTION_ERROR';
+        const errMsg = error?.message || message || '요청이 처리되지 않았습니다.';
+        addLine(`요청 처리 실패(error): [${errCode}] ${errMsg}`);
+      } else {
+        addLine(`확인 불가 상태(${status}) · 결과만 재조회하십시오.`);
+      }
+
+      // 부가 메시지가 있고 본문과 겹치지 않으면 표시
+      if (message && status !== 'denied' && status !== 'failed' && status !== 'error') {
+        addLine(`안내 메시지: ${message}`);
+      }
+
+      // 2. 조치 및 대상 식별 정보 (있는 것만 표시)
+      const detailsSection = document.createElement('section');
+      const detailsTitle = document.createElement('h5');
+      detailsTitle.textContent = '조치 세부 정보:';
+      detailsSection.append(detailsTitle);
+
+      const dl = document.createElement('dl');
+      const addDl = (term, desc) => {
+        const dt = document.createElement('dt');
+        dt.textContent = term;
+        const dd = document.createElement('dd');
+        dd.textContent = String(desc);
+        dl.append(dt, dd);
+      };
+
+      let hasDetails = false;
+      if (event && event.id) {
+        addDl('사건 ID (event.id)', event.id);
+        hasDetails = true;
+      }
+      if (event && Array.isArray(event.evidence) && event.evidence.length > 0) {
+        const evIds = event.evidence.map(e => e.id).filter(Boolean).join(', ');
+        if (evIds) {
+          addDl('근거 ID (evidence)', evIds);
+          hasDetails = true;
+        }
+      }
+      if (actionId) {
+        addDl('조치 ID (actionId)', actionId);
+        hasDetails = true;
+      }
+      if (target) {
+        if (target.id !== undefined && target.id !== null) {
+          addDl('대상 ID (target.id)', target.id);
+          hasDetails = true;
+        }
+        if (target.generation !== undefined && target.generation !== null) {
+          addDl('대상 세대 (target.generation)', target.generation);
+          hasDetails = true;
+        }
+      }
+      if (receipt) {
+        if (receipt.requestId) {
+          addDl('요청 ID (requestId)', receipt.requestId);
+          hasDetails = true;
+        }
+        if (receipt.receiptId) {
+          addDl('영수증 ID (receiptId)', receipt.receiptId);
+          hasDetails = true;
+        }
+        if (receipt.version !== undefined && receipt.version !== null) {
+          addDl('버전 (version)', receipt.version);
+          hasDetails = true;
+        }
+        if (receipt.superseded) {
+          addLine('안내: 이전 조회는 최신 결과를 대신하지 않습니다(superseded).', detailsSection);
+        }
+      }
+
+      if (hasDetails) {
+        detailsSection.append(dl);
+        root.append(detailsSection);
+      }
+
+      // 조치 버튼 및 확인 티켓 관련 안내 (학생 코드에서 생성하지 않음)
+      const guidance = document.createElement('p');
+      guidance.textContent = '안내: 조치 버튼 및 확인 승인은 제공 화면 버튼을 통해서만 수행되며, 학생 코드에서는 임의 조치 요청이나 티켓을 생성하지 않습니다.';
+      guidance.className = 'muted';
+      root.append(guidance);
+
+      return root;
+    },
   };
 }
