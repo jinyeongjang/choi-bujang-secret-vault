@@ -704,30 +704,147 @@ export function createStudentView() {
         return line;
       };
 
+      // 1) 오류 상태는 event가 null이어도 먼저 표시 (실패 시 data-student-explanation-event 속성 미부여)
+      if (explanation?.status === 'error') {
+        const code = explanation.error?.code || 'ERROR';
+        const message = explanation.error?.message || '사건 설명 생성 중 오류가 발생했습니다.';
+        addLine(`AI 설명 실패: [${code}] ${message}`);
+        addLine('안내: AI 설명에 실패했으나 보안 기록은 그대로 유지됩니다(과제 실패가 아닙니다).');
+        if (code === 'ACTION_ALREADY_EXECUTED' || explanation.data?.executed === true) {
+          addLine('안내: AI가 이미 실행했다고 답한 설명은 쓸 수 없습니다.');
+        }
+        return root;
+      }
+
+      // 2) 오류 없이 event가 null인 경우 기록 선택 안내
+      if (!event) {
+        addLine('보안 기록에서 기록을 먼저 고르세요.');
+        return root;
+      }
+
       if (!explanation || explanation.status === 'idle') {
-        addLine('선택한 사건의 AI 사건 설명을 확인하세요.');
+        addLine('선택한 사건의 AI 설명을 확인하세요.');
         return root;
       }
 
       if (explanation.status === 'loading') {
-        addLine('AI 사건 설명을 생성하는 중…');
-        return root;
-      }
-
-      if (explanation.status === 'error') {
-        const code = explanation.error?.code || 'ERROR';
-        const message = explanation.error?.message || '사건 설명 생성 중 오류가 발생했습니다.';
-        addLine(`AI 사건 설명 실패: [${code}] ${message}`);
-        addLine('안내: 사건 설명에 실패했으나 보안 기록은 그대로 유지됩니다.');
+        addLine('AI 설명을 요청하는 중…');
         return root;
       }
 
       if (explanation.status === 'ok') {
-        if (event?.id) {
-          root.dataset.studentExplanationEvent = event.id;
+        const data = explanation.data;
+        if (!data) {
+          addLine('설명 데이터가 없습니다.');
+          return root;
         }
-        addLine(`사건 ID: ${event?.id || '알 수 없음'}`);
-        addLine(`설명 요약: ${explanation.data?.summary || '요약 정보 없음'}`);
+
+        if (data.executed === true) {
+          addLine('AI 설명 실패: [INVALID_EXECUTION_STATE] AI가 이미 실행했다고 답한 설명은 쓸 수 없습니다.');
+          addLine('안내: 보안 기록은 그대로 유지됩니다.');
+          return root;
+        }
+
+        const evidenceList = Array.isArray(event.evidence) ? event.evidence : [];
+        const evidenceMap = new Map(evidenceList.map(e => [e.id, e.text]));
+        const citedEvidenceIds = Array.isArray(data.evidenceIds) ? data.evidenceIds : [];
+
+        // 근거 ID가 event.evidence에 모두 존재하는지 대조
+        const hasMissingEvidence = citedEvidenceIds.some(id => !evidenceMap.has(id));
+        if (hasMissingEvidence) {
+          addLine('AI 설명 실패: [INSUFFICIENT_EVIDENCE] 근거가 맞지 않아 이 설명을 쓸 수 없습니다(근거 불일치).');
+          addLine('안내: 없는 근거 ID를 임의로 맞추지 않으며, 보안 기록은 그대로 유지됩니다.');
+          return root;
+        }
+
+        // 성공한 경우에만 바깥 요소에 data-student-explanation-event 속성 부여
+        root.dataset.studentExplanationEvent = event.id;
+
+        // 1) 사건 ID, AI 설명 제목(참고용), summary
+        addLine(`사건 ID: ${event.id}`);
+        const titleLine = document.createElement('h4');
+        titleLine.textContent = 'AI 설명(참고용)';
+        root.append(titleLine);
+        addLine(`요약: ${data.summary || '요약 없음'}`);
+
+        // 2) 인용한 근거 ID와 근거 글 ("근거 ID — 근거 글")
+        const evTitle = document.createElement('h5');
+        evTitle.textContent = '인용한 근거:';
+        root.append(evTitle);
+        if (citedEvidenceIds.length === 0) {
+          addLine('인용한 근거가 없습니다.');
+        } else {
+          const ul = document.createElement('ul');
+          for (const evId of citedEvidenceIds) {
+            const li = document.createElement('li');
+            li.textContent = `${evId} — ${evidenceMap.get(evId) || '근거 글 없음'}`;
+            ul.append(li);
+          }
+          root.append(ul);
+        }
+
+        // 3) event.rules 마다 "규칙 ID — 규칙 글"
+        const ruleTitle = document.createElement('h5');
+        ruleTitle.textContent = '적용 규칙:';
+        root.append(ruleTitle);
+        const rulesList = Array.isArray(event.rules) ? event.rules : [];
+        if (rulesList.length === 0) {
+          addLine('적용 규칙이 없습니다.');
+        } else {
+          const ul = document.createElement('ul');
+          for (const rule of rulesList) {
+            const li = document.createElement('li');
+            li.textContent = `${rule.id} — ${rule.text}`;
+            ul.append(li);
+          }
+          root.append(ul);
+        }
+
+        // 4) event.state에서 unknown인 항목을 접속·세션·기기별로 나열
+        const stateTitle = document.createElement('h5');
+        stateTitle.textContent = '확인 불가 상태 목록:';
+        root.append(stateTitle);
+        const st = event.state || {};
+        const unknowns = [];
+        if (st.access === 'unknown') unknowns.push('접속: 확인 불가(unknown)');
+        if (st.session === 'unknown') unknowns.push('세션: 확인 불가(unknown)');
+        if (st.device === 'unknown') unknowns.push('기기: 확인 불가(unknown)');
+
+        if (unknowns.length === 0) {
+          addLine('확인 불가 상태: 없음');
+        } else {
+          const ul = document.createElement('ul');
+          for (const item of unknowns) {
+            const li = document.createElement('li');
+            li.textContent = item;
+            ul.append(li);
+          }
+          root.append(ul);
+          addLine('주의: 확인할 수 없는 상태를 정상 또는 안전으로 간주하지 마세요.');
+        }
+
+        // 5) 제안(proposals) 처리
+        const propTitle = document.createElement('h5');
+        propTitle.textContent = '조치 제안:';
+        root.append(propTitle);
+        const proposals = Array.isArray(data.proposals) ? data.proposals : [];
+        if (proposals.length === 0) {
+          if (!Array.isArray(event.supportedActions) || event.supportedActions.length === 0) {
+            addLine('연동 시스템이 지원하는 조치가 없어 제안이 없습니다(정상).');
+          } else {
+            addLine('AI가 제안한 조치가 없습니다.');
+          }
+        } else {
+          const ul = document.createElement('ul');
+          for (const prop of proposals) {
+            const li = document.createElement('li');
+            li.textContent = `조치: ${prop.action} · 이유: ${prop.reason}`;
+            ul.append(li);
+          }
+          root.append(ul);
+          addLine('주의: 사람 확인이 필요하며 실행되지 않았습니다(제안은 자동으로 실행되지 않습니다).');
+        }
+
         if (checkedAt) {
           addLine(`확인 시각: ${checkedAt}`);
         }
