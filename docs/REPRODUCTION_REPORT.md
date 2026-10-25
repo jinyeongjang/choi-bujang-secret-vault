@@ -11,7 +11,7 @@
 | **프로젝트 명** | choi-bujang-secret-vault (보안 Agent 「쉴더스진」) | alekov-client-starter 기반 |
 | **기준 저장소 URL** | `https://github.com/jinyeongjang/choi-bujang-secret-vault.git` | GitHub 원격 저장소 |
 | **기준 브랜치** | `main` | 기본 작업 브랜치 |
-| **검증 및 제출 기준 커밋 (40자리)** | `fef3461c8a9f37d864616cdacad3c6190e2a4135` | 22단계 새 환경 재현 및 원문 대조 기준 최종 커밋 |
+| **검증 및 제출 기준 커밋 (40자리)** | `0108aac0e6c54cf295867a4534c69b6b5410eb0f` | 22단계 새 환경 재현 및 원문 대조 기준 최종 커밋 |
 | **패키지 버전** | `alekov-client-starter` 0.2.11 | `package.json` 기준 |
 | **릴리스 검증 버전** | **`v0.2.11-student-verified`** (검증 중인 버전) | 공식 수료 및 원문 검토 기준 판정 버전 |
 
@@ -40,7 +40,7 @@ git clone https://github.com/jinyeongjang/choi-bujang-secret-vault.git fresh-ale
 Set-Location -Path "fresh-alekov"
 
 # 2. 검증 대상 최종 커밋으로 체크아웃합니다.
-git checkout fef3461c8a9f37d864616cdacad3c6190e2a4135
+git checkout 0108aac0e6c54cf295867a4534c69b6b5410eb0f
 
 # 3. 학생 구현 UI 문법 무결성을 점검합니다.
 npm run check
@@ -109,7 +109,7 @@ git archive --format=zip --output="<프로젝트_외부_백업_디렉터리>\vau
 
 ## 4. 13~21단계 누적 기능 재현 결과 표
 
-제출 기준 최종 커밋 `fef3461c8a9f37d864616cdacad3c6190e2a4135`를 대상으로 13단계부터 21단계까지 구현된 모든 기능의 재현 상태를 확인하여 기록합니다.
+제출 기준 최종 커밋 `0108aac0e6c54cf295867a4534c69b6b5410eb0f`를 대상으로 13단계부터 21단계까지 구현된 모든 기능의 재현 상태를 확인하여 기록합니다.
 
 | 단계 | 확인한 기능 | 결과 | 확인 시각 (KST) | 비고 |
 |---|---|---|---|---|
