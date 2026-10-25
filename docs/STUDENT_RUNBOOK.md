@@ -95,9 +95,10 @@ choi-bujang-secret-vault/
 ## 4. 실행 및 재실행 절차
 
 ### 4.1. PowerShell 작업 경로
-PowerShell 터미널을 열고 프로젝트 최상위 폴더로 이동합니다.
+PowerShell 터미널을 열고 저장소를 복제한 최상위 프로젝트 폴더로 이동합니다.
 ```powershell
-Set-Location -Path "c:\Users\wlsdu\Desktop\SKT_ALEPH_personal_project\choi-bujang-secret-vault"
+# 저장소를 내려받은 프로젝트 최상위 폴더로 이동합니다.
+Set-Location -Path "<프로젝트_저장소_경로>"
 ```
 
 ### 4.2. 실행 명령
