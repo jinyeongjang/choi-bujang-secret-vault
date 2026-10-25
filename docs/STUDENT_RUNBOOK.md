@@ -83,6 +83,7 @@ choi-bujang-secret-vault/
 ├── vendor/                         # 외부 연동 HTTP 라이브러리 (clco-http.mjs)
 └── docs/                           # 공식 문서 및 가이드라인
     ├── STUDENT_RUNBOOK.md          # [본 문서] 학생용 실행 설명서 및 시스템 구성도
+    ├── REPRODUCTION_REPORT.md      # 22단계 새 환경 재현 및 릴리스 검증 보고서
     ├── STUDENT_LAUNCH_GUIDE.md     # 실행 및 Node.js 22~24 환경 안내서
     ├── IMPLEMENTATION_CONTRACT.md  # 인터페이스 계약 규격서
     ├── CURRICULUM.json             # 단계별 교육과정 및 검사 항목

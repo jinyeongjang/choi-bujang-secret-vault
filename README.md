@@ -58,3 +58,5 @@ npm start도 같은 서버를 켭니다. 기본 실행은 실제 회사 시스�
 - **실제 확인 버전**: `v24.13.0`
 - **npm**: 11.6.2 (실제 확인)
 - **상세 실행 설명서**: 상세 설치·실행 순서, 시스템 구성도, 매니페스트 기준 제공/학생 코드 경계, 취약점 스캐너 오류별 복구 방법 및 지원 범위는 [docs/STUDENT_RUNBOOK.md](docs/STUDENT_RUNBOOK.md)에 상세히 기술되어 있습니다.
+- **새 환경 재현 및 릴리스 기록 (22단계)**: 별도 빈 폴더에서의 설치·실행 재현 절차, 13~21단계 누적 기능 재현 결과, 데이터 보존 계획 및 검증 중인 버전(v0.2.11-student-verified) 기록은 [docs/REPRODUCTION_REPORT.md](docs/REPRODUCTION_REPORT.md)를 참고하십시오.
+
