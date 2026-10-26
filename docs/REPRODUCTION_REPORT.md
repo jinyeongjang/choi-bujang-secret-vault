@@ -11,7 +11,9 @@
 | **프로젝트 명** | choi-bujang-secret-vault (보안 Agent 「쉴더스진」) | alekov-client-starter 기반 |
 | **기준 저장소 URL** | `https://github.com/jinyeongjang/choi-bujang-secret-vault.git` | GitHub 원격 저장소 |
 | **기준 브랜치** | `main` | 기본 작업 브랜치 |
-| **재현 및 제출 기준 (릴리스 태그)** | `v0.2.11-student-verified` | 22단계 새 환경 재현 및 원문 대조 기준 정확한 릴리스 태그 |
+| **기준 커밋 전체 SHA (40자리)** | `bb0ca18334803420d42f80f23e1dc7629af691a4` | 현재 제출본과 1:1 대조되는 검증 기준 커밋 해시 |
+| **재현 및 제출 기준 (릴리스 태그)** | `v0.2.11-student-verified` | 위 커밋(`bb0ca18334803420d42f80f23e1dc7629af691a4`)을 가리키는 공식 릴리스 태그 |
+| **서버 API 메타데이터 버전** | `starterVersion: 0.1.0` (진단 `0.1.0`) | `src/server.mjs`의 meta() 및 /api/diagnostics 응답 기준 |
 | **패키지 버전** | `alekov-client-starter` 0.2.11 | `package.json` 기준 |
 | **릴리스 검증 버전** | **`v0.2.11-student-verified`** (검증 중인 버전) | 공식 수료 및 원문 검토 기준 판정 버전 |
 
@@ -122,7 +124,7 @@ git archive --format=zip --output="<프로젝트_외부_백업_디렉터리>\vau
 ---
 
 ## 4. 13~21단계 누적 기능 재현 결과 표
-제출 기준 릴리스 태그 `v0.2.11-student-verified`를 대상으로 13단계부터 21단계까지 구현된 모든 기능의 재현 상태를 확인하여 기록합니다.
+제출 기준 커밋 전체 SHA `bb0ca18334803420d42f80f23e1dc7629af691a4` 및 해당 커밋을 가리키는 릴리스 태그 `v0.2.11-student-verified`를 대상으로 13단계부터 21단계까지 구현된 모든 기능의 재현 상태를 확인하여 기록합니다.
 
 | 단계 | 확인한 기능 | 결과 | 확인 시각 (KST) | 비고 |
 |---|---|---|---|---|
@@ -160,6 +162,10 @@ git archive --format=zip --output="<프로젝트_외부_백업_디렉터리>\vau
 본 릴리스 시점에서 구현 및 검증이 완료된 범위와 향후 환경 연동을 위한 대기(UNV: Unverified) 항목은 다음과 같습니다.
 
 ### 6.1. 지원 및 검증 완료 범위
+- **버전 체계 일치 및 정직한 안내**:
+  - 클라이언트 패키지 매니페스트(`package.json`): `alekov-client-starter` `0.2.11`
+  - 로컬 앱 서버 런타임(`src/server.mjs`): API 메타데이터 `starterVersion: 0.1.0` 및 `/api/diagnostics`의 component version `0.1.0` 내보냄
+  - 이 두 표시는 상충하는 오류가 아니라, 패키지 배포 버전(0.2.11)과 서버 내부 API 메타데이터 기본 규격(0.1.0)의 차이임을 문서에 투명하게 명시함
 - **플랫폼 환경**: Node.js 22~24 (Windows 10/11 환경 루프백 바인딩)
 - **독립 실행**: 외부 npm 패키지 의존성 없이 `src/server.mjs` 단독 기동
 - **UI 컴포넌트**: 13~20단계 8개 렌더링 함수의 상태(허용, 거부, 확인불가, 연결없음, 빈 상태 등) 분리 표출
