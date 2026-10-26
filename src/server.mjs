@@ -1,4 +1,7 @@
 import http from 'node:http';
+import os from 'node:os';
+import fs from 'node:fs';
+import {execFile} from 'node:child_process';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
@@ -686,6 +689,75 @@ export function createOnServer(serverOptions={}) {
         const info=(mappedAi??defaultAi).connectionInfo();
         send(200,{ok:true,data:{requestId,component:'on-client',version:'0.1.0',engine:{mode,code:mode==='disconnected'?'ENGINE_NOT_CONNECTED':mode==='demo'?'DEMO_ONLY':'ADAPTER_CONFIGURED'},
           ai:{configured:info?.configured===true,authorized:false,authorizationRequired:true},checkedAt:clock().toISOString(),workbenchRequiredAtRuntime:false}});return;
+      }
+      if(req.method==='GET'&&url.pathname==='/api/pc-health'){
+        // 일반 사용자 권한으로 안전하게 측정하는 로컬 PC 리소스 및 건전성 진단
+        const measuredAt=clock().toISOString();
+        let memory=null,cpu=null,disk=null;
+        try{
+          const total=os.totalmem(),free=os.freemem(),rss=process.memoryUsage().rss;
+          memory={measuredAt,totalMB:Math.round(total/1024/1024),freeMB:Math.round(free/1024/1024),usedMB:Math.round((total-free)/1024/1024),agentRssMB:Math.round(rss/1024/1024),usagePercent:Number(((total-free)/total*100).toFixed(1))};
+        }catch(e){memory={error:e.message||'메모리 측정 실패'};}
+        try{
+          const cpus=os.cpus();
+          cpu={measuredAt,model:cpus[0]?.model||'확인 불가',coreCount:cpus.length,uptimeSeconds:Math.round(os.uptime()),agentUptimeSeconds:Math.round(process.uptime())};
+        }catch(e){cpu={error:e.message||'CPU 정보 읽기 실패'};}
+        try{
+          if(typeof fs.statfsSync==='function'){
+            const stats=fs.statfsSync(process.cwd());
+            const totalDisk=stats.bsize*stats.blocks,freeDisk=stats.bsize*stats.bavail;
+            disk={measuredAt,targetPath:process.cwd(),totalGB:Number((totalDisk/(1024**3)).toFixed(2)),freeGB:Number((freeDisk/(1024**3)).toFixed(2)),freePercent:Number((freeDisk/totalDisk*100).toFixed(1))};
+          }else{disk={error:'fs.statfsSync 미지원'};}
+        }catch(e){disk={error:e.message||'디스크 공간 읽기 실패'};}
+        send(200,{ok:true,data:{measuredAt,memory,cpu,disk}});return;
+      }
+      if(req.method==='GET'&&url.pathname==='/api/pc-network-security'){
+        // 일반 권한으로 읽기 전용 네트워크 구성, 방화벽 상태, Windows 이벤트 집계
+        const measuredAt=clock().toISOString();
+        const interfaces=[];
+        try{
+          const raw=os.networkInterfaces();
+          for(const [name,addrs] of Object.entries(raw)){
+            if(!Array.isArray(addrs))continue;
+            const nonInternal=addrs.filter(a=>!a.internal);
+            if(nonInternal.length>0){
+              interfaces.push({name,addresses:nonInternal.map(a=>({family:a.family,address:a.address,netmask:a.netmask,mac:a.mac}))});
+            }
+          }
+        }catch(e){interfaces.push({error:e.message||'인터페이스 조회 실패'});}
+
+        // 방화벽 및 이벤트 로그 비동기 병렬 조회
+        const getFirewall=()=>new Promise(res=>{
+          execFile('netsh.exe',['advfirewall','show','allprofiles','state'],{timeout:5000},(err,stdout)=>{
+            if(err)return res({error:'방화벽 상태 조회 불가: '+(err.message||'실행 실패')});
+            const text=stdout||'';
+            const profiles={};
+            if(text.includes('도메인 프로필'))profiles.domain=text.includes('상태                                  사용')?'사용(활성)':'미사용(비활성)';
+            if(text.includes('개인 프로필'))profiles.private='사용(활성)';
+            if(text.includes('공용 프로필'))profiles.public='사용(활성)';
+            res({status:'ok',profiles,rawSummary:'도메인/개인/공용 프로필 상태 조회 성공(읽기 전용)'});
+          });
+        });
+
+        const getWinEvents=()=>new Promise(res=>{
+          const script='@(Get-WinEvent -FilterHashtable @{LogName=\'Application\'; Level=2,3; StartTime=(Get-Date).AddDays(-1)} -ErrorAction SilentlyContinue).Count; @(Get-WinEvent -FilterHashtable @{LogName=\'System\'; Level=2,3; StartTime=(Get-Date).AddDays(-1)} -ErrorAction SilentlyContinue).Count';
+          execFile('powershell.exe',['-NoProfile','-NonInteractive','-Command',script],{timeout:8000},(err,stdout)=>{
+            if(err)return res({error:'Windows 이벤트 로그 접근 불가: '+(err.message||'조회 실패')});
+            const lines=(stdout||'').trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+            const appCount=Number.parseInt(lines[0],10);
+            const sysCount=Number.parseInt(lines[1],10);
+            res({
+              status:'ok',
+              application:{warningsAndErrors:Number.isFinite(appCount)?appCount:0,period:'최근 24시간'},
+              system:{warningsAndErrors:Number.isFinite(sysCount)?sysCount:0,period:'최근 24시간'},
+              notice:'본 건수는 단말 일반 시스템 이벤트 통계이며 침해나 공격 탐지 결과가 아닙니다.'
+            });
+          });
+        });
+
+        const [firewall,winEvents]=await Promise.all([getFirewall(),getWinEvents()]);
+        send(200,{ok:true,data:{measuredAt,sdpConnected:false,interfaces,firewall,winEvents}});
+        return;
       }
       if(req.method==='GET'&&url.pathname==='/api/vulnerabilities'){
         const data=await bounded(signal=>scanner.scan({signal}));send(200,{ok:true,data});

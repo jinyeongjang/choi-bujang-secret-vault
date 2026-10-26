@@ -618,6 +618,232 @@ export function createStudentView() {
       }
       root.append(diagSection);
 
+      // 5. 내 PC 리소스 상태 및 건전성 추이 (일반 사용자 권한 실측)
+      const pcSection = document.createElement('section');
+      pcSection.className = 'student-pc-health-section';
+      const pcTitle = document.createElement('h4');
+      pcTitle.textContent = '내 PC 리소스 상태 및 건전성 추이';
+      pcSection.append(pcTitle);
+
+      const pcDesc = document.createElement('p');
+      pcDesc.textContent = '일반 권한으로 실측된 단말 메모리·CPU·디스크 가용량이며, 보안 사건 발생 시점의 리소스 병목 추이를 확인합니다.';
+      pcDesc.className = 'muted';
+      pcSection.append(pcDesc);
+
+      const pcContainer = document.createElement('div');
+      pcContainer.id = 'student-pc-health-content';
+      pcSection.append(pcContainer);
+
+      const loadPcHealthBtn = document.createElement('button');
+      loadPcHealthBtn.type = 'button';
+      loadPcHealthBtn.textContent = '내 PC 리소스 실측 및 추이 조회';
+
+      const renderHealthData = (health) => {
+        pcContainer.textContent = '';
+        if (!health || health.ok !== true || !health.data) {
+          const p = document.createElement('p');
+          p.textContent = '[확인 불가] 시스템 리소스 측정 API 응답을 읽지 못했습니다.';
+          p.className = 'state state-error';
+          pcContainer.append(p);
+          return;
+        }
+
+        const d = health.data;
+        const dl = document.createElement('dl');
+        const addDlRow = (term, val, isMeasured = true, errorReason = '') => {
+          const dt = document.createElement('dt');
+          dt.textContent = term;
+          const dd = document.createElement('dd');
+          if (!isMeasured || errorReason) {
+            dd.textContent = `[확인 불가] (이유: ${errorReason || '측정 권한 또는 시스템 제한'})`;
+            dd.className = 'state state-error';
+          } else {
+            dd.textContent = `[실측값] ${val}`;
+          }
+          dl.append(dt, dd);
+        };
+
+        // 잰 시각
+        addDlRow('측정 시각 (잰 시각)', d.measuredAt ? `${d.measuredAt} (ISO)` : '', Boolean(d.measuredAt));
+
+        // 메모리
+        if (d.memory && !d.memory.error) {
+          const memStr = `총 ${d.memory.totalMB} MB 중 가용 ${d.memory.freeMB} MB (사용률: ${d.memory.usagePercent} %, 보안Agent 점유: ${d.memory.agentRssMB} MB)`;
+          addDlRow('메모리 가용량 및 Agent 점유율', memStr, true);
+        } else {
+          addDlRow('메모리 가용량 및 Agent 점유율', '', false, d.memory?.error || '메모리 통계 접근 실패');
+        }
+
+        // CPU
+        if (d.cpu && !d.cpu.error) {
+          const cpuStr = `${d.cpu.model} (논리 코어: ${d.cpu.coreCount} 개, 시스템 가동: ${d.cpu.uptimeSeconds} 초, Agent 가동: ${d.cpu.agentUptimeSeconds} 초)`;
+          addDlRow('CPU 및 가동 시간', cpuStr, true);
+        } else {
+          addDlRow('CPU 및 가동 시간', '', false, d.cpu?.error || 'CPU 정보 조회 실패');
+        }
+
+        // 디스크
+        if (d.disk && !d.disk.error) {
+          const diskStr = `설치 디렉터리 가용 ${d.disk.freeGB} GB / 전체 ${d.disk.totalGB} GB (가용률: ${d.disk.freePercent} %)`;
+          addDlRow('디스크 남은 공간 (설치 경로)', diskStr, true);
+        } else {
+          addDlRow('디스크 남은 공간 (설치 경로)', '', false, d.disk?.error || '디스크 파일시스템 통계 미지원');
+        }
+
+        pcContainer.append(dl);
+
+        // 추이 비교 및 설명
+        const trendP = document.createElement('p');
+        trendP.className = 'muted';
+        if (d.memory && !d.memory.error) {
+          const memState = d.memory.usagePercent > 85 ? '주의(고부하)' : '안정(정상)';
+          trendP.textContent = `[추이 분석 설명] 단말 리소스 건전성: ${memState}. 가용 메모리가 충분하여 보안 사건 및 XDR 경보 수신 처리에 병목이 발생하지 않는 상태입니다.`;
+        } else {
+          trendP.textContent = '[추이 분석 설명] 리소스 실측 실패로 인해 단말 병목 추이를 분석할 수 없습니다.';
+        }
+        pcContainer.append(trendP);
+      };
+
+      loadPcHealthBtn.addEventListener('click', async () => {
+        loadPcHealthBtn.disabled = true;
+        loadPcHealthBtn.textContent = '리소스 측정 중…';
+        try {
+          const res = await fetch('/api/pc-health');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          renderHealthData(json);
+        } catch (err) {
+          pcContainer.textContent = '';
+          const p = document.createElement('p');
+          p.textContent = `[확인 불가] 리소스 조회 실패 (이유: ${err.message || '네트워크 연결 불가'})`;
+          p.className = 'state state-error';
+          pcContainer.append(p);
+        } finally {
+          loadPcHealthBtn.disabled = false;
+          loadPcHealthBtn.textContent = '내 PC 리소스 실측 및 추이 다시 조회';
+        }
+      });
+
+      pcSection.append(loadPcHealthBtn);
+      root.append(pcSection);
+
+      // 6. 네트워크 구성 및 방화벽·OS 이벤트 진단 (읽기 전용, SDP 분리)
+      const secSection = document.createElement('section');
+      secSection.className = 'student-network-security-section';
+      const secTitle = document.createElement('h4');
+      secTitle.textContent = '네트워크 구성 및 OS 보안 진단 (읽기 전용)';
+      secSection.append(secTitle);
+
+      const secNotice = document.createElement('p');
+      secNotice.textContent = '안내: 본 건수는 단말 로컬의 일반 운영체제 시스템 이벤트 통계이며, 침해 사고나 외부 공격 탐지 결과가 아닙니다. 방화벽과 보안 설정은 조회만 수행하며 절대 변경하지 않습니다.';
+      secNotice.className = 'muted';
+      secSection.append(secNotice);
+
+      const secContainer = document.createElement('div');
+      secContainer.id = 'student-network-security-content';
+      secSection.append(secContainer);
+
+      const loadSecBtn = document.createElement('button');
+      loadSecBtn.type = 'button';
+      loadSecBtn.textContent = '네트워크 구성 및 방화벽·이벤트 실측 조회';
+
+      const renderSecData = (sec) => {
+        secContainer.textContent = '';
+        if (!sec || sec.ok !== true || !sec.data) {
+          const p = document.createElement('p');
+          p.textContent = '[확인 불가] 네트워크 및 보안 진단 API 응답을 읽지 못했습니다.';
+          p.className = 'state state-error';
+          secContainer.append(p);
+          return;
+        }
+
+        const d = sec.data;
+        const dl = document.createElement('dl');
+        const addDlRow = (term, val, isSuccess = true, errorReason = '') => {
+          const dt = document.createElement('dt');
+          dt.textContent = term;
+          const dd = document.createElement('dd');
+          if (!isSuccess || errorReason) {
+            dd.textContent = `[확인 불가] (이유: ${errorReason || '권한 부족 또는 시스템 제한'})`;
+            dd.className = 'state state-error';
+          } else {
+            dd.textContent = `[실측값] ${val}`;
+          }
+          dl.append(dt, dd);
+        };
+
+        // SDP 연결 상태 명시적 분리
+        const sdpDt = document.createElement('dt');
+        sdpDt.textContent = 'SDP 서버 연동 상태';
+        const sdpDd = document.createElement('dd');
+        sdpDd.textContent = '[SDP 미연결 (disconnected)] 로컬 PC 조회가 성공하였으나 상위 SDP 서버와는 연동되지 않은 상태입니다.';
+        sdpDd.className = 'tag tag-disconnected';
+        dl.append(sdpDt, sdpDd);
+
+        // 잰 시각
+        addDlRow('측정 시각 (잰 시각)', d.measuredAt ? `${d.measuredAt} (ISO)` : '', Boolean(d.measuredAt));
+
+        // 네트워크 인터페이스
+        if (Array.isArray(d.interfaces) && d.interfaces.length > 0) {
+          const ifaceDetails = d.interfaces.map(i => {
+            const addrs = (i.addresses || []).map(a => `${a.family}: ${a.address}`).join(' / ');
+            return `${i.name} [${addrs}]`;
+          }).join(', ');
+          addDlRow('활성 네트워크 인터페이스', ifaceDetails, true);
+        } else {
+          addDlRow('활성 네트워크 인터페이스', '', false, '활성 네트워크 인터페이스 없음');
+        }
+
+        // 방화벽 프로필 상태 (읽기 전용)
+        if (d.firewall && !d.firewall.error && d.firewall.profiles) {
+          const p = d.firewall.profiles;
+          const fwStr = `도메인: ${p.domain || '확인 불가'}, 개인: ${p.private || '확인 불가'}, 공용: ${p.public || '확인 불가'} (상태: 읽기 전용 조회 성공)`;
+          addDlRow('Windows 방화벽 프로필 설정', fwStr, true);
+        } else {
+          addDlRow('Windows 방화벽 프로필 설정', '', false, d.firewall?.error || '방화벽 설정 조회 실패');
+        }
+
+        // 최근 Windows 이벤트 로그 건수
+        if (d.winEvents && !d.winEvents.error) {
+          const appC = d.winEvents.application?.warningsAndErrors ?? 0;
+          const sysC = d.winEvents.system?.warningsAndErrors ?? 0;
+          const evStr = `Application 로그: ${appC} 건, System 로그: ${sysC} 건 (기간: 최근 24시간, 심각도: 경고 및 오류)`;
+          addDlRow('최근 Windows 이벤트 (System·Application)', evStr, true);
+        } else {
+          addDlRow('최근 Windows 이벤트 (System·Application)', '', false, d.winEvents?.error || '이벤트 로그 서비스 접근 실패');
+        }
+
+        secContainer.append(dl);
+
+        const cautionP = document.createElement('p');
+        cautionP.textContent = '주의: 위 Windows 이벤트 건수는 일상적인 운영체제 백그라운드 이벤트이며, 외부 침입이나 보안 위협을 의미하지 않습니다.';
+        cautionP.className = 'muted';
+        secContainer.append(cautionP);
+      };
+
+      loadSecBtn.addEventListener('click', async () => {
+        loadSecBtn.disabled = true;
+        loadSecBtn.textContent = '보안 구성 측정 중…';
+        try {
+          const res = await fetch('/api/pc-network-security');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          renderSecData(json);
+        } catch (err) {
+          secContainer.textContent = '';
+          const p = document.createElement('p');
+          p.textContent = `[확인 불가] 네트워크·보안 정보 조회 실패 (이유: ${err.message || '네트워크 연결 불가'})`;
+          p.className = 'state state-error';
+          secContainer.append(p);
+        } finally {
+          loadSecBtn.disabled = false;
+          loadSecBtn.textContent = '네트워크 구성 및 방화벽·이벤트 실측 다시 조회';
+        }
+      });
+
+      secSection.append(loadSecBtn);
+      root.append(secSection);
+
       return root;
     },
     renderVulnerabilities({ status = 'idle', mode = null, data = null, error = null } = {}) {
