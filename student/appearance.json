@@ -1,0 +1,25 @@
+{
+  "themeName": "timeline-shield",
+  "displayName": "기록 타임라인형 보안 테마 (쉴더스진)",
+  "version": "1.0.0",
+  "layout": "timeline",
+  "accessibility": {
+    "keyboardNavigable": true,
+    "highContrastBadges": true,
+    "screenReaderAriaLive": true
+  },
+  "colors": {
+    "primary": "#0078d4",
+    "timelineLine": "#c7e0f4",
+    "badgeSuccess": "#107c41",
+    "badgeWarning": "#d83b01",
+    "badgeError": "#a80000",
+    "badgeDisconnected": "#605e5c"
+  },
+  "sectionsOrder": [
+    "timelineEvents",
+    "pcHealthMonitoring",
+    "networkSecurityDiagnostics",
+    "systemDiagnostics"
+  ]
+}

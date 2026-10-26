@@ -618,7 +618,7 @@ export function createStudentView() {
       }
       root.append(diagSection);
 
-      // 5. 내 PC 리소스 상태 및 건전성 추이 (일반 사용자 권한 실측)
+      // 5. [핵심 기능 2] 내 PC 리소스 상태 및 건전성 추이 (일반 사용자 권한 실측)
       const pcSection = document.createElement('section');
       pcSection.className = 'student-pc-health-section';
       const pcTitle = document.createElement('h4');
@@ -632,30 +632,35 @@ export function createStudentView() {
 
       const pcContainer = document.createElement('div');
       pcContainer.id = 'student-pc-health-content';
+      pcContainer.setAttribute('aria-live', 'polite');
       pcSection.append(pcContainer);
 
       const loadPcHealthBtn = document.createElement('button');
       loadPcHealthBtn.type = 'button';
-      loadPcHealthBtn.textContent = '내 PC 리소스 실측 및 추이 조회';
+      loadPcHealthBtn.textContent = '내 PC 리소스 실측 및 추이 다시 조회';
+      loadPcHealthBtn.className = 'student-action-btn';
+      loadPcHealthBtn.setAttribute('aria-label', '내 PC 리소스 실측 및 건전성 추이 다시 조회');
 
       const renderHealthData = (health) => {
         pcContainer.textContent = '';
         if (!health || health.ok !== true || !health.data) {
           const p = document.createElement('p');
-          p.textContent = '[확인 불가] 시스템 리소스 측정 API 응답을 읽지 못했습니다.';
           p.className = 'state state-error';
-          pcContainer.append(p);
+          p.textContent = '[확인 불가] 시스템 리소스 측정 실패';
+          const reason = document.createElement('p');
+          reason.textContent = '- 실패한 항목: 로컬 PC 리소스 통계\n- 이유: 백엔드 API 응답 미수신 또는 형식 불일치\n- 다음에 할 일: 서버 실행 상태(http://127.0.0.1:5189)를 점검하고 「다시 조회」를 누르세요.';
+          pcContainer.append(p, reason);
           return;
         }
 
         const d = health.data;
         const dl = document.createElement('dl');
-        const addDlRow = (term, val, isMeasured = true, errorReason = '') => {
+        const addDlRow = (term, val, isMeasured = true, errorReason = '', nextAction = '') => {
           const dt = document.createElement('dt');
           dt.textContent = term;
           const dd = document.createElement('dd');
           if (!isMeasured || errorReason) {
-            dd.textContent = `[확인 불가] (이유: ${errorReason || '측정 권한 또는 시스템 제한'})`;
+            dd.textContent = `[확인 불가] (실패한 항목: ${term} / 이유: ${errorReason || '권한 부족 또는 OS 통계 제한'} / 다음에 할 일: ${nextAction || '시스템 설정 확인 후 다시 조회'})`;
             dd.className = 'state state-error';
           } else {
             dd.textContent = `[실측값] ${val}`;
@@ -671,7 +676,7 @@ export function createStudentView() {
           const memStr = `총 ${d.memory.totalMB} MB 중 가용 ${d.memory.freeMB} MB (사용률: ${d.memory.usagePercent} %, 보안Agent 점유: ${d.memory.agentRssMB} MB)`;
           addDlRow('메모리 가용량 및 Agent 점유율', memStr, true);
         } else {
-          addDlRow('메모리 가용량 및 Agent 점유율', '', false, d.memory?.error || '메모리 통계 접근 실패');
+          addDlRow('메모리 가용량 및 Agent 점유율', '', false, d.memory?.error || '메모리 통계 접근 실패', '작업 관리자에서 프로세스 상태를 점검하세요.');
         }
 
         // CPU
@@ -679,7 +684,7 @@ export function createStudentView() {
           const cpuStr = `${d.cpu.model} (논리 코어: ${d.cpu.coreCount} 개, 시스템 가동: ${d.cpu.uptimeSeconds} 초, Agent 가동: ${d.cpu.agentUptimeSeconds} 초)`;
           addDlRow('CPU 및 가동 시간', cpuStr, true);
         } else {
-          addDlRow('CPU 및 가동 시간', '', false, d.cpu?.error || 'CPU 정보 조회 실패');
+          addDlRow('CPU 및 가동 시간', '', false, d.cpu?.error || 'CPU 정보 조회 실패', 'Windows 전원 및 코어 상태를 확인하세요.');
         }
 
         // 디스크
@@ -687,7 +692,7 @@ export function createStudentView() {
           const diskStr = `설치 디렉터리 가용 ${d.disk.freeGB} GB / 전체 ${d.disk.totalGB} GB (가용률: ${d.disk.freePercent} %)`;
           addDlRow('디스크 남은 공간 (설치 경로)', diskStr, true);
         } else {
-          addDlRow('디스크 남은 공간 (설치 경로)', '', false, d.disk?.error || '디스크 파일시스템 통계 미지원');
+          addDlRow('디스크 남은 공간 (설치 경로)', '', false, d.disk?.error || '디스크 파일시스템 통계 미지원', '설치 드라이브의 디스크 권한 및 잔여 용량을 확인하세요.');
         }
 
         pcContainer.append(dl);
@@ -706,7 +711,8 @@ export function createStudentView() {
 
       loadPcHealthBtn.addEventListener('click', async () => {
         loadPcHealthBtn.disabled = true;
-        loadPcHealthBtn.textContent = '리소스 측정 중…';
+        loadPcHealthBtn.setAttribute('aria-busy', 'true');
+        loadPcHealthBtn.textContent = '⏳ 리소스 측정 중… (잠시만 기다려 주세요)';
         try {
           const res = await fetch('/api/pc-health');
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -715,11 +721,14 @@ export function createStudentView() {
         } catch (err) {
           pcContainer.textContent = '';
           const p = document.createElement('p');
-          p.textContent = `[확인 불가] 리소스 조회 실패 (이유: ${err.message || '네트워크 연결 불가'})`;
           p.className = 'state state-error';
-          pcContainer.append(p);
+          p.textContent = `[확인 불가] 리소스 조회 실패`;
+          const detail = document.createElement('p');
+          detail.textContent = `- 실패한 항목: /api/pc-health 통신\n- 이유: ${err.message || '네트워크 연결 불가'}\n- 다음에 할 일: 로컬 서버 구동(node src/server.mjs) 여부를 확인한 뒤 「다시 조회」를 누르세요.`;
+          pcContainer.append(p, detail);
         } finally {
           loadPcHealthBtn.disabled = false;
+          loadPcHealthBtn.removeAttribute('aria-busy');
           loadPcHealthBtn.textContent = '내 PC 리소스 실측 및 추이 다시 조회';
         }
       });
@@ -727,7 +736,7 @@ export function createStudentView() {
       pcSection.append(loadPcHealthBtn);
       root.append(pcSection);
 
-      // 6. 네트워크 구성 및 방화벽·OS 이벤트 진단 (읽기 전용, SDP 분리)
+      // 6. [핵심 기능 3] 네트워크 구성 및 방화벽·OS 이벤트 진단 (읽기 전용, SDP 분리)
       const secSection = document.createElement('section');
       secSection.className = 'student-network-security-section';
       const secTitle = document.createElement('h4');
@@ -741,30 +750,35 @@ export function createStudentView() {
 
       const secContainer = document.createElement('div');
       secContainer.id = 'student-network-security-content';
+      secContainer.setAttribute('aria-live', 'polite');
       secSection.append(secContainer);
 
       const loadSecBtn = document.createElement('button');
       loadSecBtn.type = 'button';
-      loadSecBtn.textContent = '네트워크 구성 및 방화벽·이벤트 실측 조회';
+      loadSecBtn.textContent = '네트워크 구성 및 방화벽·이벤트 실측 다시 조회';
+      loadSecBtn.className = 'student-action-btn';
+      loadSecBtn.setAttribute('aria-label', '네트워크 구성 및 방화벽, Windows 이벤트 실측 다시 조회');
 
       const renderSecData = (sec) => {
         secContainer.textContent = '';
         if (!sec || sec.ok !== true || !sec.data) {
           const p = document.createElement('p');
-          p.textContent = '[확인 불가] 네트워크 및 보안 진단 API 응답을 읽지 못했습니다.';
           p.className = 'state state-error';
-          secContainer.append(p);
+          p.textContent = '[확인 불가] 네트워크 및 보안 진단 실패';
+          const reason = document.createElement('p');
+          reason.textContent = '- 실패한 항목: 보안 진단 API 응답\n- 이유: 백엔드 서비스 응답 누락\n- 다음에 할 일: 네트워크 상태를 점검하고 「다시 조회」를 누르세요.';
+          secContainer.append(p, reason);
           return;
         }
 
         const d = sec.data;
         const dl = document.createElement('dl');
-        const addDlRow = (term, val, isSuccess = true, errorReason = '') => {
+        const addDlRow = (term, val, isSuccess = true, errorReason = '', nextAction = '') => {
           const dt = document.createElement('dt');
           dt.textContent = term;
           const dd = document.createElement('dd');
           if (!isSuccess || errorReason) {
-            dd.textContent = `[확인 불가] (이유: ${errorReason || '권한 부족 또는 시스템 제한'})`;
+            dd.textContent = `[확인 불가] (실패한 항목: ${term} / 이유: ${errorReason || '권한 부족 또는 시스템 제한'} / 다음에 할 일: ${nextAction || '운영체제 서비스 상태 확인'})`;
             dd.className = 'state state-error';
           } else {
             dd.textContent = `[실측값] ${val}`;
@@ -791,7 +805,7 @@ export function createStudentView() {
           }).join(', ');
           addDlRow('활성 네트워크 인터페이스', ifaceDetails, true);
         } else {
-          addDlRow('활성 네트워크 인터페이스', '', false, '활성 네트워크 인터페이스 없음');
+          addDlRow('활성 네트워크 인터페이스', '', false, '활성 네트워크 인터페이스를 읽지 못함', '네트워크 어댑터 드라이버 상태를 확인하세요.');
         }
 
         // 방화벽 프로필 상태 (읽기 전용)
@@ -800,7 +814,7 @@ export function createStudentView() {
           const fwStr = `도메인: ${p.domain || '확인 불가'}, 개인: ${p.private || '확인 불가'}, 공용: ${p.public || '확인 불가'} (상태: 읽기 전용 조회 성공)`;
           addDlRow('Windows 방화벽 프로필 설정', fwStr, true);
         } else {
-          addDlRow('Windows 방화벽 프로필 설정', '', false, d.firewall?.error || '방화벽 설정 조회 실패');
+          addDlRow('Windows 방화벽 프로필 설정', '', false, d.firewall?.error || '방화벽 설정 조회 실패', 'Windows Defender 방화벽 서비스 가동 상태를 확인하세요.');
         }
 
         // 최근 Windows 이벤트 로그 건수
@@ -810,7 +824,7 @@ export function createStudentView() {
           const evStr = `Application 로그: ${appC} 건, System 로그: ${sysC} 건 (기간: 최근 24시간, 심각도: 경고 및 오류)`;
           addDlRow('최근 Windows 이벤트 (System·Application)', evStr, true);
         } else {
-          addDlRow('최근 Windows 이벤트 (System·Application)', '', false, d.winEvents?.error || '이벤트 로그 서비스 접근 실패');
+          addDlRow('최근 Windows 이벤트 (System·Application)', '', false, d.winEvents?.error || '이벤트 로그 서비스 접근 실패', 'PowerShell에서 Get-Service EventLog 상태를 확인하세요.');
         }
 
         secContainer.append(dl);
@@ -823,7 +837,8 @@ export function createStudentView() {
 
       loadSecBtn.addEventListener('click', async () => {
         loadSecBtn.disabled = true;
-        loadSecBtn.textContent = '보안 구성 측정 중…';
+        loadSecBtn.setAttribute('aria-busy', 'true');
+        loadSecBtn.textContent = '⏳ 보안 구성 측정 중… (잠시만 기다려 주세요)';
         try {
           const res = await fetch('/api/pc-network-security');
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -832,11 +847,14 @@ export function createStudentView() {
         } catch (err) {
           secContainer.textContent = '';
           const p = document.createElement('p');
-          p.textContent = `[확인 불가] 네트워크·보안 정보 조회 실패 (이유: ${err.message || '네트워크 연결 불가'})`;
           p.className = 'state state-error';
-          secContainer.append(p);
+          p.textContent = `[확인 불가] 네트워크·보안 정보 조회 실패`;
+          const detail = document.createElement('p');
+          detail.textContent = `- 실패한 항목: /api/pc-network-security 통신\n- 이유: ${err.message || '네트워크 연결 불가'}\n- 다음에 할 일: 앱 서버(5189 포트) 실행을 확인하고 「다시 조회」를 누르세요.`;
+          secContainer.append(p, detail);
         } finally {
           loadSecBtn.disabled = false;
+          loadSecBtn.removeAttribute('aria-busy');
           loadSecBtn.textContent = '네트워크 구성 및 방화벽·이벤트 실측 다시 조회';
         }
       });
