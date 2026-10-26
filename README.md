@@ -60,3 +60,11 @@ npm start도 같은 서버를 켭니다. 기본 실행은 실제 회사 시스�
 - **상세 실행 설명서**: 상세 설치·실행 순서, 시스템 구성도, 매니페스트 기준 제공/학생 코드 경계, 취약점 스캐너 오류별 복구 방법 및 지원 범위는 [docs/STUDENT_RUNBOOK.md](docs/STUDENT_RUNBOOK.md)에 상세히 기술되어 있습니다.
 - **새 환경 재현 및 릴리스 기록 (22단계)**: 별도 빈 폴더에서의 설치·실행 재현 절차, 13~21단계 누적 기능 재현 결과, 데이터 보존 계획 및 검증 중인 버전(v0.2.11-student-verified) 기록은 [docs/REPRODUCTION_REPORT.md](docs/REPRODUCTION_REPORT.md)를 참고하십시오.
 
+### 5. 로컬 검증 어댑터 및 Windows 설치 관리자 (`ShieldusJin-Setup.exe`)
+- **로컬 보안 엔진 어댑터 (`student/local-engine-adapter.mjs`)**: 외부 원격 SDP 호스트가 없는 환경에서도 제로 트러스트 계약(로그인 정보, 등록 단말, 활성 세션, 업무 앱 접속 판정, XDR 보안 이벤트 타임라인)을 완전하게 로컬에서 연동 및 검증할 수 있도록 지원합니다.
+- **로컬 실행 명령어**:
+  ```powershell
+  $env:ON_ENGINE_ADAPTER = "student/local-engine-adapter.mjs"; node src/server.mjs
+  ```
+- **Windows 단독 설치 프로그램**: Inno Setup 7 기반 파이프라인(`installer/ShieldusJin-Setup.iss`)을 통해 컴파일된 `Output/ShieldusJin-Setup.exe`를 제공하며, 바탕화면 바로가기 및 `Run-ShieldusJin.bat`을 통해 자동 환경변수 구성 및 원클릭 브라우저 연동 실행을 지원합니다.
+
