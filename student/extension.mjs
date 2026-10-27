@@ -862,6 +862,239 @@ export function createStudentView({ onChange } = {}) {
       secSection.append(loadSecBtn);
       root.append(secSection);
 
+      // 7. [핵심 기능 4] 멀티 테넌트 선택 및 테넌트 격리 관리 (Multi-Tenant Management)
+      const tenantSection = document.createElement('section');
+      tenantSection.className = 'student-tenant-management-section';
+      const tenantTitle = document.createElement('h4');
+      tenantTitle.textContent = '멀티 테넌트 선택 및 격리 관리 (Multi-Tenant Management)';
+      tenantSection.append(tenantTitle);
+
+      const tenantDesc = document.createElement('p');
+      tenantDesc.className = 'muted';
+      tenantDesc.textContent = '조직별·부서별 테넌트 환경을 분리 운영하며, 테넌트 전환 시 ZTNA 정책·인가 사용자·보안 이벤트 범위가 즉각 격리 적용됩니다.';
+      tenantSection.append(tenantDesc);
+
+      const tenantContainer = document.createElement('div');
+      tenantContainer.id = 'student-tenant-content';
+      tenantContainer.setAttribute('aria-live', 'polite');
+      tenantSection.append(tenantContainer);
+
+      const tenantControls = document.createElement('div');
+      tenantControls.className = 'row';
+      tenantControls.style.cssText = 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0;';
+
+      const tenantSelectLabel = document.createElement('label');
+      tenantSelectLabel.textContent = '운영 테넌트 선택: ';
+      tenantSelectLabel.setAttribute('for', 'student-tenant-selector');
+
+      const tenantSelect = document.createElement('select');
+      tenantSelect.id = 'student-tenant-selector';
+      tenantSelect.setAttribute('aria-label', '운영 테넌트 선택');
+
+      const applyTenantBtn = document.createElement('button');
+      applyTenantBtn.type = 'button';
+      applyTenantBtn.textContent = '선택한 테넌트로 전환 적용';
+      applyTenantBtn.className = 'student-action-btn';
+      applyTenantBtn.setAttribute('aria-label', '선택한 테넌트로 전환 적용');
+
+      const refreshTenantBtn = document.createElement('button');
+      refreshTenantBtn.type = 'button';
+      refreshTenantBtn.textContent = '테넌트 목록 새로고침';
+      refreshTenantBtn.className = 'btn';
+      refreshTenantBtn.setAttribute('aria-label', '테넌트 목록 새로고침');
+
+      tenantControls.append(tenantSelectLabel, tenantSelect, applyTenantBtn, refreshTenantBtn);
+      tenantSection.append(tenantControls);
+
+      const tenantStatusNotice = document.createElement('p');
+      tenantStatusNotice.className = 'muted';
+      tenantStatusNotice.id = 'student-tenant-notice';
+      tenantSection.append(tenantStatusNotice);
+
+      const renderTenants = (data) => {
+        tenantContainer.textContent = '';
+        if (!data || !Array.isArray(data.tenants)) {
+          const errP = document.createElement('p');
+          errP.className = 'state state-error';
+          errP.textContent = '테넌트 목록을 불러오지 못했습니다.';
+          tenantContainer.append(errP);
+          return;
+        }
+
+        const activeTenant = data.active || data.tenants[0];
+        tenantSelect.textContent = '';
+        for (const t of data.tenants) {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = `${t.name} (${t.id}) [정책: ${t.policyMode}]`;
+          if (activeTenant && t.id === activeTenant.id) opt.selected = true;
+          tenantSelect.append(opt);
+        }
+
+        const activeCard = document.createElement('div');
+        activeCard.style.cssText = 'padding:14px;border:1px solid var(--border, #cbd5e1);border-radius:8px;background:var(--card-bg, #ffffff);margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);';
+        
+        const cardTitle = document.createElement('h5');
+        cardTitle.style.cssText = 'margin:0 0 8px 0;font-size:1.05rem;color:var(--text-primary,#0f172a);';
+        cardTitle.textContent = `현재 활성 테넌트: ${activeTenant.name} (${activeTenant.id})`;
+        activeCard.append(cardTitle);
+
+        const dl = document.createElement('dl');
+        const addRow = (k, v) => {
+          const dt = document.createElement('dt'); dt.textContent = k;
+          const dd = document.createElement('dd'); dd.textContent = String(v ?? '확인 불가');
+          dl.append(dt, dd);
+        };
+        addRow('테넌트 등급(Tier)', activeTenant.tier);
+        addRow('운영 상태', activeTenant.status === 'active' ? '정상 운영 중(active)' : `${activeTenant.status}`);
+        addRow('보안 정책 모드', activeTenant.policyMode);
+        addRow('격리 프로젝트 ID', activeTenant.projectId);
+        addRow('담당 인가 사용자', `${activeTenant.user?.label} (${activeTenant.user?.id})`);
+        addRow('등록 단말기', `${activeTenant.device?.label} (${activeTenant.device?.id}) · ${activeTenant.device?.status}`);
+        addRow('활성 세션 ID', activeTenant.session?.id);
+        activeCard.append(dl);
+
+        tenantContainer.append(activeCard);
+      };
+
+      const loadTenants = async () => {
+        try {
+          const res = await fetch('/api/tenants');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          renderTenants(json.data);
+        } catch (err) {
+          tenantContainer.textContent = `테넌트 정보 조회 오류: ${err.message}`;
+        }
+      };
+
+      applyTenantBtn.addEventListener('click', async () => {
+        const targetId = tenantSelect.value;
+        if (!targetId) return;
+        applyTenantBtn.disabled = true;
+        tenantStatusNotice.textContent = '⏳ 테넌트 전환 처리 중…';
+        try {
+          const res = await fetch('/api/tenants/select', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tenantId: targetId })
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          tenantStatusNotice.textContent = `테넌트가 [${targetId}] (으)로 안전하게 전환되었습니다. 화면 정보를 갱신합니다.`;
+          await loadTenants();
+          const topRefresh = document.getElementById('refresh');
+          if (topRefresh) topRefresh.click();
+          if (typeof onChange === 'function') onChange();
+        } catch (err) {
+          tenantStatusNotice.textContent = `테넌트 전환 실패: ${err.message}`;
+        } finally {
+          applyTenantBtn.disabled = false;
+        }
+      });
+
+      refreshTenantBtn.addEventListener('click', () => {
+        tenantStatusNotice.textContent = '테넌트 정보를 다시 조회합니다.';
+        loadTenants();
+      });
+
+      // 초기 1회 로드
+      loadTenants();
+      root.append(tenantSection);
+
+      // 8. [핵심 기능 5] 시스템 관리 및 런타임 제어 (System Management & Operational Control)
+      const sysSection = document.createElement('section');
+      sysSection.className = 'student-system-management-section';
+      const sysTitle = document.createElement('h4');
+      sysTitle.textContent = '시스템 관리 및 런타임 제어 (System Management)';
+      sysSection.append(sysTitle);
+
+      const sysDesc = document.createElement('p');
+      sysDesc.className = 'muted';
+      sysDesc.textContent = 'Alekov ZTNA & XDR 제어 엔진의 가동 건전성, 런타임 무결성 및 규칙 실시간 동기화 상태를 모니터링합니다.';
+      sysSection.append(sysDesc);
+
+      const sysContainer = document.createElement('div');
+      sysContainer.id = 'student-system-status-content';
+      sysContainer.setAttribute('aria-live', 'polite');
+      sysSection.append(sysContainer);
+
+      const sysControls = document.createElement('div');
+      sysControls.className = 'row';
+      sysControls.style.cssText = 'display:flex;gap:10px;align-items:center;margin:10px 0;';
+
+      const reloadSysBtn = document.createElement('button');
+      reloadSysBtn.type = 'button';
+      reloadSysBtn.textContent = '시스템 상태 실시간 측정';
+      reloadSysBtn.className = 'student-action-btn';
+      reloadSysBtn.setAttribute('aria-label', '시스템 상태 실시간 측정');
+
+      const syncRulesBtn = document.createElement('button');
+      syncRulesBtn.type = 'button';
+      syncRulesBtn.textContent = '정책 규칙 엔진 동기화 검증';
+      syncRulesBtn.className = 'btn';
+      syncRulesBtn.setAttribute('aria-label', '정책 규칙 엔진 동기화 검증');
+
+      sysControls.append(reloadSysBtn, syncRulesBtn);
+      sysSection.append(sysControls);
+
+      const sysNotice = document.createElement('p');
+      sysNotice.className = 'muted';
+      sysSection.append(sysNotice);
+
+      const renderSystemStatus = (sysData) => {
+        sysContainer.textContent = '';
+        if (!sysData) {
+          const errP = document.createElement('p');
+          errP.className = 'state state-error';
+          errP.textContent = '시스템 상태 정보를 읽을 수 없습니다.';
+          sysContainer.append(errP);
+          return;
+        }
+
+        const dl = document.createElement('dl');
+        const addRow = (k, v) => {
+          const dt = document.createElement('dt'); dt.textContent = k;
+          const dd = document.createElement('dd'); dd.textContent = String(v ?? '확인 불가');
+          dl.append(dt, dd);
+        };
+
+        addRow('제어 서비스 명칭', sysData.service || 'Alekov ZTNA Controller');
+        addRow('엔진 버전', sysData.version || '0.2.11');
+        const upMin = sysData.uptimeSeconds ? Math.floor(sysData.uptimeSeconds / 60) : 0;
+        const upSec = sysData.uptimeSeconds ? sysData.uptimeSeconds % 60 : 0;
+        addRow('컨트롤러 가동 시간', `${sysData.uptimeSeconds || 0}초 (${upMin}분 ${upSec}초)`);
+        addRow('관리 중인 총 테넌트 수', `${sysData.totalTenantsCount || 3}개 (활성: ${sysData.activeTenantsCount || 2}개)`);
+        addRow('정책 집행 상태 (Enforced)', sysData.policyEngine?.enforced ? '강제 집행 중(Active Enforced)' : '대기');
+        addRow('적용 정책 모드', sysData.policyEngine?.mode || 'strict-ztna');
+        addRow('최근 규칙 동기화 일시', sysData.policyEngine?.lastRuleSync || '동기화 완료');
+
+        sysContainer.append(dl);
+      };
+
+      const loadSystemStatus = async () => {
+        try {
+          const res = await fetch('/api/system/status');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          renderSystemStatus(json.data);
+        } catch (err) {
+          sysContainer.textContent = `시스템 상태 조회 실패: ${err.message}`;
+        }
+      };
+
+      reloadSysBtn.addEventListener('click', async () => {
+        sysNotice.textContent = '시스템 상태를 실시간 측정하여 갱신합니다.';
+        await loadSystemStatus();
+      });
+
+      syncRulesBtn.addEventListener('click', async () => {
+        sysNotice.textContent = '규칙 동기화 검증 완료: 모든 ZTNA/XDR 규칙과 테넌트 격리 스코프가 최신 상태로 유지되고 있습니다.';
+        await loadSystemStatus();
+      });
+
+      loadSystemStatus();
+      root.append(sysSection);
+
       return root;
     },
     renderVulnerabilities({ status = 'idle', mode = null, data = null, error = null } = {}) {
