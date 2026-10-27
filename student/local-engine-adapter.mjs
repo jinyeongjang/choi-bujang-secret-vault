@@ -1,11 +1,49 @@
-// 학생 로컬 검증 어댑터 (XDR 확장 탐지 및 대응 체계 강화)
-// [예시값]: 사내 로컬 환경 검증용 사용자 계정, 등록 보안 단말, 활성 세션 스코프, 업무 앱 및 XDR 보안 위협 이벤트
+// 학생 로컬 검증 어댑터 (멀티 테넌트 관리, 테넌트 격리 및 시스템 관리 기능 추가)
+// [예시값]: 사내 로컬 환경 검증용 테넌트 구성 및 테넌트별 제로트러스트 스코프 데이터
 
-const identity = Object.freeze({
-  user: Object.freeze({ id: 'shieldus-admin', label: '쉴더스진 보안담당자' }),
-  device: Object.freeze({ id: 'shieldus-pc-01', label: '사내 업무용 보안 PC', status: 'compliant' }),
-  session: Object.freeze({ id: 'sess-active-2026', status: 'active' })
-});
+// 테넌트 정의 (사내 조직별 독립 보안 도메인)
+const tenants = [
+  {
+    id: 'tenant-hq-defense',
+    name: '본사 보안운영센터(SOC)',
+    tier: 'Enterprise',
+    status: 'active',
+    policyMode: 'strict-ztna',
+    user: { id: 'shieldus-admin', label: '쉴더스진 보안담당자' },
+    device: { id: 'shieldus-pc-01', label: '사내 업무용 보안 PC', status: 'compliant' },
+    session: { id: 'sess-active-2026', status: 'active' },
+    projectId: 'shieldus-jin-vault'
+  },
+  {
+    id: 'tenant-rnd-lab',
+    name: 'R&D 연구개발연구소',
+    tier: 'Enterprise',
+    status: 'active',
+    policyMode: 'dev-isolated',
+    user: { id: 'rnd-lead-01', label: '연구소 책임연구원' },
+    device: { id: 'rnd-workstation-09', label: '연구소 고성능 분석 PC', status: 'compliant' },
+    session: { id: 'sess-rnd-9901', status: 'active' },
+    projectId: 'rnd-crypto-vault'
+  },
+  {
+    id: 'tenant-finance-ops',
+    name: '금융·회계 감사팀',
+    tier: 'Standard',
+    status: 'maintenance',
+    policyMode: 'audit-only',
+    user: { id: 'finance-auditor-02', label: '선임 회계감사인' },
+    device: { id: 'finance-laptop-03', label: '감사 전용 단말', status: 'compliant' },
+    session: { id: 'sess-fin-4102', status: 'active' },
+    projectId: 'finance-audit-vault'
+  }
+];
+
+// 현재 활성 테넌트 (기본: 본사 SOC)
+let activeTenantId = 'tenant-hq-defense';
+
+function getActiveTenant() {
+  return tenants.find(t => t.id === activeTenantId) || tenants[0];
+}
 
 const defaultApps = Object.freeze([
   { id: 'vault-notes', name: '사내 보안 메모 금고' },
@@ -69,42 +107,92 @@ const defaultEvents = Object.freeze([
 
 export default {
   evidenceMode: 'connected',
-  projectId: 'shieldus-jin-vault',
-  readIdentity: async () => structuredClone(identity),
-  readDevices: async (scope) => [
-    {
-      id: identity.device.id,
-      label: identity.device.label,
-      status: identity.device.status,
-      subjectId: scope?.subjectId ?? identity.user.id,
-      projectId: scope?.projectId ?? 'shieldus-jin-vault'
+  get projectId() {
+    return getActiveTenant().projectId;
+  },
+
+  // 1. 테넌트 관리 및 선택 API
+  getTenants: async () => structuredClone(tenants),
+  getActiveTenant: async () => structuredClone(getActiveTenant()),
+  selectTenant: async (tenantId) => {
+    const target = tenants.find(t => t.id === tenantId);
+    if (!target) throw new Error(`TENANT_NOT_FOUND: ${tenantId}`);
+    activeTenantId = target.id;
+    return structuredClone(target);
+  },
+
+  // 2. 시스템 전역 관리 및 진단 지표
+  getSystemStatus: async () => ({
+    service: 'Alekov ZTNA & XDR Multi-Tenant Controller',
+    version: '0.2.11',
+    uptimeSeconds: Math.floor(process.uptime()),
+    activeTenantsCount: tenants.filter(t => t.status === 'active').length,
+    totalTenantsCount: tenants.length,
+    currentTenant: getActiveTenant().id,
+    policyEngine: {
+      mode: getActiveTenant().policyMode,
+      enforced: true,
+      lastRuleSync: new Date().toISOString()
     }
-  ],
-  readSessions: async (scope) => [
-    {
-      id: identity.session.id,
-      status: identity.session.status,
-      subjectId: scope?.subjectId ?? identity.user.id,
-      projectId: scope?.projectId ?? 'shieldus-jin-vault'
-    }
-  ],
-  readApps: async (scope) => defaultApps.map(app => ({
-    id: app.id,
-    name: app.name,
-    subjectId: scope?.subjectId ?? identity.user.id,
-    projectId: scope?.projectId ?? 'shieldus-jin-vault'
-  })),
+  }),
+
+  // 3. 테넌트 격리된 사용자·기기·세션 식별
+  readIdentity: async () => {
+    const cur = getActiveTenant();
+    return {
+      user: structuredClone(cur.user),
+      device: structuredClone(cur.device),
+      session: structuredClone(cur.session)
+    };
+  },
+
+  readDevices: async (scope) => {
+    const cur = getActiveTenant();
+    return [
+      {
+        id: cur.device.id,
+        label: cur.device.label,
+        status: cur.device.status,
+        subjectId: scope?.subjectId ?? cur.user.id,
+        projectId: scope?.projectId ?? cur.projectId
+      }
+    ];
+  },
+
+  readSessions: async (scope) => {
+    const cur = getActiveTenant();
+    return [
+      {
+        id: cur.session.id,
+        status: cur.session.status,
+        subjectId: scope?.subjectId ?? cur.user.id,
+        projectId: scope?.projectId ?? cur.projectId
+      }
+    ];
+  },
+
+  readApps: async (scope) => {
+    const cur = getActiveTenant();
+    return defaultApps.map(app => ({
+      id: app.id,
+      name: app.name,
+      subjectId: scope?.subjectId ?? cur.user.id,
+      projectId: scope?.projectId ?? cur.projectId
+    }));
+  },
+
   decideAccess: async (input, scope) => {
+    const cur = getActiveTenant();
     const appId = input?.appId;
     let decision = 'allow';
-    let reason = '정상 등록 보안 단말 및 활성 세션 확인 완료';
+    let reason = `[${cur.name}] 정상 등록 보안 단말 및 활성 세션 검증 완료`;
 
     if (appId === 'approval-system') {
       decision = 'challenge';
-      reason = '민감 업무 승인을 위해 추가 본인 확인(MFA)이 필요합니다.';
+      reason = `[${cur.name}] 민감 업무 승인을 위해 추가 본인 확인(MFA)이 필요합니다.`;
     } else if (!defaultApps.some(a => a.id === appId)) {
       decision = 'deny';
-      reason = '미등록 업무 애플리케이션 접근 차단';
+      reason = `[${cur.name}] 미등록 업무 애플리케이션 접근 차단`;
     }
 
     return {
@@ -113,17 +201,22 @@ export default {
       reason,
       checkedAt: new Date().toISOString(),
       requestId: input?.requestId,
-      subjectId: scope?.subjectId ?? identity.user.id,
-      projectId: scope?.projectId ?? 'shieldus-jin-vault'
+      subjectId: scope?.subjectId ?? cur.user.id,
+      projectId: scope?.projectId ?? cur.projectId
     };
   },
-  readEvents: async (scope) => defaultEvents.map(evt => ({
-    ...evt,
-    evidence: evt.evidence.map(e => ({ ...e })),
-    rules: evt.rules.map(r => ({ ...r })),
-    state: { ...evt.state },
-    supportedActions: [...evt.supportedActions],
-    subjectId: scope?.subjectId ?? identity.user.id,
-    projectId: scope?.projectId ?? 'shieldus-jin-vault'
-  }))
+
+  readEvents: async (scope) => {
+    const cur = getActiveTenant();
+    return defaultEvents.map(evt => ({
+      ...evt,
+      summary: `[${cur.name}] ${evt.summary}`,
+      evidence: evt.evidence.map(e => ({ ...e })),
+      rules: evt.rules.map(r => ({ ...r })),
+      state: { ...evt.state },
+      supportedActions: [...evt.supportedActions],
+      subjectId: scope?.subjectId ?? cur.user.id,
+      projectId: scope?.projectId ?? cur.projectId
+    }));
+  }
 };
