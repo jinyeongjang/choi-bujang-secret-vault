@@ -1472,16 +1472,32 @@ export function createStudentView({ onChange } = {}) {
     box.append(title);
 
     const total = counted.size;
-    const lines = total === 0
-      ? ['아직 받은 판정이 없습니다.']
-      : [
-        `허용(allow): ${tally.allow}건 · 거부(deny): ${tally.deny}건 · 추가 확인 필요(challenge): ${tally.challenge}건 · 확인 불가(unknown): ${tally.unknown}건`,
-        `합계: ${total}건`,
-      ];
-    for (const text of lines) {
+    if (total === 0) {
       const line = document.createElement('p');
-      line.textContent = text;
+      line.textContent = '아직 받은 판정이 없습니다.';
       box.append(line);
+    } else {
+      // 제공 테마의 판정 색 변수를 쓴다. 색만으로 구분하지 않도록 글자 이름과 영문 값을 함께 적는다.
+      const tiles = document.createElement('div');
+      tiles.className = 'student-decision-tiles';
+      tiles.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:8px 0;';
+      for (const [kind, name] of [['allow', '허용'], ['deny', '거부'], ['challenge', '추가 확인 필요'], ['unknown', '확인 불가']]) {
+        const tile = document.createElement('div');
+        tile.className = `student-decision-tile student-decision-tile-${kind}`;
+        tile.style.cssText = `background:var(--${kind}-soft, var(--unknown-soft));border:1px solid var(--${kind}-border, var(--border-light));border-radius:var(--radius-sm, 8px);padding:10px 12px;`;
+        const count = document.createElement('div');
+        count.style.cssText = `font-size:1.6rem;font-weight:800;line-height:1.1;color:var(--${kind}, var(--unknown));`;
+        count.textContent = `${tally[kind]}건`;
+        const label = document.createElement('div');
+        label.style.cssText = 'font-size:0.8rem;font-weight:700;color:var(--text-secondary, #334155);margin-top:2px;';
+        label.textContent = `${name}(${kind})`;
+        tile.append(count, label);
+        tiles.append(tile);
+      }
+      box.append(tiles);
+      const sum = document.createElement('p');
+      sum.textContent = `합계: ${total}건`;
+      box.append(sum);
     }
     const note = document.createElement('p');
     note.className = 'muted';
