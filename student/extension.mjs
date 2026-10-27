@@ -1567,6 +1567,56 @@ export function createStudentView({ onChange } = {}) {
   const drawStatus = view.renderStatus;
   view.renderStatus = (args = {}) => {
     const root = drawStatus(args);
+
+    // 기기·세션 이상 요약: 기준 충족 기기와 활성 세션이 아닌 것만 모은다. 받지 못한 자료는 "이상 없음"이 아니라 확인 불가로 둔다.
+    const issueBox = document.createElement('section');
+    issueBox.className = 'student-device-session-issues';
+    const issueTitle = document.createElement('h4');
+    issueTitle.textContent = '기기·세션 이상 요약';
+    issueBox.append(issueTitle);
+    const issueLine = (text, className = '') => {
+      const line = document.createElement('p');
+      line.textContent = text;
+      if (className) line.className = className;
+      issueBox.append(line);
+    };
+    const deviceText = { noncompliant: '보안 기준 미충족', unknown: '확인 불가' };
+    const sessionText = { expired: '만료', revoked: '철회됨', unknown: '확인 불가' };
+    const issues = [];
+    const unreadable = [];
+    for (const [name, resource, labels, okStatus] of [
+      ['기기', args.devices, deviceText, 'compliant'],
+      ['세션', args.sessions, sessionText, 'active'],
+    ]) {
+      if (resource?.status === 'loading') {
+        unreadable.push(`${name} 정보를 불러오는 중`);
+      } else if (resource?.status !== 'ok' || !Array.isArray(resource.data)) {
+        unreadable.push(`${name} 정보를 확인할 수 없음`);
+      } else {
+        for (const item of resource.data) {
+          if (item?.status === okStatus) continue;
+          const label = labels[item?.status] || '확인 불가';
+          issues.push(`${name}: ${item?.label || item?.id || '이름 확인 불가'} · ${label}(${item?.status || 'unknown'})`);
+        }
+      }
+    }
+    if (issues.length > 0) {
+      issueLine(`이상 ${issues.length}건`);
+      const ul = document.createElement('ul');
+      for (const text of issues) {
+        const li = document.createElement('li');
+        li.textContent = text;
+        ul.append(li);
+      }
+      issueBox.append(ul);
+    }
+    if (unreadable.length > 0) {
+      issueLine(`확인 불가: ${unreadable.join(', ')}. 이상 없음으로 간주하지 마세요.`);
+    } else if (issues.length === 0) {
+      issueLine('이상 0건: 받은 기기와 세션이 모두 기준 충족·활성입니다.');
+    }
+    root.append(issueBox);
+
     const box = document.createElement('section');
     box.className = 'student-recent-records';
     const title = document.createElement('h4');
