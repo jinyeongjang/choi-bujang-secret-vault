@@ -763,6 +763,29 @@ export function createOnServer(serverOptions={}) {
         const data=await bounded(signal=>scanner.scan({signal}));send(200,{ok:true,data});
         return;
       }
+      if(req.method==='GET'&&url.pathname==='/api/tenants'){
+        if(typeof engine.getTenants==='function'){
+          const tenants=await bounded(()=>engine.getTenants());
+          const active=typeof engine.getActiveTenant==='function'?await bounded(()=>engine.getActiveTenant()):null;
+          send(200,{ok:true,data:{tenants,active}});return;
+        }
+        send(200,{ok:true,data:{tenants:[{id:engine.projectId||'default',name:'기본 테넌트',mode:'standard',status:'active'}],active:{id:engine.projectId||'default',name:'기본 테넌트'}}});return;
+      }
+      if(req.method==='POST'&&url.pathname==='/api/tenants/select'){
+        const {tenantId}=await bounded(()=>jsonBody(req,['tenantId']));
+        if(typeof engine.selectTenant==='function'){
+          const updated=await bounded(()=>engine.selectTenant(tenantId));
+          send(200,{ok:true,data:updated});return;
+        }
+        send(200,{ok:true,data:{selected:tenantId}});return;
+      }
+      if(req.method==='GET'&&url.pathname==='/api/system/status'){
+        if(typeof engine.getSystemStatus==='function'){
+          const statusData=await bounded(()=>engine.getSystemStatus());
+          send(200,{ok:true,data:statusData});return;
+        }
+        send(200,{ok:true,data:{uptime:Math.round(process.uptime()),platform:process.platform,engineMode:mode,memory:process.memoryUsage()}});return;
+      }
       send(404,{ok:false,error:{code:'NOT_FOUND',message:'지원하지 않는 주소입니다.',retryable:false}});
     }catch(error){
       if(actionRequest&&error?.code==='REQUEST_TIMEOUT'){
