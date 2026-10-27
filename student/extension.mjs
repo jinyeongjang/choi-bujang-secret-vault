@@ -1724,7 +1724,15 @@ export function createStudentView({ onChange } = {}) {
         const label = document.createElement('div');
         label.style.cssText = 'font-size:0.8rem;font-weight:700;color:var(--text-secondary, #334155);margin-top:2px;';
         label.textContent = `${name}(${kind})`;
-        tile.append(count, label);
+
+        const pct = total > 0 ? Math.round((tally[kind] / total) * 100) : 0;
+        const meter = document.createElement('div');
+        meter.style.cssText = 'height:4px;width:100%;background:rgba(0,0,0,0.06);border-radius:2px;margin-top:6px;overflow:hidden;';
+        const meterFill = document.createElement('div');
+        meterFill.style.cssText = `height:100%;width:${pct}%;background:var(--${kind}, var(--unknown));border-radius:2px;transition:width 0.4s ease;`;
+        meter.append(meterFill);
+
+        tile.append(count, label, meter);
         tiles.append(tile);
       }
       box.append(tiles);
@@ -1840,6 +1848,82 @@ export function createStudentView({ onChange } = {}) {
           ul.append(li);
         }
         trend.append(ul);
+
+        // 관제 대시보드 시각화 차트 (SOC Visual Bar Chart)
+        const maxVal = Math.max(...rows.map(([, e]) => e.total), 1);
+        const chartWrapper = document.createElement('div');
+        chartWrapper.className = 'soc-chart-wrapper';
+
+        const chartHeader = document.createElement('div');
+        chartHeader.className = 'soc-chart-header';
+        
+        const chartTitle = document.createElement('h5');
+        chartTitle.className = 'soc-chart-title';
+        chartTitle.textContent = 'SOC 실시간 이벤트 분석 그래프 (최근 7일)';
+
+        const legend = document.createElement('div');
+        legend.className = 'soc-chart-legend';
+
+        const legNormal = document.createElement('span');
+        legNormal.className = 'soc-legend-item';
+        const legNormalBox = document.createElement('span');
+        legNormalBox.className = 'soc-legend-dot soc-legend-normal';
+        legNormal.append(legNormalBox, document.createTextNode(' 정상 인가 접속'));
+
+        const legXdr = document.createElement('span');
+        legXdr.className = 'soc-legend-item';
+        const legXdrBox = document.createElement('span');
+        legXdrBox.className = 'soc-legend-dot soc-legend-xdr';
+        legXdr.append(legXdrBox, document.createTextNode(' XDR 보안 경보'));
+
+        legend.append(legNormal, legXdr);
+        chartHeader.append(chartTitle, legend);
+        chartWrapper.append(chartHeader);
+
+        const chartBars = document.createElement('div');
+        chartBars.className = 'soc-chart-bars';
+
+        for (const [day, entry] of rows) {
+          const col = document.createElement('div');
+          col.className = 'soc-bar-col';
+
+          const countBadge = document.createElement('span');
+          countBadge.className = 'soc-bar-count';
+          countBadge.textContent = `${entry.total}건`;
+
+          const barTrack = document.createElement('div');
+          barTrack.className = 'soc-bar-track';
+          const barHeightPct = Math.max(Math.round((entry.total / maxVal) * 80), 16);
+          barTrack.style.height = `${barHeightPct}px`;
+
+          const normalCount = Math.max(0, entry.total - entry.xdr);
+          const xdrPct = entry.total > 0 ? (entry.xdr / entry.total) * 100 : 0;
+          const normalPct = entry.total > 0 ? (normalCount / entry.total) * 100 : 0;
+
+          if (normalPct > 0) {
+            const normalBar = document.createElement('div');
+            normalBar.className = 'soc-bar-segment soc-segment-normal';
+            normalBar.style.height = `${normalPct}%`;
+            normalBar.title = `정상 접속: ${normalCount}건`;
+            barTrack.append(normalBar);
+          }
+          if (xdrPct > 0) {
+            const xdrBar = document.createElement('div');
+            xdrBar.className = 'soc-bar-segment soc-segment-xdr';
+            xdrBar.style.height = `${xdrPct}%`;
+            xdrBar.title = `XDR 경보: ${entry.xdr}건`;
+            barTrack.append(xdrBar);
+          }
+
+          const dayLabel = document.createElement('span');
+          dayLabel.className = 'soc-bar-label';
+          dayLabel.textContent = day.length >= 10 ? day.slice(5) : day;
+
+          col.append(countBadge, barTrack, dayLabel);
+          chartBars.append(col);
+        }
+        chartWrapper.append(chartBars);
+        trend.append(chartWrapper);
         if (data.length < 5) trendLine('기록이 5건 미만이라 추이를 판단하기에는 부족합니다.', 'muted');
       }
       if (noTime > 0) trendLine(`시각을 알 수 없는 기록 ${noTime}건은 제외했습니다.`, 'muted');
