@@ -1549,6 +1549,54 @@ export function createStudentView({ onChange } = {}) {
     box.append(note);
     root.prepend(box);
 
+    // 날짜별 기록 추이: 기록 시각을 이 PC의 날짜로 묶어 최근 7일치 건수를 문자 막대로 보여 준다.
+    const trend = document.createElement('section');
+    trend.className = 'student-record-trend';
+    const trendTitle = document.createElement('h4');
+    trendTitle.textContent = '날짜별 기록 추이';
+    trend.append(trendTitle);
+    const trendLine = (text, className = '') => {
+      const line = document.createElement('p');
+      line.textContent = text;
+      if (className) line.className = className;
+      trend.append(line);
+    };
+    if (status === 'loading') {
+      trendLine('기록을 불러오는 중입니다.');
+    } else if (status !== 'ok' || !Array.isArray(data)) {
+      trendLine('확인 불가: 보안 기록을 받지 못해 추이를 알 수 없습니다.');
+    } else {
+      const days = new Map();
+      let noTime = 0;
+      for (const event of data) {
+        const time = Date.parse(event?.at);
+        if (!Number.isFinite(time)) {
+          noTime += 1;
+          continue;
+        }
+        const day = new Date(time).toLocaleDateString('sv-SE');
+        const entry = days.get(day) || { total: 0, xdr: 0 };
+        entry.total += 1;
+        if (event.kind === 'xdr') entry.xdr += 1;
+        days.set(day, entry);
+      }
+      if (days.size === 0) {
+        trendLine('시각이 있는 기록이 없어 추이를 그릴 수 없습니다.');
+      } else {
+        const rows = [...days.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).slice(-7);
+        const ul = document.createElement('ul');
+        for (const [day, entry] of rows) {
+          const li = document.createElement('li');
+          li.textContent = `${day} ${'█'.repeat(Math.min(entry.total, 20))} ${entry.total}건 (XDR ${entry.xdr}건)`;
+          ul.append(li);
+        }
+        trend.append(ul);
+        if (data.length < 5) trendLine('기록이 5건 미만이라 추이를 판단하기에는 부족합니다.', 'muted');
+      }
+      if (noTime > 0) trendLine(`시각을 알 수 없는 기록 ${noTime}건은 제외했습니다.`, 'muted');
+    }
+    box.after(trend);
+
     // 보호 현황의 최근 기록 3건이 쓸 수 있도록 받은 기록을 보관한다. 기록이 바뀐 때만 다시 그리게 한다.
     const signature = status === 'ok' && Array.isArray(data)
       ? JSON.stringify(data.map((event) => [event?.id, event?.at, event?.kind]))
