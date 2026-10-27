@@ -1,6 +1,6 @@
 // 이 파일은 학생이 같은 프로젝트에서 이어서 구현합니다.
 // 제공 UI를 받은 것만으로 단계 완료를 인정하지 않습니다.
-export function createStudentView() {
+export function createStudentView({ onChange } = {}) {
   const view = {
     renderIdentity({ me, devices, sessions } = {}) {
       const root = document.createElement('div');
@@ -1548,6 +1548,58 @@ export function createStudentView() {
     note.textContent = '안내: 서버가 보낸 기록 중 XDR 경보만 센 값입니다. 0건은 이 기록 범위에서 없다는 뜻이며 안전 보장이 아닙니다.';
     box.append(note);
     root.prepend(box);
+
+    // 보호 현황의 최근 기록 3건이 쓸 수 있도록 받은 기록을 보관한다. 기록이 바뀐 때만 다시 그리게 한다.
+    const signature = status === 'ok' && Array.isArray(data)
+      ? JSON.stringify(data.map((event) => [event?.id, event?.at, event?.kind]))
+      : String(status);
+    if (signature !== recentRecords.signature) {
+      recentRecords.signature = signature;
+      recentRecords.status = status;
+      recentRecords.data = status === 'ok' && Array.isArray(data) ? data : null;
+      if (typeof onChange === 'function') queueMicrotask(onChange);
+    }
+    return root;
+  };
+
+  // 최근 보안 기록 3건: 보호 현황(renderStatus) 아래에 붙인다.
+  const recentRecords = { signature: null, status: null, data: null };
+  const drawStatus = view.renderStatus;
+  view.renderStatus = (args = {}) => {
+    const root = drawStatus(args);
+    const box = document.createElement('section');
+    box.className = 'student-recent-records';
+    const title = document.createElement('h4');
+    title.textContent = '최근 보안 기록 3건';
+    box.append(title);
+
+    const addLine = (text, className = '') => {
+      const line = document.createElement('p');
+      line.textContent = text;
+      if (className) line.className = className;
+      box.append(line);
+    };
+    if (recentRecords.status === 'loading' || recentRecords.status === null) {
+      addLine('보안 기록을 불러오는 중이거나 아직 받지 못했습니다.');
+    } else if (!recentRecords.data) {
+      addLine('확인 불가: 보안 기록을 받지 못했습니다. 기록 없음으로 간주하지 마세요.');
+    } else if (recentRecords.data.length === 0) {
+      addLine('표시할 보안 기록이 없습니다.');
+    } else {
+      const kindText = { access: '접속', xdr: 'XDR 경보' };
+      const ul = document.createElement('ul');
+      const latest = [...recentRecords.data]
+        .sort((a, b) => (Date.parse(b?.at) || 0) - (Date.parse(a?.at) || 0))
+        .slice(0, 3);
+      for (const event of latest) {
+        const li = document.createElement('li');
+        li.textContent = `[${kindText[event?.kind] || event?.kind || '종류 확인 불가'}] ${event?.at || '시각 확인 불가'} · ${event?.id || 'ID 확인 불가'} - ${event?.summary || '요약 없음'}`;
+        ul.append(li);
+      }
+      box.append(ul);
+      addLine('자세한 근거와 상세는 보안 기록 탭에서 확인하세요.', 'muted');
+    }
+    root.append(box);
     return root;
   };
   return view;
