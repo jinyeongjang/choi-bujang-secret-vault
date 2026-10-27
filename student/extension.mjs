@@ -1700,5 +1700,46 @@ export function createStudentView({ onChange } = {}) {
     root.append(box);
     return root;
   };
+
+  // 조치 처리 요약: 이 화면에서 끝난 조치의 결과만 센다. 준비·전달·접수 단계는 완료가 아니므로 세지 않는다.
+  // 효과 확인은 succeeded이면서 observation.effectApplied === true일 때만 센다.
+  const actionTally = { effect: 0, unknown: 0, denied: 0, failed: 0, expired: 0 };
+  const actionCounted = new Set();
+  const drawAction = view.renderAction;
+  view.renderAction = (actionState) => {
+    const state = actionState || {};
+    const idPart = state.receipt?.requestId || state.actionId || state.event?.id;
+    let kind = null;
+    if (state.status === 'succeeded') kind = state.observation?.effectApplied === true ? 'effect' : 'unknown';
+    else if (state.status === 'unknown') kind = 'unknown';
+    else if (state.status === 'denied') kind = 'denied';
+    else if (state.status === 'failed' || state.status === 'error') kind = 'failed';
+    else if (state.status === 'expired') kind = 'expired';
+    if (kind && idPart) {
+      const key = `${idPart}|${state.status}`;
+      if (!actionCounted.has(key)) {
+        actionCounted.add(key);
+        actionTally[kind] += 1;
+      }
+    }
+
+    const root = drawAction(actionState);
+    const box = document.createElement('section');
+    box.className = 'student-action-summary';
+    const title = document.createElement('h4');
+    title.textContent = '조치 처리 요약';
+    box.append(title);
+    const line = document.createElement('p');
+    line.textContent = actionCounted.size === 0
+      ? '아직 끝난 조치가 없습니다.'
+      : `효과 확인: ${actionTally.effect}건 · 결과 불명: ${actionTally.unknown}건 · 거절: ${actionTally.denied}건 · 실패: ${actionTally.failed}건 · 기한 지남: ${actionTally.expired}건`;
+    box.append(line);
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.textContent = '안내: 이 화면에서 끝난 조치만 센 값이며 새로고침하면 초기화됩니다. 준비됨·전달 중·접수(pending)는 완료가 아니므로 세지 않고, 효과가 확인되지 않은 성공은 결과 불명으로 셉니다.';
+    box.append(note);
+    root.append(box);
+    return root;
+  };
   return view;
 }
