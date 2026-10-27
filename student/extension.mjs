@@ -1,7 +1,7 @@
 // 이 파일은 학생이 같은 프로젝트에서 이어서 구현합니다.
 // 제공 UI를 받은 것만으로 단계 완료를 인정하지 않습니다.
 export function createStudentView() {
-  return {
+  const view = {
     renderIdentity({ me, devices, sessions } = {}) {
       const root = document.createElement('div');
       const addLine = (text) => {
@@ -1442,4 +1442,113 @@ export function createStudentView() {
       return root;
     },
   };
+
+  // 접속 판정 요약: 이 화면에서 받은 판정만 센다. 새로고침하면 처음부터 다시 센다.
+  // 같은 판정이 다시 그려져도 한 번만 세도록 (앱, 판정 시각)으로 구분한다.
+  const tally = { allow: 0, deny: 0, challenge: 0, unknown: 0 };
+  const counted = new Set();
+  // 판정 사유 분포: 화면으로 오는 판정에는 reasonCode가 없고 사유 문장(reason)만 있어 문장 기준으로 센다.
+  const reasonTally = new Map();
+  const drawDecision = view.renderDecision;
+  view.renderDecision = (args = {}) => {
+    const { status, data, appId } = args;
+    if (status === 'ok' && data?.checkedAt) {
+      const key = `${data.appId || appId || ''}|${data.checkedAt}`;
+      if (!counted.has(key)) {
+        counted.add(key);
+        const kind = Object.hasOwn(tally, data.decision) ? data.decision : 'unknown';
+        tally[kind] += 1;
+        const reason = typeof data.reason === 'string' && data.reason.trim() ? data.reason.trim() : '사유 정보 없음';
+        const reasonKey = `${kind}|${reason}`;
+        reasonTally.set(reasonKey, { kind, reason, count: (reasonTally.get(reasonKey)?.count ?? 0) + 1 });
+      }
+    }
+
+    const root = drawDecision(args);
+    const box = document.createElement('section');
+    box.className = 'student-decision-summary';
+    const title = document.createElement('h4');
+    title.textContent = '접속 판정 요약';
+    box.append(title);
+
+    const total = counted.size;
+    const lines = total === 0
+      ? ['아직 받은 판정이 없습니다.']
+      : [
+        `허용(allow): ${tally.allow}건 · 거부(deny): ${tally.deny}건 · 추가 확인 필요(challenge): ${tally.challenge}건 · 확인 불가(unknown): ${tally.unknown}건`,
+        `합계: ${total}건`,
+      ];
+    for (const text of lines) {
+      const line = document.createElement('p');
+      line.textContent = text;
+      box.append(line);
+    }
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.textContent = '안내: 이 화면에서 요청한 판정만 센 값이며 새로고침하면 초기화됩니다. 요청 실패와 확인 불가는 허용으로 세지 않습니다.';
+    box.append(note);
+
+    const reasonTitle = document.createElement('h5');
+    reasonTitle.textContent = '판정 사유 분포';
+    box.append(reasonTitle);
+    if (reasonTally.size === 0) {
+      const none = document.createElement('p');
+      none.textContent = '아직 집계할 사유가 없습니다.';
+      box.append(none);
+    } else {
+      const kindText = { allow: '허용', deny: '거부', challenge: '추가 확인 필요', unknown: '확인 불가' };
+      const ul = document.createElement('ul');
+      for (const item of [...reasonTally.values()].sort((a, b) => b.count - a.count)) {
+        const li = document.createElement('li');
+        li.textContent = `${item.reason} — ${item.count}건 (${kindText[item.kind]}, ${item.kind})`;
+        ul.append(li);
+      }
+      box.append(ul);
+    }
+    root.append(box);
+    return root;
+  };
+
+  // XDR 경보 현황: 보안 기록 중 kind가 'xdr'인 기록만 센다.
+  // 기록을 받지 못했거나 형식을 알 수 없으면 "경보 없음"이 아니라 확인 불가로 표시한다.
+  const drawEvents = view.renderEvents;
+  view.renderEvents = (args = {}) => {
+    const { status, data } = args;
+    const root = drawEvents(args);
+    const box = document.createElement('section');
+    box.className = 'student-xdr-summary';
+    const title = document.createElement('h4');
+    title.textContent = 'XDR 경보 현황';
+    box.append(title);
+
+    const lines = [];
+    if (status === 'loading') {
+      lines.push('XDR 경보를 불러오는 중입니다.');
+    } else if (status !== 'ok' || !Array.isArray(data)) {
+      lines.push('확인 불가: 보안 기록을 받지 못해 XDR 경보 건수를 알 수 없습니다. 경보 없음으로 간주하지 마세요.');
+    } else {
+      const alerts = data
+        .filter((event) => event?.kind === 'xdr')
+        .sort((a, b) => (Date.parse(b?.at) || 0) - (Date.parse(a?.at) || 0));
+      if (alerts.length === 0) {
+        lines.push('XDR 경보: 0건 (받은 기록 안에 XDR 경보가 없습니다)');
+      } else {
+        const latest = alerts[0];
+        lines.push(`XDR 경보: ${alerts.length}건 (전체 기록 ${data.length}건 중)`);
+        lines.push(`가장 최근 경보: ${latest.at || '시각 확인 불가'} · ID: ${latest.id || '확인 불가'} - ${latest.summary || '요약 없음'}`);
+      }
+    }
+    for (const text of lines) {
+      const line = document.createElement('p');
+      line.textContent = text;
+      box.append(line);
+    }
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.textContent = '안내: 서버가 보낸 기록 중 XDR 경보만 센 값입니다. 0건은 이 기록 범위에서 없다는 뜻이며 안전 보장이 아닙니다.';
+    box.append(note);
+    root.prepend(box);
+    return root;
+  };
+  return view;
 }
