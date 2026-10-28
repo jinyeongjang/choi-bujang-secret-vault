@@ -110,6 +110,11 @@ $info.Arguments = '"' + $server + '"' + $(if ($Demo) { ' --demo' } else { '' }) 
 $secret = '(?i)(TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|API_?KEY|PRIVATE_?KEY|ACCESS_?KEY|^ON_AI_|^OPENAI|^ANTHROPIC|^SUPABASE)'
 foreach ($name in @($info.EnvironmentVariables.Keys)) { if ($name -match $secret) { $info.EnvironmentVariables.Remove($name) } }
 $info.EnvironmentVariables['ON_PORT'] = [string]$Port
+# 어댑터를 따로 지정하지 않은 일반 실행은 로컬 어댑터를 씁니다. 예제(-Demo)·SDP(-SdpHostConfig) 실행은 그대로 둡니다.
+$localAdapter = Join-Path $root 'student\local-engine-adapter.mjs'
+if (-not $Demo -and -not $info.EnvironmentVariables.ContainsKey('ON_ENGINE_ADAPTER') -and -not $PSBoundParameters.ContainsKey('SdpHostConfig') -and (Test-Path -LiteralPath $localAdapter)) {
+  $info.EnvironmentVariables['ON_ENGINE_ADAPTER'] = $localAdapter
+}
 if ($Background) {
   $info.CreateNoWindow = $true
   $info.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
